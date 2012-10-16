@@ -37,6 +37,7 @@ bool Map::ReadFile(std::string filename)
 	}
 	return true;
 }
+//Adds a new normal tile to the dictionary
 bool Map::AddTile(char key, int x, int y){
 	TileData value(x, y, (int)_tileDimension.X, (int)_tileDimension.Y);
 	//SDL_Rect value = {x, y, width, height};
@@ -45,6 +46,7 @@ bool Map::AddTile(char key, int x, int y){
 	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
 
 }
+//Adds a new slopetile to the dictionary
 bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 	TileData value(x, y, (int)_tileDimension.X, (int)_tileDimension.Y, slopeLeft, slopeRight);
 	//SDL_Rect value = {x, y, width, height};
@@ -53,6 +55,7 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
 
 }
+//Draws the excisting map on the screen
 void Map::Draw(SDL_Surface* screen)
 {
 	const char* charline;
@@ -71,6 +74,7 @@ void Map::Draw(SDL_Surface* screen)
 		}
 	}
 }
+//Draws a new map
 void Map::Draw(SDL_Surface* screen,const char* mapArray[], unsigned int aantalRijen)
 {
 	const char* charline;
@@ -90,6 +94,7 @@ void Map::Draw(SDL_Surface* screen,const char* mapArray[], unsigned int aantalRi
 		}
 	}
 }
+//Get the type of collision of the inserten point
 int Map::GetCharType(Point2D collisionPoint){
 	//0 = outofrange
 	//1 = none
@@ -109,8 +114,11 @@ int Map::GetCharType(Point2D collisionPoint){
 	}
 	return 0;
 }
+//Returns the dimensions of a single tile
 Point2D Map::GetTileDimension() { return _tileDimension; }
+//Returns the position of the map which is displayed
 Point2D Map::GetMapPosition() { return _mapPosition; }
+//Returns the height of empty pixels @ the position
 float Map::GetHeightAtPosition(Point2D position){
 	int y = (int)(position.Y / _tileDimension.Y);
 	int x = (int)(position.X / _tileDimension.X);
@@ -143,6 +151,7 @@ float Map::GetHeightAtPosition(Point2D position){
 	return height;
 
 }
+//Returns the height of a slope @ a positionX
 float Map::GetSlopeHeight(int x, int y, float positionX){
 	const char* charline = _mapArray.at(y).c_str();
 	TileData tiledat = _tileLibrary.find(charline[x])->second;
