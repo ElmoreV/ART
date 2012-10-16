@@ -24,8 +24,7 @@ private:
 int main( int argc, char* args[] ) 
 {
 	InitSDL();
-	WindowSurface screen;
-	screen.CreateWindowSurface(800,600);
+	WindowSurface screen(800,600);
 
 	SDL_ShowCursor(0);
 	long Timer = clock();//For Frame Independent Movement

@@ -1,4 +1,4 @@
-//SDLFramework Rev 2
+//SDLFramework Rev 3
 
 
 #ifndef SDLFRAMEWORK_H
@@ -46,12 +46,13 @@ enum ErrorState{None,Log,Caption,Exit};
 class Error
 {
 public:
-	
+	Error();
+	Error(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=true);
 	void HandleError(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=true);
 private:
 	void LogError(std::string message, int code);
 	void MessageError(std::string message, int code);
-	ErrorState _errState;
+	//ErrorState _errState;
 };
 
 
@@ -101,6 +102,7 @@ class WindowSurface:public BaseSurface
 public:
 	WindowSurface();
 	WindowSurface(SDL_Surface* surface);
+	WindowSurface(int width, int height, int bpp=0, bool doublebuffering=false, bool windowFrame=true);
 	bool CreateWindowSurface(int width,int height, int bpp=0, bool doublebuffering=false, bool windowFrame=true);
 	void SetCaption(std::string caption);
 	bool UpdateWindow();

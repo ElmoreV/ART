@@ -1,4 +1,4 @@
-//SDLFramework Rev 1
+//SDLFramework Rev 2
 
 
 #include "SDLFramework.h"
@@ -8,11 +8,19 @@
 #include <iostream>
 #include <ctime>
 #endif
+
+Error::Error(){};
+Error::Error(ErrorState error,std::string errorMessage, int errorCode, bool showSDLError)
+{HandleError(error,errorMessage,errorCode,showSDLError);};
+//Errorstate error: Log/Caption/Exit. Determines how to handle the error
+//errorMessage: the message describing the error,and it will be logged
+//errorCode: optional code describing developer code values. Default=0; With code 0, the code will not be logged.
+//showSDLError: when true, it add the internal SDLError message to the log message. Default = true.
 void Error::HandleError(ErrorState error,std::string errorMessage, int errorCode, bool showSDLError)
 {
 #ifdef ERROR
 
-	if (error==Exit)//If the error-severity is exit-worthy, so log the error, and exit
+	if (error==Exit)//If the error-severity is exit-worthy, log the error, and exit
 	{
 		LogError(errorMessage,errorCode);
 		if (showSDLError)
@@ -27,41 +35,53 @@ void Error::HandleError(ErrorState error,std::string errorMessage, int errorCode
 	}else if (error==Log)//The error isn't that severe, and should be just logged
 	{
 		LogError(errorMessage,errorCode);
+		if (showSDLError)
+		{LogError(SDL_GetError(),-1);}
 	}
 #endif
 };
-void Error::LogError(std::string message, int code)//Function handling the logging
+//When code is positive non-zero: add the clocktime to the log
+//When code = 0, don't add it
+void Error::LogError(std::string message, int code)
 {
 #ifdef ERROR
 	std::string str;
-	if (code>=0)
+	if (code>0)
 	{
-	std::stringstream clockstr; clockstr<<(int)clock();//Add the clocktime to the log
-	str=clockstr.str();str+="   ";
-	str+=message;//Add the message
+		//Add the clocktime to the log
+		std::stringstream clockstr; 
+		clockstr<<(int)clock();
+		str=clockstr.str();str+="   ";	
 	}
-	if (code>0)//If the code is specified, add it too
+	str+=message;
+
+	if (code!=0)
 	{
 		str+="  ";
-		std::stringstream integer;if (code<0){integer<<"-";code=-code;} 
+		std::stringstream integer;
+		if (code<0)
+		{integer<<"-";code=-code;} 
 		integer<<code;
 		str+=integer.str();
 	}
 	std::ofstream out("log.txt",std::ios::out|std::ios::app|std::ios::binary);//Log it and make a newline
 	out<<str;
-	if (str.length()>1){out<<"\n\r";out<<std::endl;}
+	if (str.length()>0)
+	{out<<"\n\r";out<<std::endl;}
 	out.flush();
 	out.close();
 #endif
 };
-void Error::MessageError(std::string message, int code)//Function handling the caption message
+void Error::MessageError(std::string message, int code)
 {
 #ifdef ERROR
-	std::string str=message;//Add message
-	if (code)//Add code if neccessary
+	std::string str=message;
+	if (code!=0)//Add code if non-zero
 	{
 		str+="   ";
-		std::stringstream integer;if (code<0){integer<<"-";code=-code;}  integer<<code;
+		std::stringstream integer;
+		if (code<0){integer<<"-";code=-code;}  
+		integer<<code;
 		str+=integer.str();
 	}
 	SDL_WM_SetCaption(str.c_str(),0);
@@ -71,24 +91,24 @@ bool InitSDL()
 {
 	int flags=SDL_INIT_VIDEO;//Initialize video component
 	#ifdef AUDIO
-	flags|=SDL_INIT_AUDIO;//Inirialize audio component
+	flags|=SDL_INIT_AUDIO;//Initialize audio component
 	#endif
 	if (SDL_Init(flags)==-1)//Initialize SDL
 	{
-		Error error; error.HandleError(Exit,"The initializing of SDL failed with code:");
+		Error error(Exit,"The initializing of SDL failed with code:");
 		return false;
 	};
 	#ifdef FONT
 	if (TTF_Init()==-1)//Initialize Font extension
 	{
-		Error error; error.HandleError(Exit,"The initializing of TTF failed with code:");
+		Error error(Exit,"The initializing of TTF failed with code:");
 		return false;
 	};
 	#endif
 	#ifdef AUDIO
 	if (Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 )==-1)//Open audio device on a certain sample rate
 	{
-		Error error; error.HandleError(Exit,"The opening of the audio device failed with code:");
+		Error error(Exit,"The opening of the audio device failed with code:");
 		return false;
 	}
 	#endif
@@ -117,9 +137,9 @@ bool Font::OpenFont(std::string filename, int size)
 	_ttf=TTF_OpenFont( filename.c_str(), size );
 	if (_ttf==0)
 	{		
-		std::string errorMessage="The following font file cannot be opened: ";
+		std::string errorMessage="The following font file could not be opened: ";
 		errorMessage+=filename;
-		Error error; error.HandleError(Caption,errorMessage);
+		Error error(Caption,errorMessage);
 		return false;
 	}
 	return true;
@@ -127,7 +147,8 @@ bool Font::OpenFont(std::string filename, int size)
 //Set and get the Colour
 void Font::SetColor(int R,int G, int B)
 {
-	SDL_Color text={R,G,B};_textColor=text;
+	SDL_Color text={R,G,B};
+	_textColor=text;
 }
 void Font::SetColor(SDL_Color color)
 {
@@ -177,11 +198,13 @@ bool Surface::Draw(WindowSurface windowSurface,unsigned int x, unsigned int y, S
 		int retVal=SDL_BlitSurface(_surface,clip,windowSurface,&offset);
 		if (retVal==-1)//Return value =1 when error
 		{		
-			Error error; error.HandleError(Caption,"Failed to blit to the window with code: ");
+			Error error(Caption,"Failed to blit to the window with code: ");
 			return false;
-		}else if (retVal==-2)//Return value =2 when video memory= lost
+		}else if (retVal==-2)//Return value =2 when video memory is lost
 		{
-			Error error; error.HandleError(Log,"The Blit-memory was lost in VRAM: ");
+			Error error; 
+			error(Log,"The Blit-memory was lost in VRAM: ");
+			//TODO:
 			//Draw individual pixels in video memory, because that memory was lost
 			return false;//Must become return true when successful
 		}else
@@ -204,12 +227,14 @@ bool Surface::LoadImage(std::string filename,int colorKeyR,int colorKeyG, int co
 	{
 		std::string errorMessage="The following image file cannot be opened: ";
 		errorMessage+=filename;
-		Error error; error.HandleError(Caption,errorMessage);
+		Error error(Caption,errorMessage);
 		return false;
 	}
 	//Colorkey and transparency here for hardware acceleration
-	if (colorKeyR!=-1&&colorKeyG!=-1&&colorKeyB!=-1){tempLoaded.MaskColor(colorKeyR,colorKeyG,colorKeyB);}
-	if (alpha!=SDL_ALPHA_OPAQUE){tempLoaded.SetTransparency(alpha);}
+	if (colorKeyR!=-1&&colorKeyG!=-1&&colorKeyB!=-1)
+	{tempLoaded.MaskColor(colorKeyR,colorKeyG,colorKeyB);}
+	if (alpha!=SDL_ALPHA_OPAQUE)
+	{tempLoaded.SetTransparency(alpha);}
 	//convert to video buffer pixel format
 	if (useImageAlpha)
 	{_surface=::SDL_DisplayFormatAlpha(tempLoaded);}
@@ -217,9 +242,9 @@ bool Surface::LoadImage(std::string filename,int colorKeyR,int colorKeyG, int co
 	if (_surface==0)//If an error occurs
 	{
 		_surface=tempLoaded;//Just use the unoptimized image then
-		std::string errorMessage="The following image file could be converted: ";
+		std::string errorMessage="The following image file could not be converted: ";
 		errorMessage+=filename;
-		Error error; error.HandleError(Log,errorMessage);
+		Error error(Log,errorMessage);
 	}else
 	{
 		tempLoaded.Free();//Otherwise free the resource
@@ -236,7 +261,7 @@ bool Surface::RenderText(Font font,std::string text)
 	{		
 		std::string errorMessage="The following text could not be rendered: ";
 		errorMessage+=text;
-		Error error; error.HandleError(Caption,errorMessage);
+		Error error(Caption,errorMessage);
 		return false;
 	}
 	return true;
@@ -255,7 +280,7 @@ bool Surface::MaskColor(int r,int g,int b)
 			if (r<0x00){r=0x00;};if (g<0x00){g=0x00;};if (b<0x00){b=0x00;};//If it's below zero, change it to 0
 			if (::SDL_SetColorKey(_surface,flags,SDL_MapRGB(_surface->format,r,g,b))==-1)
 			{		
-				Error error; error.HandleError(Log,"Failed to set Colorkey with code :");
+				Error error(Log,"Failed to set Colorkey with code :");
 				return false;
 			}
 		}
@@ -277,7 +302,7 @@ bool Surface::SetTransparency(int alpha)
 		if (alpha<SDL_ALPHA_TRANSPARENT){alpha=SDL_ALPHA_TRANSPARENT;}
 		if (SDL_SetAlpha(_surface,SDL_SRCALPHA,alpha)==-1)
 		{		
-			Error error; error.HandleError(Log,"Failed to set transparency");
+			Error error(Log,"Failed to set transparency");
 			return false;
 		};
 		return true;
@@ -295,6 +320,10 @@ void Surface::Free()//Freeing the surface
 
 WindowSurface::WindowSurface():BaseSurface(){};
 WindowSurface::WindowSurface(SDL_Surface* surface):BaseSurface(){_surface=surface;};
+WindowSurface::WindowSurface(int width, int height, int bpp, bool doublebuffering, bool windowFrame):BaseSurface()
+{
+	CreateWindowSurface(width,height,bpp,doublebuffering,windowFrame);
+};
 bool WindowSurface::CreateWindowSurface(int width,int height, int bpp, bool doublebuffering, bool windowFrame)
 {
 	int modeFlags=0;
@@ -306,7 +335,7 @@ bool WindowSurface::CreateWindowSurface(int width,int height, int bpp, bool doub
 	_surface=::SDL_SetVideoMode(width,height,bpp,modeFlags);
 	if (_surface==0)
 	{		
-		Error error; error.HandleError(Exit,"Failed to create window surface");
+		Error error(Exit,"Failed to create window surface");
 		return false;
 	};
 	return true;
@@ -323,21 +352,21 @@ bool WindowSurface::UpdateWindow()
 	{
 		if (SDL_Flip(_surface)==-1)
 		{		
-			Error error; error.HandleError(Caption,"Failed to update screen with code: ");
+			Error error(Caption,"Failed to update screen with code: ");
 			return false;
 		}
 		return true;
 	}
 	return false;
 }
-//Fill the entire window with a certain color (default=black)
+//Fill the entire window with a certain color (default=black RGB(0,0,0))
 bool WindowSurface::ClearWindow(int r, int g, int b)
 {
 	if (_surface!=0)
 	{
 		if (::SDL_FillRect(_surface,0,SDL_MapRGB(_surface->format,r,g,b)))
 		{	
-			Error error; error.HandleError(Caption,"Failed to clear the window");
+			Error error(Caption,"Failed to clear the window");
 			return false;
 		};
 		return true;
@@ -353,8 +382,7 @@ bool WindowSurface::DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g,
 	int retVal=SDL_FillRect(_surface,&rectangle,SDL_MapRGB(_surface->format,r,g,b));
 	if (retVal==-1)
 	{		
-		Error error;
-		error.HandleError(Log,"Failed to draw filled rectangle");
+		Error error(Log,"Failed to draw filled rectangle");
 		return false;
 	}
 	return true;
@@ -364,8 +392,7 @@ bool WindowSurface::DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b
 {
 	if (::lineRGBA(_surface,x1,y1,x2,y2,r,g,b,255)==-1)
 	{
-		Error error;
-		error.HandleError(Log,"Failed to draw line");
+		Error error(Log,"Failed to draw line");
 		return false;
 	};
 	return true;
