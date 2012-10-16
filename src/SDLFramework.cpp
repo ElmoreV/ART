@@ -203,7 +203,7 @@ bool Surface::Draw(WindowSurface windowSurface,unsigned int x, unsigned int y, S
 		}else if (retVal==-2)//Return value =2 when video memory is lost
 		{
 			Error error; 
-			error(Log,"The Blit-memory was lost in VRAM: ");
+			error.HandleError(Log,"The Blit-memory was lost in VRAM: ");
 			//TODO:
 			//Draw individual pixels in video memory, because that memory was lost
 			return false;//Must become return true when successful
