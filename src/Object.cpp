@@ -172,44 +172,46 @@ void Object::HandleEvent(SDL_Event sEvent)
 
 Player::Player(std::string filename, float X, float Y, int interval, int spriteX, int spriteY):Object(filename, X, Y, spriteX, spriteY)
 {
+	_maxVelocity = 250;
 	_interval = interval;
 	if(_interval <= 0) _interval = 1;
 	_countInterval = 0;
 	_animationState = 0;
 	_lastFrame = 1;
 };
+void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=Y;}
 void Player::Update(Map map1, long lastTick){
 	//Update animation image for the player
 	_frame = _lastFrame;
-	if((_buttonUp || _buttonDown || _buttonLeft || _buttonRight) && (_countInterval > _interval)){
+	if((_buttonLeft || _buttonRight) && (_countInterval > _interval)){
 		_countInterval = 0;
 		_animationState++;
 		if(_animationState > 2){_animationState = 0;}
 	}
 	_countInterval++;
-
+	
 	//Timedifference, important for time-based movement
-	float timeDiff=lastTick<0?
-		1:(clock()-lastTick)/1000.0f;
-	//float timeDiff;
-	//if(lastTick < 0) timeDiff = 1;
-	//else timeDiff = (clock() - lastTick) / 1000.0f;
-
+	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
+	//For the jump
+	if(_velocity.Y < _maxVelocity) _velocity.Y += timeDiff*_maxVelocity;
+	//Initiate jump if button up is pressed
+	if(_buttonUp && _jumpEnable) {_velocity.Y = (float)-_maxVelocity; _jumpEnable = false; }
 	//Handles walking and collision
 	HandleCollision(map1, 800, 600, timeDiff);
-	
-
-
 
 	//Prevents the player from walking out of screen
 	if(_position.X - map1.GetMapPosition().X < 0) 
 		_position.X = map1.GetMapPosition().X ;
 	else if(_position.X + _spriteDimension.X - map1.GetMapPosition().X > 800) 
 		_position.X = 800 - _spriteDimension.X + map1.GetMapPosition().X ;
-	if(_position.Y -  map1.GetMapPosition().Y< 0) 
+	if(_position.Y -  map1.GetMapPosition().Y< 0) {
 		_position.Y = map1.GetMapPosition().Y;
-	else if(_position.Y + _spriteDimension.Y -  map1.GetMapPosition().Y > 600) 
+		_velocity.Y = 0;
+	}
+	else if(_position.Y + _spriteDimension.Y -  map1.GetMapPosition().Y > 600) {
+		_jumpEnable = true;
 		_position.Y = 600 - _spriteDimension.Y +  map1.GetMapPosition().Y;
+	}
 	
 }
 void Player::Draw(WindowSurface screen)
@@ -218,43 +220,37 @@ void Player::Draw(WindowSurface screen)
 	_surface.Draw(screen, (Sint16)_position.X, (Sint16)_position.Y, &GetFrame());
 }
 void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float timeDiff){
-	if(_buttonUp || _buttonDown)
-	{
-		int Y;
-		if(_buttonUp)
-		{
-			//For animation
-			_frame=13+_animationState;_lastFrame = 12;
-			//The new y position after walking if up
-			Y = (int)((_position.Y - _velocity.Y*timeDiff) / map.GetTileDimension().Y);
+	int Y;
+	if(_velocity.Y < 0){
+		//The new y position after walking if up
+		Y = (int)((_position.Y + _velocity.Y*timeDiff) / map.GetTileDimension().Y);
+	}
+	else {
+		//The new y position after walking if down
+		Y = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y) / map.GetTileDimension().Y);
+	}
+	//The left edge x coord
+	int X1 = (int)(_position.X / map.GetTileDimension().X);
+	//The right edge x coord
+	int X2 = (int)((_position.X + _spriteDimension.X) / map.GetTileDimension().X);
+	Point2D left((float)X1, (float)Y);
+	Point2D right((float)X2, (float)Y);
+	//IF both edges dont hit anything, the player can walk freely upwards or downwards
+	if(map.GetCharType(left) < 2 && map.GetCharType(right) < 2){
+		_position.Y += _velocity.Y*timeDiff;
+	}
+	//The player hit a block, so now it can only walk the difference between player and the block
+	else {
+		if(_velocity.Y < 0){
+			double yDiff = abs(_position.Y - ((Y+1) * map.GetTileDimension().Y));
+			_position.Y += (float)(yDiff-1);
+			_velocity.Y = 0;
 		}
 		else {
-			//For animation
-			_frame=1+_animationState;_lastFrame = 0;
-			//The new y position after walking if down
-			Y = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y) / map.GetTileDimension().Y);
-		}
-		//The left edge x coord
-		int X1 = (int)(_position.X / map.GetTileDimension().X);
-		//The right edge x coord
-		int X2 = (int)((_position.X + _spriteDimension.X) / map.GetTileDimension().X);
-		Point2D left((float)X1, (float)Y);
-		Point2D right((float)X2, (float)Y);
-		//IF both edges dont hit anything, the player can walk freely upwards or downwards
-		if(map.GetCharType(left) < 2 && map.GetCharType(right) < 2){
-			if(_buttonUp) {_position.Y -= _velocity.Y*timeDiff;}
-			else {_position.Y += _velocity.Y*timeDiff;}
-		}
-		//The player hit a block, so now it can only walk the difference between player and the block
-		else {
-			if(_buttonUp){
-				double yDiff = abs(_position.Y - ((Y+1) * map.GetTileDimension().Y));
-				_position.Y -= (float)(yDiff-1);
-			}
-			else {
-				double yDiff = abs(_position.Y + _spriteDimension.Y - (Y *map.GetTileDimension().Y));
-				_position.Y += (float)(yDiff-1);
-			}
+			double yDiff = abs(_position.Y + _spriteDimension.Y - (Y *map.GetTileDimension().Y));
+			_position.Y += (float)(yDiff-1);
+			_velocity.Y = 50;
+			_jumpEnable = true;
 		}
 	}
 	if(_buttonLeft || _buttonRight){

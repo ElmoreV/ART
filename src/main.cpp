@@ -40,7 +40,7 @@ int main( int argc, char* args[] )
 	map1.AddTile('b', 64, 36);
 
 	Player player("Images/player.png", 0, 0, 3, 3, 4);
-	player.SetVelocity(50, 50); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
+	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 	player.MaskColor(120, 195, 128);
 
 	/* If using array for map
