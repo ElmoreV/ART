@@ -72,11 +72,11 @@ public:
 				Point2D off=_canvas.GetOffset();
 				off.X=-off.X;
 				off.Y=-off.Y;
-				sfScreen.DrawLine(point.X-off.X-2,point.Y-off.Y,point2.X-off.X-2,point2.Y-off.Y,255,0,0);
-				sfScreen.DrawLine(point.X-off.X-1,point.Y-off.Y-2,point2.X-off.X-1,point2.Y-off.Y-2,255,255,0);
-				sfScreen.DrawLine(point.X-off.X,point.Y-off.Y-1,point2.X-off.X,point2.Y-off.Y-1,0,255,255);
-				sfScreen.DrawLine(point.X-off.X+1,point.Y-off.Y+1,point2.X-off.X+1,point2.Y-off.Y+1,255,0,255);
-				sfScreen.DrawLine(point.X-off.X+2,point.Y-off.Y+2,point2.X-off.X+2,point2.Y-off.Y+2,255,0,0);
+				sfScreen.DrawLine((int)(point.X-off.X-2),(int)(point.Y-off.Y),(int)(point2.X-off.X-2),(int)(point2.Y-off.Y),255,0,0);
+				sfScreen.DrawLine((int)(point.X-off.X-1),(int)(point.Y-off.Y-2),(int)(point2.X-off.X-1),(int)(point2.Y-off.Y-2),255,255,0);
+				sfScreen.DrawLine((int)(point.X-off.X),(int)(point.Y-off.Y-1),(int)(point2.X-off.X),(int)(point2.Y-off.Y-1),0,255,255);
+				sfScreen.DrawLine((int)(point.X-off.X+1),(int)(point.Y-off.Y+1),(int)(point2.X-off.X+1),(int)(point2.Y-off.Y+1),255,0,255);
+				sfScreen.DrawLine((int)(point.X-off.X+2),(int)(point.Y-off.Y+2),(int)(point2.X-off.X+2),(int)(point2.Y-off.Y+2),255,0,0);
 
 			}
 		}

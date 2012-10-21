@@ -35,7 +35,7 @@ void VectorDraw::SetNewPoint(float x, float y)
 					if (offX<0.0||offX>=_width)
 					{
 						//X=0, or X=_width, depending on which boundary is crossed by offX
-						nextX=offX<0.0?0:_width-1;
+						nextX=offX<0.0?0.0f:_width-1;
 						//y=(X-c)*(b-d)/(a-c)+d
 						nextY=(nextX-offX)*(inPoint.Y-offY)/(inPoint.X-offX)+offY;
 
@@ -43,7 +43,7 @@ void VectorDraw::SetNewPoint(float x, float y)
 					else if (offY<0||offY>=_height)
 					{
 						//y=0 or y=_height, depending on crossing top or bottom
-						nextY=offY<0.0?0:_height-1;
+						nextY=offY<0.0?0.0f:_height-1;
 						//x=(x-c)*(a-c)/(b-d)+c
 						nextX=(nextY-offY)*(inPoint.X-offX)/(inPoint.Y-offY)+offX;
 					}
@@ -72,7 +72,7 @@ void VectorDraw::SetNewPoint(float x, float y)
 					//X=0, or X=_width, depending on which boundary is crossed by offX
 					nextX=_lastPoint.X<0.0?0:_width-1;
 					//y=(X-c)*(b-d)/(a-c)+d
-					nextY=(nextX-offX)*(_lastPoint.Y-offY)/(_lastPoint.X-offX)+offY;
+					nextY=(int)((nextX-offX)*(_lastPoint.Y-offY)/(_lastPoint.X-offX)+offY);
 					
 				}
 				else if (_lastPoint.Y<0||_lastPoint.Y>=_height)
@@ -81,7 +81,7 @@ void VectorDraw::SetNewPoint(float x, float y)
 					//y=0 or y=_height, depending on crossing top or bottom
 					nextY=_lastPoint.Y<0.0?0:_height-1;
 					//x=(x-c)*(a-c)/(b-d)+c
-					nextX=(nextY-offY)*(_lastPoint.X-offX)/(_lastPoint.Y-offY)+offX;
+					nextX=(int)((nextY-offY)*(_lastPoint.X-offX)/(_lastPoint.Y-offY)+offX);
 				}
 				_lastPoint.X=-0xFFFF;
 				_lastPoint.Y=-0xFFFF;
