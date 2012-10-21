@@ -179,23 +179,30 @@ Player::Player(std::string filename, float X, float Y, int interval, int spriteX
 	_animationState = 0;
 	_lastFrame = 1;
 };
-void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=Y;}
+void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
 void Player::Update(Map map1, long lastTick){
 	//Update animation image for the player
 	_frame = _lastFrame;
 	if((_buttonLeft || _buttonRight) && (_countInterval > _interval)){
 		_countInterval = 0;
 		_animationState++;
-		if(_animationState > 2){_animationState = 0;}
+		if(_animationState > 2)
+			_animationState = 0;
 	}
 	_countInterval++;
 	
 	//Timedifference, important for time-based movement
 	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
 	//For the jump
-	if(_velocity.Y < _maxVelocity) _velocity.Y += timeDiff*_maxVelocity;
+	if(_velocity.Y == 0) 
+		_velocity.Y++;
+	else if(_velocity.Y < _maxVelocity) 
+		_velocity.Y += timeDiff*_maxVelocity;
 	//Initiate jump if button up is pressed
-	if(_buttonUp && _jumpEnable) {_velocity.Y = (float)-_maxVelocity; _jumpEnable = false; }
+	if(_buttonUp && _jumpEnable) {
+		_velocity.Y = (float)-_maxVelocity; 
+		_jumpEnable = false; 
+	}
 	//Handles walking and collision
 	HandleCollision(map1, 800, 600, timeDiff);
 
@@ -236,19 +243,23 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 	Point2D left((float)X1, (float)Y);
 	Point2D right((float)X2, (float)Y);
 	//IF both edges dont hit anything, the player can walk freely upwards or downwards
-	if(map.GetCharType(left) < 2 && map.GetCharType(right) < 2){
+	int charTypeLeft = map.GetCharType(left);
+	int charTypeRight = map.GetCharType(right);
+
+	if(charTypeLeft < 2 && charTypeRight < 2){
 		_position.Y += _velocity.Y*timeDiff;
+
 	}
 	//The player hit a block, so now it can only walk the difference between player and the block
 	else {
 		if(_velocity.Y < 0){
-			double yDiff = abs(_position.Y - ((Y+1) * map.GetTileDimension().Y));
-			_position.Y += (float)(yDiff-1);
+			//double yDiff = abs(_position.Y - ((Y+1) * map.GetTileDimension().Y));
+			_position.Y = (Y+1)*map.GetTileDimension().Y;
 			_velocity.Y = 0;
 		}
-		else {
-			double yDiff = abs(_position.Y + _spriteDimension.Y - (Y *map.GetTileDimension().Y));
-			_position.Y += (float)(yDiff-1);
+		else if(_velocity.Y > 0) {
+			//double yDiff = abs(_position.Y + _spriteDimension.Y - (Y *map.GetTileDimension().Y));
+			_position.Y = (Y*map.GetTileDimension().Y) - _spriteDimension.Y;
 			_velocity.Y = 50;
 			_jumpEnable = true;
 		}
