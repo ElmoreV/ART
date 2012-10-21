@@ -2,6 +2,7 @@
 #include "SDLFramework.h"
 #include "Object.h"
 #include "map.h"
+#include "Drawing.h"
 
 class FPS
 {
@@ -26,12 +27,12 @@ int main( int argc, char* args[] )
 	InitSDL();
 	WindowSurface screen(800,600);
 
-	SDL_ShowCursor(0);
+	//SDL_ShowCursor(0);
 	long Timer = clock();//For Frame Independent Movement
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-
+	DrawingObject drawer(800,600);
 	Map map1("Images/tilesheet.png", 64, 36, "Map/map.txt");
 	map1.AddTile('x', 0, 0, 0, 36);
 	map1.AddTile('y', 64, 0, 36, 0);
@@ -53,11 +54,12 @@ int main( int argc, char* args[] )
 		{
 			if (sEvent.type==SDL_QUIT){gameRunning=false;}
 			player.HandleEvent(sEvent);
+			drawer.HandleEvent(sEvent);
 		}
 		player.Update(map1, Timer);
 		screen.ClearWindow();
 		map1.Draw(screen);
-		
+		drawer.Draw(screen);
 		player.Draw(screen);
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 

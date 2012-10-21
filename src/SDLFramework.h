@@ -7,7 +7,7 @@
 #define IMAGE
 //#define FONT
 //#define AUDIO
-//#define DRAWING
+#define DRAWING
 #define ERROR
 //General declarations
 #include <string>
