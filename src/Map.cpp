@@ -114,50 +114,72 @@ int Map::GetCharType(Point2D collisionPoint){
 	}
 	return 0;
 }
+TileData Map::GetTileData(unsigned int x, unsigned int y){
+	TileData td(0, 0, 0, 0);
+	if(_mapArray.size()>y){
+		const char* charline = _mapArray.at(y).c_str();
+		td = _tileLibrary.find(charline[x])->second;
+	}
+	return td;
+
+}
+
 //Returns the dimensions of a single tile
 Point2D Map::GetTileDimension() { return _tileDimension; }
 //Returns the position of the map which is displayed
 Point2D Map::GetMapPosition() { return _mapPosition; }
 //Returns the height of empty pixels @ the position
 float Map::GetHeightAtPosition(Point2D position){
+	//std::stringstream ss;
 	int y = (int)(position.Y / _tileDimension.Y);
 	int x = (int)(position.X / _tileDimension.X);
 	float height = 0;
+	//ss << x << "  " << y << "  " << position.X << "  " << position.Y;
+	int charType = GetCharType(Point2D((float)x, (float)y));
+	if(charType == 2) return 0; //NormalBlock
+	y--;
 	while(y >= 0){
 		if(GetCharType(Point2D((float)x, (float)y)) >= 2){
 			break;
 		}
 		else {y--; height+= _tileDimension.Y;}
 	}
-	if(GetCharType(Point2D((float)x, (float)(position.Y/_tileDimension.Y))) < 2){
-		y = (int)(position.Y / _tileDimension.Y)+1;
-		while((Uint32)y <= _mapArray.size()){
-			int chart = GetCharType(Point2D((float)x, (float)y));
-				if(chart == 1){y++; height+= _tileDimension.Y;}
-				else if(chart == 3){
-					const char* charline = _mapArray.at(y).c_str();
-					TileData tiledat = _tileLibrary.find(charline[x])->second;
-					int slopeLeft, slopeRight;
-					tiledat.GetSlope(slopeLeft, slopeRight);
-					float form = (slopeRight - slopeLeft) / _tileDimension.X;
-					float dif = position.X - ((int)(position.X/_tileDimension.X))*_tileDimension.X;
-					height += (slopeLeft<slopeRight)?_tileDimension.Y-dif*form:dif*form*-1;
-					break;
-
-				}
-				else break;
-			}
+	y = (int)(position.Y / _tileDimension.Y);
+	while((unsigned)y <= _mapArray.size()){
+		charType = GetCharType(Point2D((float)x, (float)y));
+		if(charType == 2) break;
+		else if(charType == 3){
+			TileData td = GetTileData(x, y);
+			int y1, y2;
+			td.GetSlope(y1, y2);
+			float diff = position.X - x * _tileDimension.X;
+			float ratio = (y2-y1)/_tileDimension.X;
+			float h = y2>y1?_tileDimension.Y - ratio*diff:ratio*diff*-1;
+			height += h;
+			break;
 		}
+		else {y++; height+= _tileDimension.Y;}
+	}
+	//Error er; er.HandleError(Caption, ss.str());
 	return height;
 
 }
 //Returns the height of a slope @ a positionX
-float Map::GetSlopeHeight(int x, int y, float positionX){
+float Map::GetSlopeHeight(Point2D position){
+	int x = (int)(position.X / _tileDimension.X);
+	int y = (int)(position.Y / _tileDimension.Y);
 	const char* charline = _mapArray.at(y).c_str();
 	TileData tiledat = _tileLibrary.find(charline[x])->second;
-	int slopeLeft, slopeRight;
-	tiledat.GetSlope(slopeLeft, slopeRight);
-	float form = (slopeRight - slopeLeft) / _tileDimension.X;
-	float dif = positionX - ((int)(positionX/_tileDimension.X))*_tileDimension.X;
-	return (slopeLeft<slopeRight)?dif*form:_tileDimension.Y+dif*form;
+	int y1, y2;
+	tiledat.GetSlope(y1, y2);
+	if(y1 > y2){
+		float diff = position.X-x*_tileDimension.X;
+		float ratio = (y1-y2)/_tileDimension.X;
+		return diff * ratio - y1 + _tileDimension.Y;
+	}
+	else {
+		float diff = position.X-x*_tileDimension.X;
+		float ratio = (y2-y1)/_tileDimension.X;
+		return _tileDimension.Y - diff * ratio - y1;
+	}
 }
