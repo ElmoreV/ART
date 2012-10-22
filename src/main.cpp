@@ -34,8 +34,10 @@ int main( int argc, char* args[] )
 	SDL_Event sEvent;
 	DrawingObject drawer(800,600);
 	Map map1("Images/tilesheet.png", 64, 36, "Map/map.txt");
+	//normal blocks
 	map1.AddTile('x', 0, 0, 0, 36);
 	map1.AddTile('y', 64, 0, 36, 0);
+	//slopes
 	map1.AddTile('a', 0, 36);
 	map1.AddTile('b', 64, 36);
 	map1.AddTile('c', 0, 72, 0, 18);
