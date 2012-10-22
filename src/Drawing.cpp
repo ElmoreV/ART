@@ -141,14 +141,6 @@ void VectorDraw::Optimize(float precision)
 			beginPoint=_points[i];
 			middlePoint=_points[i+1];
 			endPoint=_points[i+2];
-			//Font font;
-			//font.OpenFont("Another.ttf");
-			//font.SetColor(0xff,0xff,0xff);
-			//std::stringstream integer; integer<<beginPoint.X<<","<<beginPoint.Y<<" "
-			//	<<middlePoint.X<<","<<middlePoint.Y<<" "
-			//	<<endPoint.X<<","<<endPoint.Y;
-			//std::string str; str=integer.str();
-			//bamboozle.RenderText(font,str.c_str());
 			//Check if the last two are the same, cause that would be silly
 			if (endPoint.X==middlePoint.X&&endPoint.Y==middlePoint.Y)
 			{
