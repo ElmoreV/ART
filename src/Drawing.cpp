@@ -13,15 +13,15 @@ void VectorDraw::SetNewPoint(float x, float y)
 		{_recurseChecker=0;return;}
 		//If you weren't drawing, you sure are now!
 		if (!_drawing){_drawing=true;}
-		//if you draw at screenX=300, and the surface is turned 100x to the left (-100)
-		//You actually draw at X=400
-		float offX=x-_offset.X;
-		float offY=y-_offset.Y;
+		//if you draw at screenX=300, and the surface is turned 100px to the left (-100)
+		//You actually draw at X=300- -100  =400
+		float surfaceX=x-_offset.X;
+		float surfaceY=y-_offset.Y;
 		//Check if it's inside the boundaries
-		if (offX<0||offY<0||offX>=_width||offY>=_height)
+		if (surfaceX<0||surfaceY<0||surfaceX>=_width||surfaceY>=_height)
 		{
-			//It's outside
-			//If it wasn't already outside
+			//The new point is outside the surface
+			//if the last point was undefined (because it was inside)
 			if (_lastPoint.X==-0xFFFF)
 			{
 				//Find the last point inside the surface on the line between this point and the other point
@@ -30,31 +30,75 @@ void VectorDraw::SetNewPoint(float x, float y)
 				//and outsidePoint(c,d)
 				Point2D inPoint=_points[_points.size()-1];
 				float nextX=0,nextY=0;
-				if (inPoint.X!=-0xFFFF)//If you were actually already drawing
+				//You needed to be already drawing (so no 'stop' point).
+				if (inPoint.X!=-0xFFFF)
 				{
-					if (offX<0.0||offX>=_width)
+					//if new point is left or right of the surface
+					if (surfaceX<0.0||surfaceX>=_width)
 					{
-						//X=0, or X=_width, depending on which boundary is crossed by offX
-						nextX=offX<0.0?0.0f:_width-1;
+						//X=0, or X=_width, depending on which boundary is crossed by surfaceX
+						nextX=surfaceX<0.0?0.0f:_width-1;
 						//y=(X-c)*(b-d)/(a-c)+d
-						nextY=(nextX-offX)*(inPoint.Y-offY)/(inPoint.X-offX)+offY;
+						nextY=(nextX-surfaceX)*(inPoint.Y-surfaceY)/(inPoint.X-surfaceX)+surfaceY;
 
 					}
-					else if (offY<0||offY>=_height)
+					else if (surfaceY<0||surfaceY>=_height)
 					{
 						//y=0 or y=_height, depending on crossing top or bottom
-						nextY=offY<0.0?0.0f:_height-1;
-						//x=(x-c)*(a-c)/(b-d)+c
-						nextX=(nextY-offY)*(inPoint.X-offX)/(inPoint.Y-offY)+offX;
+						nextY=surfaceY<0.0?0.0f:_height-1;
+						//x=(y-c)*(a-c)/(b-d)+c
+						nextX=(nextY-surfaceY)*(inPoint.X-surfaceX)/(inPoint.Y-surfaceY)+surfaceX;
 					}
 					SetNewPoint(nextX+_offset.X,nextY+_offset.Y);
 				}
 
+			}else// If both points were outside
+			{
+				//If any of the two points are on the same side, do nothing
+				if ((surfaceX<0.0&&_lastPoint.X<0.0)
+				||(surfaceX>_width&&_lastPoint.X>=_width)
+				||(surfaceY<0.0&&_lastPoint.Y<0.0)
+				||(surfaceY>_height&&_lastPoint.Y>=_height))
+				{}
+				else
+				{
+					//TODO: for when they cut a corner
+					float nextX=0,nextY=0;
+					if (surfaceX<0.0||surfaceX>=_width)
+					{
+						//X=0, or X=_width, depending on which boundary is crossed by surfaceX
+						nextX=surfaceX<0.0?0.0f:_width-1;
+						//y=(X-c)*(b-d)/(a-c)+d
+						nextY=(nextX-surfaceX)*(_lastPoint.Y-surfaceY)/(_lastPoint.X-surfaceX)+surfaceY;
+
+					}else if (surfaceY<0.0||surfaceY>=_height)
+					{
+						//y=0 or y=_height, depending on crossing top or bottom
+						nextY=surfaceY<0.0?0.0f:_height-1;
+						//x=(y-c)*(a-c)/(b-d)+c
+						nextX=(nextY-surfaceY)*(_lastPoint.X-surfaceX)/(_lastPoint.Y-surfaceY)+surfaceX;
+					}
+					if (nextX<0||nextY<0||nextX>=_width||nextY>=_height)
+					{
+
+					}else
+					{SetNewPoint(nextX+_offset.X,nextY+_offset.Y);}
+				}
+				//Check the last point
+				//Check the first point in contact with the line
+					//If no contact, break
+					//If contact, get second point
+					//Set two points
+					//Set marker to outside again
+					//
+
+
 			}
-			//Anyway, just update the values
-			_lastPoint.X=offX;
-			_lastPoint.Y=offY;
-			//Oh, and add a point indicating not to continue drawing this shizzle, if it's not already done
+
+			//This point needs to be remembered for when it goes inside again
+			_lastPoint.X=surfaceX;
+			_lastPoint.Y=surfaceY;
+			//The new point is outside, so we indicate it with an 'stop' marker
 			if (_points[_points.size()-1].X!=-0xFFFF)
 			{
 				Point2D stopPoint(-0xFFFF,-0xFFFF);
@@ -62,26 +106,30 @@ void VectorDraw::SetNewPoint(float x, float y)
 			}
 		}else
 		{
-			//If it was outside before, get the line, and set the last point to undefined
+			//The new point is inside the surface
+			//The last point was defined (so outside the surface), get the line, and set the last point to undefined
 			if (_lastPoint.X!=-0xFFFF)
 			{
 				int nextX=0, nextY=0;
+				//If the lastpoint was left or right of the surface
 				if (_lastPoint.X<0.0||_lastPoint.X>=_width)
 				{
 					//Point insidePoint=_points[_points.size()-1];
-					//X=0, or X=_width, depending on which boundary is crossed by offX
+					//X=0, or X=_width, depending on which boundary is crossed by surfaceX
 					nextX=_lastPoint.X<0.0?0:_width-1;
+					//(y-d)=(x-c)*(b-d)/(a-c)
 					//y=(X-c)*(b-d)/(a-c)+d
-					nextY=(int)((nextX-offX)*(_lastPoint.Y-offY)/(_lastPoint.X-offX)+offY);
+					nextY=(int)((nextX-surfaceX)*(_lastPoint.Y-surfaceY)/(_lastPoint.X-surfaceX)+surfaceY);
 					
 				}
+				//if the last point was above or below the surface
 				else if (_lastPoint.Y<0||_lastPoint.Y>=_height)
 				{
 					//Point insidePoint=_points[_points.size()-1];
 					//y=0 or y=_height, depending on crossing top or bottom
 					nextY=_lastPoint.Y<0.0?0:_height-1;
 					//x=(x-c)*(a-c)/(b-d)+c
-					nextX=(int)((nextY-offY)*(_lastPoint.X-offX)/(_lastPoint.Y-offY)+offX);
+					nextX=(int)((nextY-surfaceY)*(_lastPoint.X-surfaceX)/(_lastPoint.Y-surfaceY)+surfaceX);
 				}
 				_lastPoint.X=-0xFFFF;
 				_lastPoint.Y=-0xFFFF;
@@ -89,7 +137,7 @@ void VectorDraw::SetNewPoint(float x, float y)
 				
 			}
 			//It's inside, so just plot the point
-			Point2D newPoint(offX,offY);
+			Point2D newPoint(surfaceX,surfaceY);
 			_points.push_back(newPoint);
 			
 		}

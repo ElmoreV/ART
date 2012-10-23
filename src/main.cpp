@@ -32,7 +32,7 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	DrawingObject drawer(800,600);
+	DrawingObject drawer(400,400);
 	Map map1("Images/tilesheet.png", 64, 36, "Map/map.txt");
 	//normal blocks
 	map1.AddTile('x', 0, 0, 0, 36);
