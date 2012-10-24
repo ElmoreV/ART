@@ -28,12 +28,17 @@ private:
 class DrawingObject
 {
 public:
-	DrawingObject(int width, int height):_canvas(width,height){_mousePressed=false;_canvas.SetDrawMode(false);};
+	DrawingObject(int width, int height, int x, int y):_canvas(width,height)
+	{
+		_mousePressed=false;
+		_canvas.SetDrawMode(false);
+		_canvas.ChangeOffset(x,y);
+	};
 	void HandleEvent(SDL_Event sEvent)
 	{
 		if (sEvent.type==SDL_MOUSEBUTTONDOWN)
 		{
-
+			_canvas.SetDrawMode(true);
 			_canvas.SetNewPoint(sEvent.button.x,sEvent.button.y);
 			_mousePressed=true;
 
@@ -43,12 +48,12 @@ public:
 			if (_mousePressed)
 			{
 				_canvas.SetNewPoint(sEvent.button.x,sEvent.button.y);
-
 			}
 		}else if (sEvent.type==SDL_MOUSEBUTTONUP)
 		{
 			_mousePressed=false;
 			_canvas.SetDrawMode(false);
+
 		}else if (sEvent.type==SDL_KEYDOWN)
 		{
 				
@@ -81,10 +86,10 @@ public:
 			}
 		}
 	}
+	VectorDraw& GetDrawing(){return _canvas;}
 private:
 	bool _mousePressed;
 	VectorDraw _canvas;
-	Surface _suffie;
 };
 
 
