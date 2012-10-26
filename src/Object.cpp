@@ -279,17 +279,14 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 						_jumpEnable = true;
 					}
 					else if(ly1 > ly2 && ry1 < ry2){
-						/*
-						bug, still not fixed :(
 						//A little cheat because normal map.getslopeheight(P) gives 10^9 as values
 						int d = ly2==0?31:15;
 							if((Y-1) * map.GetTileDimension().Y + d > _position.Y + _velocity.Y*timeDiff){
 								_position.Y += _velocity.Y*timeDiff;
 							}
 							else {_position.Y = (Y-1)*map.GetTileDimension().Y+d;
-							*/
 						_velocity.Y = 50;
-						_jumpEnable = true;
+						_jumpEnable = true;}
 						handled=true;
 					}
 				}
