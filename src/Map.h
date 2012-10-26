@@ -4,7 +4,6 @@
 #include "Point.h"
 #include <map>
 #include <fstream>
-#include <sstream>
 #include <vector>
 class TileData{
 private:
@@ -36,10 +35,9 @@ public:
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
 	bool ReadFile(std::string filename);
 	int GetCharType(Point2D collisionPoint);
-	TileData GetTileData(unsigned int x, unsigned int y);
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
 	float GetHeightAtPosition(Point2D position);
-	float GetSlopeHeight(Point2D position);
+	float GetSlopeHeight(int x, int y, float positionX);
 };
 #endif
