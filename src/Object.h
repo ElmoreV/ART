@@ -54,9 +54,7 @@ public:
 	Player(std::string filename, float X, float Y, int interval, int spriteX=1, int spriteY=1);
 	//Update the position based on the velocity and draws the clip on screen
 	void SetVelocity(float X, float Y);
-	//Draws the players
 	void Draw(WindowSurface screen);
-	//Updates the player (move collision etc)
 	void Update(Map map1, long lastTick=-1);
 };
 #endif
