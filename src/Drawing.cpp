@@ -30,8 +30,6 @@ void VectorDraw::SetNewPoint(float x, float y)
 		if (!_drawing)
 		{return;}
 
-		if (_recurseChecker==2)
-		{_divisionByZero=true;}
 		if (_recurseChecker++>3)
 		{_recurseChecker=0;
 		return;}
@@ -85,10 +83,6 @@ void VectorDraw::SetNewPoint(float x, float y)
 				{
 					float tempX=surfaceX, tempY=surfaceY;
 					float nextX=0,nextY=0;
-					if (FloatEq(surfaceY,_lastPoint.Y))
-					{
-						_divisionByZero=true;
-					}
 					if (surfaceX<0.0||surfaceX>=_width)
 					{
 						//X=0, or X=_width, depending on which boundary is crossed by surfaceX
@@ -142,9 +136,6 @@ void VectorDraw::SetNewPoint(float x, float y)
 				{
 					_lastPoint.X=-0xFFFF;
 					_lastPoint.Y=-0xFFFF;
-				}else
-				{
-					_divisionByZero=true;
 				}
 				SetNewPoint(nextX+_offset.X,nextY+_offset.Y);	
 			}
