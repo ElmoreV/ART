@@ -1,5 +1,7 @@
 #include "Drawing.h"
 
+inline bool FloatEq(float a,float b){return (a-b>-0.0001&&a-b<0.0001);}
+
 inline float GetXForYBetweenPoints(float Y, float x1, float y1, float x2, float y2)
 {
 	//x=(y-y1)*(x2-x1)/(y2-y1)+x1
@@ -28,8 +30,11 @@ void VectorDraw::SetNewPoint(float x, float y)
 		if (!_drawing)
 		{return;}
 
+		if (_recurseChecker==2)
+		{_divisionByZero=true;}
 		if (_recurseChecker++>3)
-		{_recurseChecker=0;return;}
+		{_recurseChecker=0;
+		return;}
 		
 		//if you draw at screenX=300, and the surface is turned 100px to the left (-100)
 		//You actually draw at X=300- -100  =400
@@ -40,30 +45,32 @@ void VectorDraw::SetNewPoint(float x, float y)
 		{
 			//The new point is outside the surface
 			
-			if (_lastPoint.X==-0xFFFF)//if the last point was undefined (because it was inside)
+			if (FloatEq(_lastPoint.X,-0xFFFF))//if the last point was undefined (because it was inside)
 			{
 				//Find the last point inside the surface on the line between this point and the other point
 				//Search in every quadrant
 				//with insidePoint (a,b)
 				//and outsidePoint(c,d)
 				Point2D inPoint=_points[_points.size()-1];
-				float nextX=0,nextY=0;
+				
 				//You needed to be already drawing (so no 'stop' point).
-				if (inPoint.X!=-0xFFFF)
+				if (!FloatEq(inPoint.X,-0xFFFF))
 				{
+					float nextX=0,nextY=0;
+					float tempX=surfaceX,tempY=surfaceY;
 					//if new point is left or right of the surface
 					if (surfaceX<0.0||surfaceX>=_width)
 					{
 						//X=0, or X=_width, depending on which boundary is crossed by surfaceX
-						nextX=surfaceX<0.0?0.0f:_width-1;
+						nextX=surfaceX<0.0?0.0f:_width-0.01f;
 						nextY=::GetYForXBetweenPoints(nextX,surfaceX,surfaceY,inPoint.X,inPoint.Y);
-
+						tempX=nextX;tempY=nextY;
 					}
-					else if (surfaceY<0||surfaceY>=_height)
+					if (tempY<0||tempY>=_height)
 					{
 						//y=0 or y=_height, depending on crossing top or bottom
-						nextY=surfaceY<0.0?0.0f:_height-1;
-						nextX=GetXForYBetweenPoints(nextY,surfaceX,surfaceY,inPoint.X,inPoint.Y);
+						nextY=tempY<0.0?0.0f:_height-0.01f;
+						nextX=GetXForYBetweenPoints(nextY,tempX,tempY,inPoint.X,inPoint.Y);
 					}
 					SetNewPoint(nextX+_offset.X,nextY+_offset.Y);
 				}
@@ -72,32 +79,37 @@ void VectorDraw::SetNewPoint(float x, float y)
 			{
 				//If any of the two points are on the same side, do nothing
 				if (!((surfaceX<0.0&&_lastPoint.X<0.0)
-				||(surfaceX>_width&&_lastPoint.X>=_width)
 				||(surfaceY<0.0&&_lastPoint.Y<0.0)
-				||(surfaceY>_height&&_lastPoint.Y>=_height)))
+				||(surfaceX>=_width&&_lastPoint.X>=_width)
+				||(surfaceY>=_height&&_lastPoint.Y>=_height)))
 				{
+					float tempX=surfaceX, tempY=surfaceY;
 					float nextX=0,nextY=0;
+					if (FloatEq(surfaceY,_lastPoint.Y))
+					{
+						_divisionByZero=true;
+					}
 					if (surfaceX<0.0||surfaceX>=_width)
 					{
 						//X=0, or X=_width, depending on which boundary is crossed by surfaceX
-						nextX=surfaceX<0.0?0.0f:_width-1;
+						nextX=surfaceX<0.0?0.0f:_width-0.01f;
 						nextY=::GetYForXBetweenPoints(nextX,surfaceX,surfaceY,_lastPoint.X,_lastPoint.Y);
-
-					}else if (surfaceY<0.0||surfaceY>=_height)
+						tempX=nextX; tempY=nextY;
+					}
+					if (tempY<0.0||tempY>=_height)
 					{
 						//y=0 or y=_height, depending on crossing top or bottom
-						nextY=surfaceY<0.0?0.0f:_height-1;
-						nextX=GetXForYBetweenPoints(nextY,surfaceX,surfaceY,_lastPoint.X,_lastPoint.Y);
+						nextY=tempY<0.0?0.0f:_height-0.01f;
+						nextX=GetXForYBetweenPoints(nextY,tempX,tempY,_lastPoint.X,_lastPoint.Y);
 					}
-					if (nextX>=0||nextY>=0||nextX<_width||nextY<_height)//if the corresponding x or y are within range
-					{SetNewPoint(nextX+_offset.X,nextY+_offset.Y);}
+					SetNewPoint(nextX+_offset.X,nextY+_offset.Y);
 				}
 			}
 			//This point needs to be remembered for when it goes inside again
 			_lastPoint.X=surfaceX;
 			_lastPoint.Y=surfaceY;
 
-			//The new point is outside, so we indicate it with an 'stop' marker
+			//The new point is outside, so we indicate it with an 'stop' marker, if it's not already there
 			if (_points[_points.size()-1].X!=-0xFFFF)
 			{
 				Point2D stopPoint(-0xFFFF,-0xFFFF);
@@ -110,22 +122,30 @@ void VectorDraw::SetNewPoint(float x, float y)
 			if (_lastPoint.X!=-0xFFFF)
 			{
 				float nextX=0, nextY=0;
+				float tempX=_lastPoint.X,tempY=_lastPoint.Y;
 				//If the lastpoint was left or right of the surface
 				if (_lastPoint.X<0.0||_lastPoint.X>=_width)
 				{
 					//X=0, or X=_width, depending on which boundary is crossed by surfaceX
-					nextX=_lastPoint.X<0.0?0.0f:_width-1.0f;
-					nextY=::GetYForXBetweenPoints(nextX,surfaceX,surfaceY,_lastPoint.X,_lastPoint.Y);		
+					nextX=_lastPoint.X<0.0?0.0f:_width-0.01f;
+					nextY=::GetYForXBetweenPoints(nextX,surfaceX,surfaceY,_lastPoint.X,_lastPoint.Y);	
+					tempX=nextX;tempY=nextY;
 				}
 				//if the last point was above or below the surface
-				else if (_lastPoint.Y<0||_lastPoint.Y>=_height)
+				if (tempY<0||tempY>=_height)
 				{
 					//y=0 or y=_height, depending on crossing top or bottom
-					nextY=_lastPoint.Y<0.0?0.0f:_height-1.0f;
-					nextX=GetXForYBetweenPoints(nextY,surfaceX,surfaceY,_lastPoint.X,_lastPoint.Y);
+					nextY=tempY<0.0?0.0f:_height-0.01f;
+					nextX=GetXForYBetweenPoints(nextY,surfaceX,surfaceY,tempX,tempY);
 				}
-				_lastPoint.X=-0xFFFF;
-				_lastPoint.Y=-0xFFFF;
+				if (nextX>=0&&nextY>=0&&nextX<_width&&nextY<_height)
+				{
+					_lastPoint.X=-0xFFFF;
+					_lastPoint.Y=-0xFFFF;
+				}else
+				{
+					_divisionByZero=true;
+				}
 				SetNewPoint(nextX+_offset.X,nextY+_offset.Y);	
 			}
 			//It's inside, so just plot the point

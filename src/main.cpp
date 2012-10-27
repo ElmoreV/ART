@@ -34,6 +34,8 @@ int main( int argc, char* args[] )
 	SDL_Event sEvent;
 	DrawingObject drawer(64,36,64*5,36*5);
 	DrawingObject drawer2(64,36,64*6,36*5);
+	DrawingObject drawer3(64,36,64*5,36*6);
+	DrawingObject drawer4(64,36,64*6,36*6);
 	Map map1("Images/tilesheet.png", 64, 36, "Map/map.txt");
 	map1.AddTile('x', 0, 0, 0, 36);
 	map1.AddTile('y', 64, 0, 36, 0);
@@ -57,12 +59,16 @@ int main( int argc, char* args[] )
 			player.HandleEvent(sEvent);
 			drawer.HandleEvent(sEvent);
 			drawer2.HandleEvent(sEvent);
+			drawer3.HandleEvent(sEvent);
+			drawer4.HandleEvent(sEvent);
 		}
 		player.Update(map1, Timer);
 		screen.ClearWindow();
 		map1.Draw(screen);
 		drawer.Draw(screen);
 		drawer2.Draw(screen);
+		drawer3.Draw(screen);
+		drawer4.Draw(screen);
 		player.Draw(screen);
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 

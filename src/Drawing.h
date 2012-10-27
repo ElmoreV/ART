@@ -22,6 +22,7 @@ private:
 	Point2D _offset;
 	Point2D _lastPoint;
 	std::vector<Point2D> _points;
+	bool _divisionByZero;
 };
 
 //TODO: Decent drawingobject class. Easily manageable
@@ -61,6 +62,24 @@ public:
 			_canvas.Optimize(1);
 			if (sEvent.key.keysym.sym==SDLK_DELETE)
 			_canvas.Clear();
+			if (sEvent.key.keysym.sym==SDLK_INSERT)
+			{
+				int mostLeft=64*5;
+				int mostTop=36*5;
+				_canvas.SetDrawMode(true);
+				//Test 1
+				//_canvas.SetNewPoint(64*6-.01,36*3);
+				//_canvas.SetNewPoint(64*6-.01,36*8);
+				//Test 2
+				//_canvas.SetNewPoint(64*3,36*6-.01);
+				//_canvas.SetNewPoint(64*8,36*6-.01);
+				//Test 3 - diagonal lines
+				_canvas.SetNewPoint(mostLeft-10,mostTop+30);
+				_canvas.SetNewPoint(mostLeft+64*2+7,mostTop+36*2+10);
+				//_canvas.SetNewPoint(64*6,36*7);
+				//_canvas.SetNewPoint(64*7,36*6);
+				_canvas.SetDrawMode(false);
+			}
 		}
 	}
 	void Draw(WindowSurface sfScreen)
@@ -77,11 +96,11 @@ public:
 				Point2D off=_canvas.GetOffset();
 				off.X=-off.X;
 				off.Y=-off.Y;
-				sfScreen.DrawLine((int)(point.X-off.X-2),(int)(point.Y-off.Y),(int)(point2.X-off.X-2),(int)(point2.Y-off.Y),255,0,0);
 				sfScreen.DrawLine((int)(point.X-off.X-1),(int)(point.Y-off.Y-2),(int)(point2.X-off.X-1),(int)(point2.Y-off.Y-2),255,255,0);
-				sfScreen.DrawLine((int)(point.X-off.X),(int)(point.Y-off.Y-1),(int)(point2.X-off.X),(int)(point2.Y-off.Y-1),0,255,255);
-				sfScreen.DrawLine((int)(point.X-off.X+1),(int)(point.Y-off.Y+1),(int)(point2.X-off.X+1),(int)(point2.Y-off.Y+1),255,0,255);
-				sfScreen.DrawLine((int)(point.X-off.X+2),(int)(point.Y-off.Y+2),(int)(point2.X-off.X+2),(int)(point2.Y-off.Y+2),255,0,0);
+				sfScreen.DrawLine((int)(point.X-off.X-2),(int)(point.Y-off.Y-1),(int)(point2.X-off.X-2),(int)(point2.Y-off.Y-1),255,0,0);
+				sfScreen.DrawLine((int)(point.X-off.X),(int)(point.Y-off.Y),(int)(point2.X-off.X),(int)(point2.Y-off.Y-1),255,0,255);
+				sfScreen.DrawLine((int)(point.X-off.X+1),(int)(point.Y-off.Y+1),(int)(point2.X-off.X+1),(int)(point2.Y-off.Y+1),255,255,255);
+				sfScreen.DrawLine((int)(point.X-off.X+2),(int)(point.Y-off.Y+2),(int)(point2.X-off.X+2),(int)(point2.Y-off.Y+2),0,255,255);
 
 			}
 		}
