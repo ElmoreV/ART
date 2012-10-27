@@ -1,17 +1,30 @@
 #include "map.h"
-TileData::TileData(int x, int y, int width, int height){
-	X=x;Y=y;Width=width;Height=height;_isSlope=false;
+TileData::TileData(int x, int y, int width, int height, bool solid){
+	X=x;Y=y;Width=width;Height=height;_isSlope=false;_isSolid=solid;
 }
 TileData::TileData(int x, int y, int width, int height, int slopeleft, int sloperight){
-	X=x;Y=y;Width=width;Height=height;_isSlope=true;_slopeLeft=slopeleft;_slopeRight=sloperight;
+	X=x;Y=y;Width=width;Height=height;_isSlope=true;_slopeLeft=slopeleft;_slopeRight=sloperight;_isSolid=true;
+
 }
 SDL_Rect TileData::Rect(){
 	SDL_Rect value =  {X, Y, Width, Height};
 	return value;
 }
 bool TileData::IsSlope(){return _isSlope; }
-void TileData::GetSlope(int& y1, int& y2){ y1=_slopeLeft; y2=_slopeRight; }
-
+bool TileData::IsSolid(){return _isSolid; }
+void TileData::GetSlope(int& y1, int& y2){ 
+	if(_isSlope){y1=_slopeLeft; y2=_slopeRight;}
+	else if(!_isSolid){y1=0;y2=0;}
+	else { y1=1;y2=1;}
+}
+TileData Map::GetTileData(unsigned int x, unsigned int y){	
+  TileData td(0, 0, 0, 0);
+  if(_mapArray.size()>y){
+    const char* charline = _mapArray.at(y).c_str();
+    td = _tileLibrary.find(charline[x])->second;
+  }
+  return td;
+}
 
 //Initialize map (leave string map empty if using array)
 Map::Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map)
@@ -122,42 +135,68 @@ Point2D Map::GetMapPosition() { return _mapPosition; }
 float Map::GetHeightAtPosition(Point2D position){
 	int y = (int)(position.Y / _tileDimension.Y);
 	int x = (int)(position.X / _tileDimension.X);
+
 	float height = 0;
+	int charType = GetCharType(Point2D((float)x, (float)y));
+	
+	if(charType == 2) //NormalBlock
+		return 0; 
+	y--;
+	
 	while(y >= 0){
-		if(GetCharType(Point2D((float)x, (float)y)) >= 2){
+		if(GetCharType(Point2D((float)x, (float)y)) >= 2)
+			break;
+		else {
+			y--; 
+			height+= _tileDimension.Y;
+		}
+	}
+
+	y = (int)(position.Y / _tileDimension.Y);
+	while((unsigned)y <= _mapArray.size()){
+		charType = GetCharType(Point2D((float)x, (float)y));
+		if(charType == 2) 
+			break;
+		else if(charType == 3) {
+			TileData td = GetTileData(x, y);
+			int y1, y2; td.GetSlope(y1, y2);
+
+			float diff = position.X - x * _tileDimension.X;
+			float ratio = (y2-y1)/_tileDimension.X;
+			float h = y2>y1?_tileDimension.Y - ratio*diff:ratio*diff*-1;
+			height += h;
 			break;
 		}
-		else {y--; height+= _tileDimension.Y;}
-	}
-	if(GetCharType(Point2D((float)x, (float)(position.Y/_tileDimension.Y))) < 2){
-		y = (int)(position.Y / _tileDimension.Y)+1;
-		while((Uint32)y <= _mapArray.size()){
-			int chart = GetCharType(Point2D((float)x, (float)y));
-				if(chart == 1){y++; height+= _tileDimension.Y;}
-				else if(chart == 3){
-					const char* charline = _mapArray.at(y).c_str();
-					TileData tiledat = _tileLibrary.find(charline[x])->second;
-					int slopeLeft, slopeRight;
-					tiledat.GetSlope(slopeLeft, slopeRight);
-					float form = (slopeRight - slopeLeft) / _tileDimension.X;
-					float dif = position.X - ((int)(position.X/_tileDimension.X))*_tileDimension.X;
-					height += (slopeLeft<slopeRight)?_tileDimension.Y-dif*form:dif*form*-1;
-					break;
-
-				}
-				else break;
-			}
+		else {
+			y++; 
+			height+= _tileDimension.Y;
 		}
+	}
 	return height;
-
 }
 //Returns the height of a slope @ a positionX
-float Map::GetSlopeHeight(int x, int y, float positionX){
+float Map::GetSlopeHeight(Point2D position){
+	int x = (int)(position.X / _tileDimension.X);
+	int y = (int)(position.Y / _tileDimension.Y);
+	//out of range check
+	if(y > _mapArray.size()) return 0;
+	if(x >_mapArray[y].size()) return 0;
+
 	const char* charline = _mapArray.at(y).c_str();
 	TileData tiledat = _tileLibrary.find(charline[x])->second;
-	int slopeLeft, slopeRight;
-	tiledat.GetSlope(slopeLeft, slopeRight);
-	float form = (slopeRight - slopeLeft) / _tileDimension.X;
-	float dif = positionX - ((int)(positionX/_tileDimension.X))*_tileDimension.X;
-	return (slopeLeft<slopeRight)?dif*form:_tileDimension.Y+dif*form;
+	int y1, y2;
+	tiledat.GetSlope(y1, y2);
+	float h;
+	if(y1 > y2){
+		float diff = position.X-x*_tileDimension.X;
+		float ratio = (y1-y2)/_tileDimension.X;
+		h = diff * ratio - y1 + _tileDimension.Y;
+	}
+	else {
+		float diff = position.X-x*_tileDimension.X;
+		float ratio = (y2-y1)/_tileDimension.X;
+		h = _tileDimension.Y - diff * ratio - y1;
+	}
+	if(h > 1000) return 0;
+	return h;
 }

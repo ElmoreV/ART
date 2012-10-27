@@ -7,14 +7,15 @@
 #include <vector>
 class TileData{
 private:
-	bool _isSlope;
+	bool _isSlope, _isSolid;
 	int _slopeLeft, _slopeRight;
 public:
 	int X, Y, Width, Height;
-	TileData(int x, int y, int width, int height);
+	TileData(int x, int y, int width, int height, bool solid=false);
 	TileData(int x, int y, int width, int height, int slopeleft, int sloperight);
 	SDL_Rect Rect();
 	bool IsSlope();
+	bool IsSolid();
 	void GetSlope(int& y1, int& y2);
 };
 typedef std::map<char, TileData> Dictionary;
@@ -37,7 +38,8 @@ public:
 	int GetCharType(Point2D collisionPoint);
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
+	TileData GetTileData(unsigned int x, unsigned int y);
 	float GetHeightAtPosition(Point2D position);
-	float GetSlopeHeight(int x, int y, float positionX);
+	float GetSlopeHeight(Point2D position);
 };
 #endif

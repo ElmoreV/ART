@@ -41,6 +41,10 @@ int main( int argc, char* args[] )
 	map1.AddTile('y', 64, 0, 36, 0);
 	map1.AddTile('a', 0, 36);
 	map1.AddTile('b', 64, 36);
+ 	map1.AddTile('c', 0, 72, 0, 18);
+ 	map1.AddTile('d', 64, 72, 18, 36);
+ 	map1.AddTile('e', 0, 108, 36, 18);
+ 	map1.AddTile('f', 64, 108, 18, 0);
 
 	Player player("Images/player.png", 0, 0, 3, 3, 4);
 	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)

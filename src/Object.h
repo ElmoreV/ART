@@ -3,6 +3,7 @@
 #include "SDLFramework.h"
 #include "Point.h"
 #include "Map.h"
+#include <sstream>
 #include <iostream>
 #include <fstream>
 #include <strstream>
