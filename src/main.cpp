@@ -2,7 +2,7 @@
 #include "SDLFramework.h"
 #include "Object.h"
 #include "map.h"
-#include "Drawing.h"
+#include "DrawingObject.h"
 
 class FPS
 {
