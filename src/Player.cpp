@@ -157,6 +157,7 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 			}
 			int Y1 = (int)(_position.Y / map.GetTileDimension().Y); // Top edge of sprite
 			int Y2 = (int)((_position.Y + _spriteDimension.Y - 1) / map.GetTileDimension().Y); //bottom edge of sprite
+			
 			Point2D top((float)X, (float)Y1);
 			Point2D bot((float)X, (float)Y2);
 			int charTypeTop = map.GetCharType(top);
@@ -175,52 +176,62 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 				//Get tile data
 				TileData slopeLeft = map.GetTileData(X1, Y2);
 				TileData slopeRight = map.GetTileData(X2, Y2);
-				int ly1, ly2, ry1, ry2;
-				slopeLeft.GetSlope(ly1, ly2);
-				slopeRight.GetSlope(ry1, ry2);
-				if(ly1==ly2==1) {ly1=ly2=0; }
-				if(ry1==ry2==1) {ry1=ry2=0; }
-				float hl = map.GetHeightAtPosition(Point2D(dx, _position.Y));
-				float hr = map.GetHeightAtPosition(Point2D(dx+_spriteDimension.X, _position.Y));
-				//IF player hits the high side of a slope, so he can walk through
-				if(_buttonLeft && (int)(_position.X/map.GetTileDimension().X)>X1 &&
-					Y2*map.GetTileDimension().Y-_position.Y<=ly2 && ly2 > ry1 && abs(ly2 - ry1) > 1){
-					_position.X = (X1+1)*map.GetTileDimension().X;
+				TileData slopeTop = _buttonLeft?map.GetTileData(X1, Y1):map.GetTileData(X2, Y1);
+				if(Y1<Y2 && charTypeTop == 3){
+					if(_buttonLeft)
+						_position.X -= (X+1) * map.GetTileDimension().X ;
+					else 
+						_position.X = X*map.GetTileDimension().X-_spriteDimension.X;
+				
 				}
-				//IF player hits the high side of a slope, so he can walk through
-				else if(_buttonRight && (int)((_position.X+_spriteDimension.X)/map.GetTileDimension().X)<X2 && 
-					Y2*map.GetTileDimension().Y-_position.Y<=ry1 && ry1 > ly2 && abs(ly2 - ry1) > 1){
-					_position.X = X2*map.GetTileDimension().X-_spriteDimension.X-1;
-				}
-				else {
-					float newpos;
-					bool handled = false;
-					//walking up a downward slope: \ <-direction
-					if(ly1 > ly2 && _buttonLeft && hl > _spriteDimension.Y){ //down
-						float diff=_position.X - (X1 * map.GetTileDimension().X);
-						float ratio = (ly1-ly2)/map.GetTileDimension().X;
-						newpos = Y2 * map.GetTileDimension().Y + diff * ratio - _spriteDimension.Y - ly1 + map.GetTileDimension().Y;
-						handled = true;
+				else{
+					int ly1, ly2, ry1, ry2;
+					slopeLeft.GetSlope(ly1, ly2);
+					slopeRight.GetSlope(ry1, ry2);
+					if(ly1==ly2==1) {ly1=ly2=0; }
+					if(ry1==ry2==1) {ry1=ry2=0; }
+					float hl = map.GetHeightAtPosition(Point2D(dx, _position.Y));
+					float hr = map.GetHeightAtPosition(Point2D(dx+_spriteDimension.X, _position.Y));
+					//IF player hits the high side of a slope, so he can walk through
+					if(_buttonLeft && (int)(_position.X/map.GetTileDimension().X)>X1 &&
+						Y2*map.GetTileDimension().Y-_position.Y<=ly2 && ly2 > ry1 && abs(ly2 - ry1) > 1){
+						_position.X = (X1+1)*map.GetTileDimension().X;
 					}
-					//walking up a downward slope: direction-> /
-					else if(ry1 < ry2 && _buttonRight && hr>_spriteDimension.Y){ //Up
-						float diff = _position.X+_spriteDimension.X-(X2*map.GetTileDimension().X);
-						float ratio = (ry2-ry1)/map.GetTileDimension().X;
-						newpos = Y2 * map.GetTileDimension().Y + map.GetTileDimension().Y - diff * ratio - _spriteDimension.Y;
-						handled = true;
+					//IF player hits the high side of a slope, so he can walk through
+					else if(_buttonRight && (int)((_position.X+_spriteDimension.X)/map.GetTileDimension().X)<X2 && 
+						Y2*map.GetTileDimension().Y-_position.Y<=ry1 && ry1 > ly2 && abs(ly2 - ry1) > 1){
+						_position.X = X2*map.GetTileDimension().X-_spriteDimension.X-1;
 					}
-					//handles player pos
-					if(handled && newpos < _position.Y){
-						_position.Y = newpos;
-						//_velocity.Y = 50;
-						//_jumpEnable = true;
+					else {
+						float newpos;
+						bool handled = false;
+						//walking up a downward slope: \ <-direction
+						if(ly1 > ly2 && _buttonLeft && hl > _spriteDimension.Y){ //down
+							float diff=_position.X - (X1 * map.GetTileDimension().X);
+							float ratio = (ly1-ly2)/map.GetTileDimension().X;
+							newpos = Y2 * map.GetTileDimension().Y + diff * ratio - _spriteDimension.Y - ly1 + map.GetTileDimension().Y;
+							handled = true;
+						}
+						//walking up a downward slope: direction-> /
+						else if(ry1 < ry2 && _buttonRight && hr>_spriteDimension.Y){ //Up
+							float diff = _position.X+_spriteDimension.X-(X2*map.GetTileDimension().X);
+							float ratio = (ry2-ry1)/map.GetTileDimension().X;
+							newpos = Y2 * map.GetTileDimension().Y + map.GetTileDimension().Y - diff * ratio - _spriteDimension.Y;
+							handled = true;
+						}
+						//handles player pos
+						if(handled && newpos < _position.Y){
+							_position.Y = newpos;
+							//_velocity.Y = 50;
+							//_jumpEnable = true;
+						}
+						//checks of the player can walk left or right
+						//(IF there is no ceiling lower then spriteheight)
+						if(_buttonLeft && hl>_spriteDimension.Y)
+							_position.X -= _velocity.X*timeDiff;
+						else if(_buttonRight && hr>_spriteDimension.Y)
+							_position.X += _velocity.X*timeDiff;
 					}
-					//checks of the player can walk left or right
-					//(IF there is no ceiling lower then spriteheight)
-					if(_buttonLeft && hl>_spriteDimension.Y)
-						_position.X -= _velocity.X*timeDiff;
-					else if(_buttonRight && hr>_spriteDimension.Y)
-						_position.X += _velocity.X*timeDiff;
 				}
 			}
 			//Minimal one edge hit a block, so now it can only move the difference between the block and the player
@@ -233,7 +244,6 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 					double xDiff = abs(_position.X + _spriteDimension.X - (X*map.GetTileDimension().X));
 					_position.X += (float)(xDiff-1);
 				}
-
 			}
 		}
 	}

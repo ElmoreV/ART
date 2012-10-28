@@ -30,8 +30,8 @@ protected:
 	Point2D _tileDimension, _mapPosition;
 public:
 	Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map="");
-	void Draw(SDL_Surface* screen);
-	void Draw(SDL_Surface* screen, const char* mapArray[], unsigned int aantalRijen);
+	void Draw(WindowSurface screen);
+	void Draw(WindowSurface screen, const char* mapArray[], unsigned int aantalRijen);
 	bool AddTile(char key, int x, int y);
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
 	bool ReadFile(std::string filename);

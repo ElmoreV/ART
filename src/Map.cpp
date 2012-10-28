@@ -69,7 +69,7 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 
 }
 //Draws the excisting map on the screen
-void Map::Draw(SDL_Surface* screen)
+void Map::Draw(WindowSurface screen)
 {
 	const char* charline;
 	for(unsigned int y = 0; y < _mapArray.size(); y++)
@@ -81,14 +81,15 @@ void Map::Draw(SDL_Surface* screen)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
 				SDL_Rect clip = td.Rect();
-				SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-				SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
+				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 			}
 		}
 	}
 }
 //Draws a new map
-void Map::Draw(SDL_Surface* screen,const char* mapArray[], unsigned int aantalRijen)
+void Map::Draw(WindowSurface screen,const char* mapArray[], unsigned int aantalRijen)
 {
 	const char* charline;
 	unsigned int y = 0;
@@ -101,8 +102,9 @@ void Map::Draw(SDL_Surface* screen,const char* mapArray[], unsigned int aantalRi
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
 				SDL_Rect clip = td.Rect();
-				SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-				SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
+				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 			}
 		}
 	}
