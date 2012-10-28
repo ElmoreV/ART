@@ -32,6 +32,7 @@ public:
 	void Draw(WindowSurface screen);//Draws (clip of) surface on the screen
 	void HandleEvent(SDL_Event sEvent); //Keep up if arrowbuttons are pressed
 	void SetPosition(float X, float Y);//Changes the position of the object
+	void SetPosition(Point2D position);
 	void SetVelocity(float X, float Y);
 	void SetFrame(int frame);//Set the animation (if it has more then 1)
 	void Free(); //Releases resources of the object

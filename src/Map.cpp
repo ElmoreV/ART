@@ -29,24 +29,37 @@ TileData Map::GetTileData(unsigned int x, unsigned int y){
 //Initialize map (leave string map empty if using array)
 Map::Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map)
 {
-	_tileSheet.LoadImage(tileSheet.c_str(), 255, 255, 255); //TileSheet
+	LoadTileSheet(tileSheet); //TileSheet
 	_tileDimension.X = (float)tileWidth; //Width of a tile
 	_tileDimension.Y = (float)tileHeight; //Height of a tile
-	if(map != "") ReadFile(map);
 	_spawnLocation = '#';
+	_newMapChar = '@';
+	if(map != "") ReadFile(map);
+}
+void Map::LoadTileSheet(std::string tileSheet){
+	_tileSheet.LoadImage(tileSheet.c_str(), 255, 255, 255);
 }
 //Read the file and push lines into vector
 bool Map::ReadFile(std::string filename)
 {
+	_mapArray.clear();
 	_lines=0;
 	std::ifstream streamer;
 	streamer.open(filename.c_str());
 	if(!streamer) return false;
 	std::string line;
+	size_t dx;
 	while(!streamer.eof())
 	{
 		std::getline(streamer, line);
+		//Check if there is a spawnchar in it
+		dx = line.find(_spawnLocation);
+		if(dx != std::string::npos) {
+			_spawnPosition.X = int(dx)*_tileDimension.X;
+			_spawnPosition.Y = _lines*_tileDimension.Y;
+		}
 		_mapArray.push_back(line);
+		_lines++;
 	}
 	return true;
 }
@@ -77,7 +90,7 @@ void Map::Draw(WindowSurface screen)
 		charline = _mapArray.at(y).c_str();
 		for(unsigned int x = 0; x < strlen(charline); x++)
 		{
-			if(_tileLibrary.count(charline[x]) != 0)
+			if(_tileLibrary.count(charline[x]) != 0 && charline[x] != _spawnLocation)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
 				SDL_Rect clip = td.Rect();
@@ -115,11 +128,13 @@ int Map::GetCharType(Point2D collisionPoint){
 	//1 = none
 	//2 = normal
 	//3 = slope
+	//4 = newMap
 	const char* charline;
 	if(_mapArray.size() > collisionPoint.Y){
 		charline = _mapArray.at((int)collisionPoint.Y).c_str();
 		if(strlen(charline) > collisionPoint.X){
-			if(charline[(int)collisionPoint.X] == '-') return 1;
+			if(charline[(int)collisionPoint.X] == _newMapChar) return 4;
+			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return 1;
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
 				if(td.IsSlope()) return 3;
@@ -202,20 +217,37 @@ float Map::GetSlopeHeight(Point2D position){
 	if(h > 1000) return 0;
 	return h;
 }
+//Center the map
 void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 	float maxX = _tileDimension.X * _mapArray[0].size();
 	float maxY = _tileDimension.Y * _mapArray.size();
-	if(centerPoint.X <= screenSize.X / 2)
-		_mapPosition.X = 0;
-	else if(centerPoint.X >= maxX - screenSize.X / 2)
-		_mapPosition.X = maxX - screenSize.X;
-	else 
-		_mapPosition.X = centerPoint.X - screenSize.X / 2;
-
-	if(centerPoint.Y <= screenSize.Y / 2)
-		_mapPosition.Y = 0;
-	else if(centerPoint.Y >= maxY - screenSize.Y / 2)
-		_mapPosition.Y = maxY - screenSize.Y;
-	else 
-		_mapPosition.Y = centerPoint.Y - screenSize.Y / 2;
+	if(maxX > screenSize.X){
+		if(centerPoint.X <= screenSize.X / 2)
+			_mapPosition.X = 0;
+		else if(centerPoint.X >= maxX - screenSize.X / 2)
+			_mapPosition.X = maxX - screenSize.X;
+		else 
+			_mapPosition.X = centerPoint.X - screenSize.X / 2;
+	}
+	else _mapPosition.X = 0;
+	if(maxY > screenSize.Y){
+		if(centerPoint.Y <= screenSize.Y / 2)
+			_mapPosition.Y = 0;
+		else if(centerPoint.Y >= maxY - screenSize.Y / 2)
+			_mapPosition.Y = maxY - screenSize.Y;
+		else 
+			_mapPosition.Y = centerPoint.Y - screenSize.Y / 2;
+	}
+	else _mapPosition.Y = 0;
+}
+//Loads a new map
+bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeight, std::string tileSheet){
+	if(tileSheet != ""){
+		_tileSheet.LoadImage(tileSheet, 255, 255, 255);
+		_tileDimension.X = (float)tileWidth;
+		_tileDimension.Y = (float)tileHeight;
+	}
+	if(map == "") return false;
+	_spawnPosition.X =0; _spawnPosition.Y = 0;
+	ReadFile(map);
 }

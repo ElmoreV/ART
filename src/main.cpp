@@ -37,7 +37,7 @@ int main( int argc, char* args[] )
 	DrawingObject drawer2(64,36,64*6,36*5);
 	DrawingObject drawer3(64,36,64*5,36*6);
 	DrawingObject drawer4(64,36,64*6,36*6);
-	Map map1("Images/tilesheet.png", 64, 36, "Map/map.txt");
+	Map map1("Images/tilesheet.png", 64, 36, "Map/map1.txt");
 	map1.AddTile('x', 0, 0, 0, 36);
 	map1.AddTile('y', 64, 0, 36, 0);
 	map1.AddTile('a', 0, 36);
@@ -47,7 +47,7 @@ int main( int argc, char* args[] )
  	map1.AddTile('e', 0, 108, 36, 18);
  	map1.AddTile('f', 64, 108, 18, 0);
 
-	Player player("Images/player.png", 0, 0, 3, 3, 4);
+	Player player("Images/player.png", map1.GetSpawnLocation().X, map1.GetSpawnLocation().Y, 3, 3, 4);
 	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 	player.MaskColor(120, 195, 128);
 
@@ -68,6 +68,11 @@ int main( int argc, char* args[] )
 			drawer2.HandleEvent(sEvent);
 			drawer3.HandleEvent(sEvent);
 			drawer4.HandleEvent(sEvent);
+		}
+		//IF a new map can be load
+		if(player.NewMapEnabled()){
+			map1.NewMap("Map/map2.txt");
+			player.SetNewMap(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
 		screen.ClearWindow();

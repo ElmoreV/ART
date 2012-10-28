@@ -141,6 +141,7 @@ bool Object::ChangeSprite(std::string filename, int r, int g, int b )
 }
 //Changes the object position
 void Object::SetPosition(float X, float Y){_position.X = X;_position.Y = Y;}
+void Object::SetPosition(Point2D position){_position = position; }
 //Changes the object velocity
 void Object::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = Y;}
 //Set the clipnumber that will be showed (like a book, from left to right, and then from top to bottom)

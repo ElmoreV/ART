@@ -8,6 +8,7 @@ Player::Player(std::string filename, float X, float Y, int interval, int spriteX
 	_countInterval = 0;
 	_animationState = 0;
 	_lastFrame = 1;
+	_newmap=false;
 };
 void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
 void Player::Update(Map map1, int screenWidth, int screenHeight, long lastTick){
@@ -75,7 +76,8 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 		//IF both edges dont hit anything, the player can walk freely upwards or downwards
 		int charTypeLeft = map.GetCharType(left);
 		int charTypeRight = map.GetCharType(right);
-
+		if(charTypeLeft==4){_newmap=true;charTypeLeft=1;}
+		if(charTypeRight==4){_newmap=true;charTypeRight=1;}
 		if(charTypeLeft < 2 && charTypeRight < 2){
 			_position.Y += _velocity.Y*timeDiff;
 
@@ -162,6 +164,9 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 			Point2D bot((float)X, (float)Y2);
 			int charTypeTop = map.GetCharType(top);
 			int charTypeBot = map.GetCharType(bot);
+			if(charTypeBot==4){_newmap = true;charTypeBot=1;}
+			if(charTypeTop==4){_newmap = true;charTypeTop=1;}
+
 			//IF both edge don't hit anything, the player can freely move to left or right
 			if(charTypeTop < 2 && charTypeBot < 2){
 				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
