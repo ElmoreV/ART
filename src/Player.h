@@ -18,8 +18,8 @@ public:
 	void SetVelocity(float X, float Y);
 	void Draw(WindowSurface screen, Point2D mapPosition);
 	void Update(Map map1, int screenWidth, int screenHeight, long lastTick=-1);
-	Point2D GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };
-	bool NewMapEnabled() { return _newmap;};
-	void SetNewMap(Point2D position){_position=position; _newmap=false;};
+	Point2D GetCenter();
+	bool NewMapEnabled();
+	void SetNewMap(Point2D position);
 };
 #endif

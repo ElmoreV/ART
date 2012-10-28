@@ -148,6 +148,10 @@ int Map::GetCharType(Point2D collisionPoint){
 Point2D Map::GetTileDimension() { return _tileDimension; }
 //Returns the position of the map which is displayed
 Point2D Map::GetMapPosition() { return _mapPosition; }
+//Returns the spawnposition of the player
+Point2D Map::GetSpawnLocation(){return _spawnPosition; }
+//Sets the offset of the map, so from where it must be showed
+void Map::SetMapPosition(float x, float y){ _mapPosition.X = x; _mapPosition.Y = y; };
 //Returns the height of empty pixels @ the position
 float Map::GetHeightAtPosition(Point2D position){
 	int y = (int)(position.Y / _tileDimension.Y);

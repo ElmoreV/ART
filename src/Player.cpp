@@ -253,3 +253,6 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 		}
 	}
 }
+Point2D Player::GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };
+bool Player::NewMapEnabled() { return _newmap;};
+void Player::SetNewMap(Point2D position){_position=position; _newmap=false;};

@@ -39,8 +39,8 @@ public:
 	int GetCharType(Point2D collisionPoint);
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
-	Point2D GetSpawnLocation(){return _spawnPosition; }
-	void SetMapPosition(float x, float y){ _mapPosition.X = x; _mapPosition.Y = y; };
+	Point2D GetSpawnLocation();
+	void SetMapPosition(float x, float y);
 	TileData GetTileData(unsigned int x, unsigned int y);
 	float GetHeightAtPosition(Point2D position);
 	float GetSlopeHeight(Point2D position);
