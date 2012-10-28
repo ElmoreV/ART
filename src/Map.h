@@ -30,16 +30,18 @@ protected:
 	Point2D _tileDimension, _mapPosition;
 public:
 	Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map="");
-	void Draw(SDL_Surface* screen);
-	void Draw(SDL_Surface* screen, const char* mapArray[], unsigned int aantalRijen);
+	void Draw(WindowSurface screen);
+	void Draw(WindowSurface screen, const char* mapArray[], unsigned int aantalRijen);
 	bool AddTile(char key, int x, int y);
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
 	bool ReadFile(std::string filename);
 	int GetCharType(Point2D collisionPoint);
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
+	void SetMapPosition(float x, float y){ _mapPosition.X = x; _mapPosition.Y = y; };
 	TileData GetTileData(unsigned int x, unsigned int y);
 	float GetHeightAtPosition(Point2D position);
 	float GetSlopeHeight(Point2D position);
+	void SetNewMapPosition(Point2D screenSize, Point2D centerPoint);
 };
 #endif

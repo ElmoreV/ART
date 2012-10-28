@@ -69,7 +69,7 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 
 }
 //Draws the excisting map on the screen
-void Map::Draw(SDL_Surface* screen)
+void Map::Draw(WindowSurface screen)
 {
 	const char* charline;
 	for(unsigned int y = 0; y < _mapArray.size(); y++)
@@ -81,14 +81,15 @@ void Map::Draw(SDL_Surface* screen)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
 				SDL_Rect clip = td.Rect();
-				SDL_Rect offset = {(Uint16)(x * _tileDimension.X), (Uint16)(y * _tileDimension.Y), clip.w, clip.h};
-				SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
+				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 			}
 		}
 	}
 }
 //Draws a new map
-void Map::Draw(SDL_Surface* screen,const char* mapArray[], unsigned int aantalRijen)
+void Map::Draw(WindowSurface screen,const char* mapArray[], unsigned int aantalRijen)
 {
 	const char* charline;
 	unsigned int y = 0;
@@ -101,8 +102,9 @@ void Map::Draw(SDL_Surface* screen,const char* mapArray[], unsigned int aantalRi
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
 				SDL_Rect clip = td.Rect();
-				SDL_Rect offset = {(Uint16)(x * _tileDimension.X), (Uint16)(y * _tileDimension.Y), clip.w, clip.h};
-				SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
+				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 			}
 		}
 	}
@@ -176,8 +178,8 @@ float Map::GetHeightAtPosition(Point2D position){
 }
 //Returns the height of a slope @ a positionX
 float Map::GetSlopeHeight(Point2D position){
-	int x = (int)(position.X / _tileDimension.X);
-	int y = (int)(position.Y / _tileDimension.Y);
+	unsigned int x = (int)(position.X / _tileDimension.X);
+	unsigned int y = (int)(position.Y / _tileDimension.Y);
 	//out of range check
 	if(y > _mapArray.size()) return 0;
 	if(x >_mapArray[y].size()) return 0;
@@ -199,4 +201,21 @@ float Map::GetSlopeHeight(Point2D position){
 	}
 	if(h > 1000) return 0;
 	return h;
+}
+void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
+	float maxX = _tileDimension.X * _mapArray[0].size();
+	float maxY = _tileDimension.Y * _mapArray.size();
+	if(centerPoint.X <= screenSize.X / 2)
+		_mapPosition.X = 0;
+	else if(centerPoint.X >= maxX - screenSize.X / 2)
+		_mapPosition.X = maxX - screenSize.X;
+	else 
+		_mapPosition.X = centerPoint.X - screenSize.X / 2;
+
+	if(centerPoint.Y <= screenSize.Y / 2)
+		_mapPosition.Y = 0;
+	else if(centerPoint.Y >= maxY - screenSize.Y / 2)
+		_mapPosition.Y = maxY - screenSize.Y;
+	else 
+		_mapPosition.Y = centerPoint.Y - screenSize.Y / 2;
 }

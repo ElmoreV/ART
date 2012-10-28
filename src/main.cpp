@@ -1,8 +1,9 @@
 #define IMAGE
 #include "SDLFramework.h"
-#include "Object.h"
-#include "map.h"
+#include "Player.h"
+#include "Map.h"
 #include "DrawingObject.h"
+
 
 class FPS
 {
@@ -60,20 +61,22 @@ int main( int argc, char* args[] )
 		while (SDL_PollEvent(&sEvent))
 		{
 			if (sEvent.type==SDL_QUIT){gameRunning=false;}
+			screen.HandleEvent(sEvent);
 			player.HandleEvent(sEvent);
 			drawer.HandleEvent(sEvent);
 			drawer2.HandleEvent(sEvent);
 			drawer3.HandleEvent(sEvent);
 			drawer4.HandleEvent(sEvent);
 		}
-		player.Update(map1, Timer);
+		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
 		screen.ClearWindow();
+		map1.SetNewMapPosition(Point2D((float)screen.GetWidth(), (float)screen.GetHeight()), player.GetCenter());
 		map1.Draw(screen);
 		drawer.Draw(screen);
 		drawer2.Draw(screen);
 		drawer3.Draw(screen);
 		drawer4.Draw(screen);
-		player.Draw(screen);
+		player.Draw(screen, map1.GetMapPosition());
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 
 		screen.UpdateWindow();
