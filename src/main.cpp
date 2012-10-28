@@ -61,7 +61,8 @@ int main( int argc, char* args[] )
 		while (SDL_PollEvent(&sEvent))
 		{
 			if (sEvent.type==SDL_QUIT){gameRunning=false;}
-			screen.HandleEvent(sEvent);
+			if (sEvent.type == SDL_VIDEORESIZE )
+			{screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
 			player.HandleEvent(sEvent);
 			drawer.HandleEvent(sEvent);
 			drawer2.HandleEvent(sEvent);

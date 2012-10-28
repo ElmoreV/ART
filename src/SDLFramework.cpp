@@ -332,6 +332,7 @@ bool WindowSurface::CreateWindowSurface(int width,int height, int bpp, bool doub
 	if (windowFrame==false){modeFlags|=SDL_NOFRAME;}else{modeFlags|=SDL_RESIZABLE;}
 	//Create the window surface
 	_surface=::SDL_SetVideoMode(width,height,bpp,modeFlags);
+	_width=width;_height=height;
 	if (_surface==0)
 	{		
 		Error error(Exit,"Failed to create window surface");
