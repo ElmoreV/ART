@@ -38,8 +38,10 @@ public:
 	int GetCharType(Point2D collisionPoint);
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
+	void SetMapPosition(float x, float y){ _mapPosition.X = x; _mapPosition.Y = y; };
 	TileData GetTileData(unsigned int x, unsigned int y);
 	float GetHeightAtPosition(Point2D position);
 	float GetSlopeHeight(Point2D position);
+	void SetNewMapPosition(Point2D screenSize, Point2D centerPoint);
 };
 #endif

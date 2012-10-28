@@ -1,7 +1,7 @@
 #define IMAGE
 #include "SDLFramework.h"
-#include "Object.h"
-#include "map.h"
+#include "Player.h"
+#include "Map.h"
 #include "Drawing.h"
 
 class FPS
@@ -68,12 +68,13 @@ int main( int argc, char* args[] )
 		}
 		player.Update(map1, Timer);
 		screen.ClearWindow();
+		map1.SetNewMapPosition(Point2D(800, 600), player.GetCenter());
 		map1.Draw(screen);
 		drawer.Draw(screen);
 		drawer2.Draw(screen);
 		drawer3.Draw(screen);
 		drawer4.Draw(screen);
-		player.Draw(screen);
+		player.Draw(screen, map1.GetMapPosition());
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 
 		screen.UpdateWindow();
