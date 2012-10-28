@@ -10,7 +10,7 @@ Player::Player(std::string filename, float X, float Y, int interval, int spriteX
 	_lastFrame = 1;
 };
 void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
-void Player::Update(Map map1, long lastTick){
+void Player::Update(Map map1, int screenWidth, int screenHeight, long lastTick){
 	//Update animation image for the player
 	_frame = _lastFrame;
 	if((_buttonLeft || _buttonRight) && (_countInterval > _interval)){
@@ -34,20 +34,20 @@ void Player::Update(Map map1, long lastTick){
 		_jumpEnable = false; 
 	}
 	//Handles walking and collision
-	HandleCollision(map1, 800, 600, timeDiff);
+	HandleCollision(map1, screenWidth, screenHeight, timeDiff);
 
 	//Prevents the player from walking out of screen
 	if(_position.X - map1.GetMapPosition().X < 0) 
 		_position.X = map1.GetMapPosition().X ;
-	else if(_position.X + _spriteDimension.X - map1.GetMapPosition().X > 800) 
-		_position.X = 800 - _spriteDimension.X + map1.GetMapPosition().X ;
+	else if(_position.X + _spriteDimension.X - map1.GetMapPosition().X > screenWidth) 
+		_position.X = screenWidth - _spriteDimension.X + map1.GetMapPosition().X ;
 	if(_position.Y -  map1.GetMapPosition().Y< 0) {
 		_position.Y = map1.GetMapPosition().Y;
 		_velocity.Y = 0;
 	}
-	else if(_position.Y + _spriteDimension.Y -  map1.GetMapPosition().Y > 600) {
+	else if(_position.Y + _spriteDimension.Y -  map1.GetMapPosition().Y > screenHeight) {
 		_jumpEnable = true;
-		_position.Y = 600 - _spriteDimension.Y +  map1.GetMapPosition().Y;
+		_position.Y = screenHeight - _spriteDimension.Y +  map1.GetMapPosition().Y;
 	}
 }
 void Player::Draw(WindowSurface screen, Point2D mapPosition)

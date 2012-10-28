@@ -99,6 +99,8 @@ protected:
 //This Surface is special: it's the window, with window-like functions
 class WindowSurface:public BaseSurface
 {
+private:
+	int _width, _height;
 public:
 	WindowSurface();
 	WindowSurface(SDL_Surface* surface);
@@ -107,6 +109,16 @@ public:
 	void SetCaption(std::string caption);
 	bool UpdateWindow();
 	bool ClearWindow(int r=0x00, int g=0x00, int b=0x00);
+	int GetWidth(){return _width;}
+	int GetHeight(){return _height;}
+	void HandleEvent(SDL_Event sEvent){
+		//Updates the window when screen
+		if( sEvent.type == SDL_VIDEORESIZE ){
+			_width = sEvent.resize.w;
+			_height = sEvent.resize.h;
+			SDL_SetVideoMode(sEvent.resize.w, sEvent.resize.h,0,SDL_ANYFORMAT | SDL_RESIZABLE);
+		}
+	};
 #ifdef DRAWING
 	bool DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g, int b);
 	bool DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b);

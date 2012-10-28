@@ -16,7 +16,7 @@ public:
 	//Update the position based on the velocity and draws the clip on screen
 	void SetVelocity(float X, float Y);
 	void Draw(WindowSurface screen, Point2D mapPosition);
-	void Update(Map map1, long lastTick=-1);
+	void Update(Map map1, int screenWidth, int screenHeight, long lastTick=-1);
 	Point2D GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };
 };
 #endif
