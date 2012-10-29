@@ -25,7 +25,7 @@ protected:
 public:
 	//Normal function
 	Object(std::string filename, float X, float Y, int spriteX=1, int spriteY=1); //Constructor
-	SDL_Rect GetBound();//Get the position and dimentions of the object on the screen
+	SDL_Rect GetBound(float velocityX=0, float velocityY=0);//Get the position and dimentions of the object on the screen
 	SDL_Rect GetFrame();//Get the part of the image that is showed
 	bool ChangeSprite(std::string filename, int r=-1, int g=-1, int b=-1); //Changes the surface and set maskcolor
 	bool MaskColor(int r, int g, int b); //Set the colorkey (mask)

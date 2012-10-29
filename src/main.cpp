@@ -33,10 +33,10 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	DrawingObject drawer(64,36,64*5,36*5);
-	DrawingObject drawer2(64,36,64*6,36*5);
-	DrawingObject drawer3(64,36,64*5,36*6);
-	DrawingObject drawer4(64,36,64*6,36*6);
+	//DrawingObject drawer(64,36,64*5,36*5);
+	//DrawingObject drawer2(64,36,64*6,36*5);
+	//DrawingObject drawer3(64,36,64*5,36*6);
+	//DrawingObject drawer4(64,36,64*6,36*6);
 	Map map1("Images/tilesheet.png", 64, 36, "Map/map1.txt");
 	map1.AddTile('x', 0, 0, 0, 36);
 	map1.AddTile('y', 64, 0, 36, 0);
@@ -46,6 +46,7 @@ int main( int argc, char* args[] )
  	map1.AddTile('d', 64, 72, 18, 36);
  	map1.AddTile('e', 0, 108, 36, 18);
  	map1.AddTile('f', 64, 108, 18, 0);
+	map1.AddTile('z', 65, 65, false, true);
 
 	Player player("Images/player.png", map1.GetSpawnLocation().X, map1.GetSpawnLocation().Y, 3, 3, 4);
 	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
@@ -64,10 +65,11 @@ int main( int argc, char* args[] )
 			if (sEvent.type == SDL_VIDEORESIZE )
 			{screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
 			player.HandleEvent(sEvent);
-			drawer.HandleEvent(sEvent);
-			drawer2.HandleEvent(sEvent);
-			drawer3.HandleEvent(sEvent);
-			drawer4.HandleEvent(sEvent);
+			//drawer.HandleEvent(sEvent);
+			//drawer2.HandleEvent(sEvent);
+			//drawer3.HandleEvent(sEvent);
+			//drawer4.HandleEvent(sEvent);
+			map1.HandleEvent(sEvent);
 		}
 		//IF a new map can be load
 		if(player.NewMapEnabled()){
@@ -75,15 +77,14 @@ int main( int argc, char* args[] )
 			player.SetNewMap(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
-		if (drawer4.CheckCollision(player.GetBound()))
-		{}	//Handle collision
+		//if (drawer4.CheckCollision(player.GetBound())){}	//Handle collision
 		screen.ClearWindow();
 		map1.SetNewMapPosition(Point2D((float)screen.GetWidth(), (float)screen.GetHeight()), player.GetCenter());
 		map1.Draw(screen);
-		drawer.Draw(screen);
-		drawer2.Draw(screen);
-		drawer3.Draw(screen);
-		drawer4.Draw(screen);
+		//drawer.Draw(screen);
+		///drawer2.Draw(screen);
+		//drawer3.Draw(screen);
+		//drawer4.Draw(screen);
 		player.Draw(screen, map1.GetMapPosition());
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 

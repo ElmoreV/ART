@@ -2,20 +2,22 @@
 #define MAP_H
 #include "SDLFramework.h"
 #include "Point.h"
+#include "DrawingObject.h"
 #include <map>
 #include <fstream>
 #include <vector>
 class TileData{
 private:
-	bool _isSlope, _isSolid;
+	bool _isSlope, _isSolid, _isDrawable;
 	int _slopeLeft, _slopeRight;
 public:
 	int X, Y, Width, Height;
-	TileData(int x, int y, int width, int height, bool solid=false);
+	TileData(int x, int y, int width, int height, bool solid=false, bool drawable=false);
 	TileData(int x, int y, int width, int height, int slopeleft, int sloperight);
 	SDL_Rect Rect();
 	bool IsSlope();
 	bool IsSolid();
+	bool IsDrawable();
 	void GetSlope(int& y1, int& y2);
 };
 typedef std::map<char, TileData> Dictionary;
@@ -26,13 +28,14 @@ protected:
 	Surface _tileSheet;
 	unsigned int _lines;
 	std::vector<std::string> _mapArray;
+	std::vector<DrawingObject> _drawObjects;
 	char _spawnLocation, _newMapChar;
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
 public:
 	Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map="");
 	void Draw(WindowSurface screen);
 	void Draw(WindowSurface screen, const char* mapArray[], unsigned int aantalRijen);
-	bool AddTile(char key, int x, int y);
+	bool AddTile(char key, int x, int y, bool solid=true, bool drawable=false);
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
 	bool ReadFile(std::string filename);
 	void LoadTileSheet(std::string tileSheet);
@@ -40,6 +43,8 @@ public:
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
 	Point2D GetSpawnLocation();
+	bool HandleEvent(SDL_Event sEvent);
+	bool Map::CheckDrawCollision(SDL_Rect playerBound);
 	void SetMapPosition(float x, float y);
 	TileData GetTileData(unsigned int x, unsigned int y);
 	float GetHeightAtPosition(Point2D position);

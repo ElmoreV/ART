@@ -1,9 +1,9 @@
 #include "map.h"
-TileData::TileData(int x, int y, int width, int height, bool solid){
-	X=x;Y=y;Width=width;Height=height;_isSlope=false;_isSolid=solid;
+TileData::TileData(int x, int y, int width, int height, bool solid, bool drawable){
+	X=x;Y=y;Width=width;Height=height;_isSlope=false;_isSolid=solid;_isDrawable=drawable;
 }
 TileData::TileData(int x, int y, int width, int height, int slopeleft, int sloperight){
-	X=x;Y=y;Width=width;Height=height;_isSlope=true;_slopeLeft=slopeleft;_slopeRight=sloperight;_isSolid=true;
+	X=x;Y=y;Width=width;Height=height;_isSlope=true;_slopeLeft=slopeleft;_slopeRight=sloperight;_isSolid=true;_isDrawable=false;
 
 }
 SDL_Rect TileData::Rect(){
@@ -12,6 +12,7 @@ SDL_Rect TileData::Rect(){
 }
 bool TileData::IsSlope(){return _isSlope; }
 bool TileData::IsSolid(){return _isSolid; }
+bool TileData::IsDrawable(){return _isDrawable;}
 void TileData::GetSlope(int& y1, int& y2){ 
 	if(_isSlope){y1=_slopeLeft; y2=_slopeRight;}
 	else if(!_isSolid){y1=0;y2=0;}
@@ -64,13 +65,11 @@ bool Map::ReadFile(std::string filename)
 	return true;
 }
 //Adds a new normal tile to the dictionary
-bool Map::AddTile(char key, int x, int y){
-	TileData value(x, y, (int)_tileDimension.X, (int)_tileDimension.Y);
-	//SDL_Rect value = {x, y, width, height};
+bool Map::AddTile(char key, int x, int y, bool solid, bool drawable){
+	TileData value(x, y, (int)_tileDimension.X, (int)_tileDimension.Y,solid, drawable);
 	Dictionary::iterator it = _tileLibrary.lower_bound(key);
 	if(it != _tileLibrary.end() && !(_tileLibrary.key_comp()(key, it->first))) { return false; } //Key already exist
 	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
-
 }
 //Adds a new slopetile to the dictionary
 bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
@@ -81,9 +80,15 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
 
 }
+bool Map::HandleEvent(SDL_Event sEvent){
+	for(int i = 0; i < _drawObjects.size(); i++){
+		_drawObjects.at(i).HandleEvent(sEvent);
+	}
+}
 //Draws the excisting map on the screen
 void Map::Draw(WindowSurface screen)
 {
+	int drawings = 0;
 	const char* charline;
 	for(unsigned int y = 0; y < _mapArray.size(); y++)
 	{
@@ -93,10 +98,22 @@ void Map::Draw(WindowSurface screen)
 			if(_tileLibrary.count(charline[x]) != 0 && charline[x] != _spawnLocation)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
-				SDL_Rect clip = td.Rect();
-				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
-				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				if(td.IsDrawable()){
+					if(_drawObjects.size() > drawings){
+						_drawObjects.at(drawings).Draw(screen);
+					}
+					else {
+						_drawObjects.push_back(DrawingObject(_tileDimension.X, _tileDimension.Y, x*_tileDimension.X, y*_tileDimension.Y));
+						_drawObjects.at(drawings).Draw(screen);
+					}
+					drawings++;
+				}
+				else{
+					SDL_Rect clip = td.Rect();
+					//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
+					_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+					//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				}
 			}
 		}
 	}
@@ -138,11 +155,19 @@ int Map::GetCharType(Point2D collisionPoint){
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
 				if(td.IsSlope()) return 3;
-				return 2;
+				else if(td.IsDrawable()) return 5;
+				else if(td.IsSolid()) return 2;
 			}
 		}
 	}
 	return 0;
+}
+bool Map::CheckDrawCollision(SDL_Rect playerBound){
+	for(int i = 0; i < _drawObjects.size(); i++){
+		if(_drawObjects.at(i).CheckCollision(playerBound))
+			return true;
+	}
+	return false;
 }
 //Returns the dimensions of a single tile
 Point2D Map::GetTileDimension() { return _tileDimension; }
@@ -225,24 +250,30 @@ float Map::GetSlopeHeight(Point2D position){
 void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 	float maxX = _tileDimension.X * _mapArray[0].size();
 	float maxY = _tileDimension.Y * _mapArray.size();
+	float newX=0, newY=0;
 	if(maxX > screenSize.X){
 		if(centerPoint.X <= screenSize.X / 2)
-			_mapPosition.X = 0;
+			newX = 0;
 		else if(centerPoint.X >= maxX - screenSize.X / 2)
-			_mapPosition.X = maxX - screenSize.X;
+			newX = maxX - screenSize.X;
 		else 
-			_mapPosition.X = centerPoint.X - screenSize.X / 2;
+			newX = centerPoint.X - screenSize.X / 2;
 	}
-	else _mapPosition.X = 0;
+	else newX = 0;
 	if(maxY > screenSize.Y){
 		if(centerPoint.Y <= screenSize.Y / 2)
-			_mapPosition.Y = 0;
+			newY = 0;
 		else if(centerPoint.Y >= maxY - screenSize.Y / 2)
-			_mapPosition.Y = maxY - screenSize.Y;
+			newY = maxY - screenSize.Y;
 		else 
-			_mapPosition.Y = centerPoint.Y - screenSize.Y / 2;
+			newY = centerPoint.Y - screenSize.Y / 2;
 	}
-	else _mapPosition.Y = 0;
+	else newY = 0;
+	for(int i = 0; i < _drawObjects.size(); i++){
+		_drawObjects.at(i).GetDrawing().ChangeOffset(_mapPosition.X - newX, _mapPosition.Y-newY);
+	}
+	_mapPosition.X = newX;
+	_mapPosition.Y = newY;
 }
 //Loads a new map
 bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeight, std::string tileSheet){
@@ -254,4 +285,5 @@ bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeigh
 	if(map == "") return false;
 	_spawnPosition.X =0; _spawnPosition.Y = 0;
 	ReadFile(map);
+	_drawObjects.clear();
 }

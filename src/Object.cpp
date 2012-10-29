@@ -13,9 +13,9 @@ Object::Object(std::string filename, float X, float Y, int spriteX, int spriteY)
 	_buttonUp=false; _buttonDown=false; _buttonLeft=false; _buttonRight=false;
 }
 //Get a rectangle of the position and the dimentions
-SDL_Rect Object::GetBound()
+SDL_Rect Object::GetBound(float velocityX, float velocityY)
 {
-	SDL_Rect bound = {(Sint16)_position.X, (Sint16)_position.Y, (Sint16)_spriteDimension.X, (Sint16)_spriteDimension.Y};
+	SDL_Rect bound = {(Sint16)_position.X+velocityX, (Sint16)_position.Y+velocityY, (Sint16)_spriteDimension.X, (Sint16)_spriteDimension.Y};
 	return bound;
 }
 //Get a rectangle of the clipimage that is showed on the screen

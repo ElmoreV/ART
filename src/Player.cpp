@@ -80,14 +80,22 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 		if(charTypeRight==4){_newmap=true;charTypeRight=1;}
 		if(charTypeLeft < 2 && charTypeRight < 2){
 			_position.Y += _velocity.Y*timeDiff;
-
 		}
 		//The player hit a block, so now it can only walk the difference between player and the block
 		else {
 			if(_velocity.Y < 0){
+				if ((charTypeLeft == 5 && charTypeRight < 2) || (charTypeRight == 5 && charTypeLeft < 2) ||
+					(charTypeLeft == 5 && charTypeRight == 5)){
+					if(!map.CheckDrawCollision(GetBound(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)))
+						_position.Y += _velocity.Y*timeDiff;
+					else 
+						_velocity.Y = 0;
+				}
+				else {
 				//double yDiff = abs(_position.Y - ((Y+1) * map.GetTileDimension().Y));
 				_position.Y = (Y+1)*map.GetTileDimension().Y;
 				_velocity.Y = 0;
+				}
 			}
 			else if(_velocity.Y > 0) {
 				//double yDiff = abs(_position.Y + _spriteDimension.Y - (Y *map.GetTileDimension().Y));
@@ -98,14 +106,34 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 					_jumpEnable = true;
 				}
 				else if(charTypeLeft == 3 || charTypeRight == 3){
-					
 					//_position.Y += _velocity.Y*timeDiff;
 					TileData tl = map.GetTileData((int)left.X, (int)left.Y);
 					TileData tr = map.GetTileData((int)right.X, (int)right.Y);
 					int yl1, yl2; tl.GetSlope(yl1, yl2);
 					int yr1, yr2; tr.GetSlope(yr1, yr2);
+					if((charTypeRight == 3 && charTypeLeft == 5) || (charTypeLeft == 3 && charTypeRight == 5)){
+						float height = (charTypeLeft==3)?map.GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):
+							map.GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
+						float newpos= (Y*map.GetTileDimension().Y) + height - _spriteDimension.Y;
+						if (newpos>_position.Y + _velocity.Y*timeDiff){
+							newpos =_position.Y+_velocity.Y*timeDiff;
+							if(!map.CheckDrawCollision(GetBound(-map.GetMapPosition().X, -map.GetMapPosition().Y + newpos - _position.Y))){
+								_position.Y = newpos;
+							}
+							else {_velocity.Y = 50; _jumpEnable = true;	}
+						}
+						else {
+							if(!map.CheckDrawCollision(GetBound(-map.GetMapPosition().X, -map.GetMapPosition().Y + newpos - _position.Y))){
+								_position.Y = newpos;
+							}
+							_velocity.Y = 50;
+							_jumpEnable = true;
+						}
+						
+					}
+					
 					//on top of 1 or 2 slopes / or \ or /\ 
-					if((charTypeRight == charTypeLeft && yl2 != yr1 && (int)left.X != (int)right.X) || // if 2 of the same slopes to each other // or \\ 
+					else if((charTypeRight == charTypeLeft && yl2 != yr1 && (int)left.X != (int)right.X) || // if 2 of the same slopes to each other // or \\ 
 						(charTypeLeft == 3 && yl2>yl1 &&  (charTypeRight != 3 || (charTypeRight == 3 && yr1>yr2))) || 
 						(charTypeRight == 3 && yr1>yr2&&(charTypeLeft!=3 || (charTypeLeft==3&&yl2>yl1)))){
 						int h = yl2>yr1?yl2:yr1;
@@ -140,6 +168,14 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 							_jumpEnable = true;
 						}
 					}
+				}
+				
+				else if(charTypeLeft == 5  || charTypeRight == 5){
+					if(!map.CheckDrawCollision(GetBound(-map.GetMapPosition().X, -map.GetMapPosition().Y + _velocity.Y*timeDiff)))
+						_position.Y += _velocity.Y*timeDiff;
+					else {
+						_velocity.Y = 50;
+						_jumpEnable = true;}
 				}
 			}
 		}
@@ -207,6 +243,13 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 						Y2*map.GetTileDimension().Y-_position.Y<=ry1 && ry1 > ly2 && abs(ly2 - ry1) > 1){
 						_position.X = X2*map.GetTileDimension().X-_spriteDimension.X-1;
 					}
+						
+				else if(charTypeTop == 5){
+					float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
+					if(!map.CheckDrawCollision(GetBound(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y - 2))){
+						_position.X += dx;
+					}
+				}
 					else {
 						float newpos;
 						bool handled = false;
@@ -236,6 +279,15 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 							_position.X -= _velocity.X*timeDiff;
 						else if(_buttonRight && hr>_spriteDimension.Y)
 							_position.X += _velocity.X*timeDiff;
+					}
+				}
+			}
+			else if(charTypeBot == 5 || charTypeTop == 5){
+				if((charTypeBot == 5 && (charTypeTop <2 || charTypeTop == 5) && charTypeTop != 2) ||
+					(charTypeTop == 5 && (charTypeBot <2 || charTypeBot == 5) && charTypeBot != 2))		{
+					float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
+					if(!map.CheckDrawCollision(GetBound(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y - 2))){
+						_position.X += dx;
 					}
 				}
 			}
