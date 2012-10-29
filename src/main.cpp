@@ -75,6 +75,8 @@ int main( int argc, char* args[] )
 			player.SetNewMap(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
+		if (drawer4.CheckCollision(player.GetBound()))
+		{}	//Handle collision
 		screen.ClearWindow();
 		map1.SetNewMapPosition(Point2D((float)screen.GetWidth(), (float)screen.GetHeight()), player.GetCenter());
 		map1.Draw(screen);

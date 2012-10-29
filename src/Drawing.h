@@ -13,8 +13,10 @@ public:
 	void SetDrawMode(bool startDrawing=true);
 	void Optimize(float precision);
 	inline Point2D GetPoint(int index){return _points[index];};
-	int GetSize(){return _points.size();}
+	unsigned int GetSize(){return _points.size();}
 	Point2D GetOffset(){return _offset;};
+	int GetWidth(){return _width;}
+	int GetHeight(){return _height;}
 	void Clear(){_points.clear();}
 private:
 	unsigned int _recurseChecker;
