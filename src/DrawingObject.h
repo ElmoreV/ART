@@ -2,6 +2,7 @@
 #define DRAWING_OBJECT_H
 
 #include "Drawing.h"
+#include "Rectangle.h"
 
 
 
@@ -11,7 +12,7 @@ class DrawingObject
 public:
 	DrawingObject(int width, int height, int x, int y);
 	void HandleEvent(SDL_Event sEvent);
-	bool CheckCollision(SDL_Rect Object);
+	bool CheckCollision(Rectangle ObjectRect);
 	void Draw(WindowSurface sfScreen);
 	inline VectorDraw& GetDrawing(){return _canvas;}
 private:

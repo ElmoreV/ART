@@ -44,7 +44,7 @@ public:
 	Point2D GetMapPosition();
 	Point2D GetSpawnLocation();
 	bool HandleEvent(SDL_Event sEvent);
-	bool Map::CheckDrawCollision(SDL_Rect playerBound);
+	bool Map::CheckDrawCollision(Rectangle playerBound);
 	void SetMapPosition(float x, float y);
 	TileData GetTileData(unsigned int x, unsigned int y);
 	float GetHeightAtPosition(Point2D position);

@@ -1,4 +1,5 @@
 #include "Object.h"
+#include "Rectangle.h"
 //Constructor
 Object::Object(std::string filename, float X, float Y, int spriteX, int spriteY)
 {
@@ -18,6 +19,11 @@ SDL_Rect Object::GetBound(float velocityX, float velocityY)
 	SDL_Rect bound = {(Sint16)_position.X+velocityX, (Sint16)_position.Y+velocityY, (Sint16)_spriteDimension.X, (Sint16)_spriteDimension.Y};
 	return bound;
 }
+Rectangle Object::GetBoundR(float velocityX, float velocityY)
+{
+	Rectangle bound(_position.X+velocityX, _position.Y+velocityY, _spriteDimension.X, _spriteDimension.Y);
+	return bound;
+}
 //Get a rectangle of the clipimage that is showed on the screen
 SDL_Rect Object::GetFrame()
 {
@@ -26,6 +32,11 @@ SDL_Rect Object::GetFrame()
 	frames.y = (Sint16)((_frame / _spriteY) * _spriteDimension.Y); //Get Y on the surface
 	frames.w = (Sint16)_spriteDimension.X; //Clip width
 	frames.h = (Sint16)_spriteDimension.Y; //Clip Height
+	return frames;
+}
+Rectangle Object::GetFrameR()
+{
+	Rectangle frames(((_frame % _spriteX) * _spriteDimension.X),((_frame / _spriteY) * _spriteDimension.Y),_spriteDimension.X,_spriteDimension.Y);
 	return frames;
 }
 //Draws the surface on the screen
@@ -46,6 +57,11 @@ SDL_Rect Object::ConvertToImagePosition(SDL_Rect rect)
     normalized.h = rect.h;
      
     return normalized;
+}
+Rectangle Object::ConvertToImagePositionR(Rectangle rect)
+{
+	Rectangle normalized(rect.X-_position.X,rect.Y-_position.Y,rect.W,rect.H);
+	return normalized;
 }
 //Get the boundingbox if the two rectangles intersect
 SDL_Rect Object::GetBoundingBox(SDL_Rect boundsA, SDL_Rect boundsB)
@@ -70,6 +86,19 @@ SDL_Rect Object::GetBoundingBox(SDL_Rect boundsA, SDL_Rect boundsB)
 		return intersect;
     }
 };
+Rectangle Object::GetBoundingBoxR(Rectangle boundsA, Rectangle boundsB)
+{
+	float leftCollision=Maximum(boundsA.X,boundsB.X);
+	float rightCollision=Maximum(boundsA.X+boundsA.W,boundsB.X+boundsB.W);
+	float topCollision=Minimum(boundsA.Y,boundsB.Y);
+	float botCollision=Maximum(boundsA.Y+boundsA.H,boundsB.Y+boundsB.H);
+	float width=rightCollision-leftCollision;
+	float height=botCollision-topCollision;
+	if (width>=0.0f&& height>=0.0f)
+	{return Rectangle(leftCollision,rightCollision,width,height);
+	}else
+	{return Rectangle();}
+};
 //Check if there is collision
 bool Object::CheckCollision(Object objB)
 {
@@ -89,6 +118,26 @@ bool Object::CheckCollision(Object objB)
 		{
 			//Return true if two non-transpirant pixels collide
 			if(GetAlphaXY(this, normalA.x + x, normalA.y + y) && GetAlphaXY(&objB, normalB.x + x, normalB.y + y))
+                return true;
+		}
+	}
+    return false;
+};
+bool Object::CheckCollisionR(Object objB)
+{
+	Rectangle collisionRect=GetBoundingBoxR(GetBoundR(), objB.GetBoundR());
+	if(collisionRect.W == 0 && collisionRect.H == 0)
+	{return false;}
+	//Get the boundingbox on the two surfaces
+	Rectangle normalA = ConvertToImagePositionR(collisionRect);
+    Rectangle normalB = objB.ConvertToImagePositionR(collisionRect);
+	//Check if two no-transpirant pixel collide
+    for(int y = 0; y < collisionRect.H; y++)
+	{
+        for(int x = 0; x < collisionRect.W; x++)
+		{
+			//Return true if two non-transpirant pixels collide
+			if(GetAlphaXY(this, normalA.X + x, normalA.X + y) && GetAlphaXY(&objB, normalB.X + x, normalB.X + y))
                 return true;
 		}
 	}

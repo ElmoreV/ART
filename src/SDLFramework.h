@@ -1,4 +1,4 @@
-//SDLFramework Rev 3
+//SDLFramework Rev 4
 
 
 #ifndef SDLFRAMEWORK_H
@@ -143,6 +143,6 @@ private:
 void FillRect (SDL_Rect* destination,int x, int y, int w, int h);
 //Formulas to get the bigger/smaller value
 #define Maximum(a, b) ((a > b) ? a : b)
-#define Minimum(a, b) ((a < b) ? a : b)
+#define Minimum(a, b) ((a > b) ? b : a)
 
 #endif

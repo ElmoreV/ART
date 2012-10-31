@@ -81,14 +81,14 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 
 }
 bool Map::HandleEvent(SDL_Event sEvent){
-	for(int i = 0; i < _drawObjects.size(); i++){
+	for(unsigned int i = 0; i < _drawObjects.size(); i++){
 		_drawObjects.at(i).HandleEvent(sEvent);
 	}
 }
 //Draws the excisting map on the screen
 void Map::Draw(WindowSurface screen)
 {
-	int drawings = 0;
+	unsigned int drawings = 0;
 	const char* charline;
 	for(unsigned int y = 0; y < _mapArray.size(); y++)
 	{
@@ -162,8 +162,8 @@ int Map::GetCharType(Point2D collisionPoint){
 	}
 	return 0;
 }
-bool Map::CheckDrawCollision(SDL_Rect playerBound){
-	for(int i = 0; i < _drawObjects.size(); i++){
+bool Map::CheckDrawCollision(Rectangle playerBound){
+	for(unsigned int i = 0; i < _drawObjects.size(); i++){
 		if(_drawObjects.at(i).CheckCollision(playerBound))
 			return true;
 	}
@@ -269,7 +269,7 @@ void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 			newY = centerPoint.Y - screenSize.Y / 2;
 	}
 	else newY = 0;
-	for(int i = 0; i < _drawObjects.size(); i++){
+	for(unsigned int i = 0; i < _drawObjects.size(); i++){
 		_drawObjects.at(i).GetDrawing().ChangeOffset(_mapPosition.X - newX, _mapPosition.Y-newY);
 	}
 	_mapPosition.X = newX;

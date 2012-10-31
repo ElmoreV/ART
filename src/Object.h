@@ -3,6 +3,7 @@
 #include "SDLFramework.h"
 #include "Point.h"
 #include "Map.h"
+#include "Rectangle.h"
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -25,8 +26,10 @@ protected:
 public:
 	//Normal function
 	Object(std::string filename, float X, float Y, int spriteX=1, int spriteY=1); //Constructor
-	SDL_Rect GetBound(float velocityX=0, float velocityY=0);//Get the position and dimentions of the object on the screen
+	Rectangle GetBoundR(float velocityX=0, float velocityY=0);//Get the position and dimentions of the object on the screen
+	SDL_Rect GetBound(float velocityX=0, float velocityY=0);//This is the lower quality SDL_Rect version
 	SDL_Rect GetFrame();//Get the part of the image that is showed
+	Rectangle GetFrameR();//The function with floats
 	bool ChangeSprite(std::string filename, int r=-1, int g=-1, int b=-1); //Changes the surface and set maskcolor
 	bool MaskColor(int r, int g, int b); //Set the colorkey (mask)
 	void Draw(WindowSurface screen);//Draws (clip of) surface on the screen
@@ -39,8 +42,11 @@ public:
 	bool _showing;
 	//Collision function
 	SDL_Rect ConvertToImagePosition(SDL_Rect rect); //Convert the collistion rectangle to the position on the surface
+	Rectangle ConvertToImagePositionR(Rectangle rect);
 	SDL_Rect GetBoundingBox(SDL_Rect boundsA, SDL_Rect boundsB); //Get the collistionpart between two rectangles
+	Rectangle GetBoundingBoxR(Rectangle boundsA, Rectangle boundsB);
 	bool CheckCollision(Object objB); //Check if there is pixelcollision
+	bool CheckCollisionR(Object objB);
     bool GetAlphaXY(Object* obj, int x, int y);//Get if the selected pixel is transpirant
 };
 #endif

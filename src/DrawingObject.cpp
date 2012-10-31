@@ -1,4 +1,5 @@
 #include "DrawingObject.h"
+#include "Rectangle.h"
 
 inline bool FloatEq(float a,float b){return (a-b>-0.0001&&a-b<0.0001);}
 
@@ -17,7 +18,7 @@ DrawingObject::DrawingObject(int width, int height, int x, int y):_canvas(width,
 {
 	_mousePressed=false;
 	_canvas.SetDrawMode(false);
-	_canvas.SetOffset(x,y);
+	_canvas.SetOffset((float)x,(float)y);
 };
 void DrawingObject::HandleEvent(SDL_Event sEvent)
 {
@@ -71,18 +72,18 @@ void DrawingObject::Draw(WindowSurface sfScreen)
 		}
 	}
 }
-bool DrawingObject::CheckCollision(SDL_Rect Object)
+bool DrawingObject::CheckCollision(Rectangle ObjectRect)
 {
-	Point2D objectPosition(Object.x,Object.y);
-	float objectWidth=Object.w, objectHeight=Object.h;
+	Point2D objectPosition(ObjectRect.X,ObjectRect.Y);
+	float objectWidth=ObjectRect.W, objectHeight=ObjectRect.H;
 	//Make the object's position relative
 	objectPosition-=_canvas.GetOffset();
 	/*CHECK IF THE SQUARES OVERLAP*/
-	int x1 = Maximum(objectPosition.X, 0);
-	int y1 = Maximum(objectPosition.Y, 0);
-	int x2 = Minimum(objectPosition.X + objectWidth, _canvas.GetWidth());
-	int y2 = Minimum(objectPosition.Y + objectHeight, _canvas.GetHeight());
-	int width = x2 - x1; int height = y2 - y1;
+	float x1 = Maximum(objectPosition.X, 0);
+	float y1 = Maximum(objectPosition.Y, 0);
+	float x2 = Minimum(objectPosition.X + objectWidth, _canvas.GetWidth());
+	float y2 = Minimum(objectPosition.Y + objectHeight, _canvas.GetHeight());
+	float width = x2 - x1; float height = y2 - y1;
 	if(width > 0 && height > 0) 
 	{
 		for (unsigned int i=1;i<_canvas.GetSize();i++)
@@ -96,17 +97,27 @@ bool DrawingObject::CheckCollision(SDL_Rect Object)
 				float r=Maximum(point1.X,point2.X);
 				float t=Minimum(point1.Y,point2.Y);
 				float b=Maximum(point1.Y,point2.Y);
-				int x1 = Maximum(objectPosition.X, l);
-				int y1 = Maximum(objectPosition.Y, t);
-				int x2 = Minimum(objectPosition.X + objectWidth, r);
-				int y2 = Minimum(objectPosition.Y + objectHeight, b);
+				float x1 = Maximum(objectPosition.X, l);
+				float y1 = Maximum(objectPosition.Y, t);
+				float x2 = Minimum(objectPosition.X + objectWidth, r);
+				float y2 = Minimum(objectPosition.Y + objectHeight, b);
 				//Get width and height of collisionpart
-				int width = x2 - x1; int height = y2 - y1;
+				float width = x2 - x1; float height = y2 - y1;
+				//Error error(ErrorState::Caption,"Area: ",width*height);
 				//Return collisionpart
-				if(width > 0 && height > 0) 
+				if(width >= 0 && height >= 
+					0) 
 				{
-					float mostTopL=GetYForXBetweenPoints(objectPosition.X,point1.X,point1.Y,point2.X,point2.Y);
-					float mostTopR=GetYForXBetweenPoints(objectPosition.X+objectWidth,point1.X,point1.Y,point2.X,point2.Y);
+					float mostTopL,mostTopR;
+					if (!FloatEq(point1.X,point2.X))
+					{
+						mostTopL=GetYForXBetweenPoints(objectPosition.X,point1.X,point1.Y,point2.X,point2.Y);
+						mostTopR=GetYForXBetweenPoints(objectPosition.X+objectWidth,point1.X,point1.Y,point2.X,point2.Y);
+					}else
+					{
+						mostTopL=objectPosition.Y+0.5*objectWidth;
+						mostTopR=objectPosition.Y+0.5*objectWidth;
+					}
 					//If the calculated values are below the thingy, but also above the bottom
 					if ((mostTopR>objectPosition.Y||mostTopL>objectPosition.Y)&&
 						(mostTopR<objectPosition.Y+objectHeight||mostTopL<objectPosition.Y+objectHeight))
