@@ -5,14 +5,12 @@
 #include "Rectangle.h"
 
 
-
-//TODO: Decent drawingobject class. Easily manageable
 class DrawingObject
 {
 public:
-	DrawingObject(int width, int height, int x, int y);
+	DrawingObject(float width, float height, float x, float y);
 	void HandleEvent(SDL_Event sEvent);
-	bool CheckCollision(Rectangle ObjectRect);
+	float CheckCollision(Rectangle ObjectRect);
 	void Draw(WindowSurface sfScreen);
 	inline VectorDraw& GetDrawing(){return _canvas;}
 private:

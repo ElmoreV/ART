@@ -84,6 +84,7 @@ bool Map::HandleEvent(SDL_Event sEvent){
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
 		_drawObjects.at(i).HandleEvent(sEvent);
 	}
+	return true;
 }
 //Draws the excisting map on the screen
 void Map::Draw(WindowSurface screen)
@@ -165,7 +166,7 @@ int Map::GetCharType(Point2D collisionPoint){
 bool Map::CheckDrawCollision(Rectangle playerBound){
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
 		if(_drawObjects.at(i).CheckCollision(playerBound))
-			return true;
+		{return true;}	
 	}
 	return false;
 }
@@ -282,8 +283,9 @@ bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeigh
 		_tileDimension.X = (float)tileWidth;
 		_tileDimension.Y = (float)tileHeight;
 	}
-	if(map == "") return false;
+	if(map == "") {return false;}
 	_spawnPosition.X =0; _spawnPosition.Y = 0;
 	ReadFile(map);
 	_drawObjects.clear();
+	return true;
 }
