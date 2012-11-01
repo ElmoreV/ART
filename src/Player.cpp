@@ -8,10 +8,9 @@ Player::Player(std::string filename, float X, float Y, int interval, int spriteX
 	_countInterval = 0;
 	_animationState = 0;
 	_lastFrame = 1;
-	_newmap=false;
 };
 void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
-void Player::Update(Map map1, int screenWidth, int screenHeight, long lastTick){
+void Player::Update(Map& map1, int screenWidth, int screenHeight, long lastTick){
 	//Update animation image for the player
 	_frame = _lastFrame;
 	if((_buttonLeft || _buttonRight) && (_countInterval > _interval)){
@@ -36,7 +35,7 @@ void Player::Update(Map map1, int screenWidth, int screenHeight, long lastTick){
 	}
 	//Handles walking and collision
 	HandleCollision(map1, screenWidth, screenHeight, timeDiff);
-
+	map1.SetNewMapPosition(Point2D((float)screenWidth, (float)screenHeight), GetCenter());
 	//Prevents the player from walking out of screen
 	if(_position.X - map1.GetMapPosition().X < 0) 
 		_position.X = map1.GetMapPosition().X ;
@@ -56,7 +55,7 @@ void Player::Draw(WindowSurface screen, Point2D mapPosition)
 	//Draws the player on the screen
 	_surface.Draw(screen, (Sint16)(_position.X - mapPosition.X), (Sint16)(_position.Y - mapPosition.Y), &GetFrame());
 }
-void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float timeDiff){
+void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float timeDiff){
 	if(timeDiff*_velocity.Y <= map.GetTileDimension().Y && timeDiff*_velocity.X<=map.GetTileDimension().X){
 		int Y;
 		if(_velocity.Y < 0){
@@ -76,8 +75,6 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 		//IF both edges dont hit anything, the player can walk freely upwards or downwards
 		int charTypeLeft = map.GetCharType(left);
 		int charTypeRight = map.GetCharType(right);
-		if(charTypeLeft==4){_newmap=true;charTypeLeft=1;}
-		if(charTypeRight==4){_newmap=true;charTypeRight=1;}
 		if(charTypeLeft < 2 && charTypeRight < 2){
 			_position.Y += _velocity.Y*timeDiff;
 		}
@@ -200,8 +197,6 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 			Point2D bot((float)X, (float)Y2);
 			int charTypeTop = map.GetCharType(top);
 			int charTypeBot = map.GetCharType(bot);
-			if(charTypeBot==4){_newmap = true;charTypeBot=1;}
-			if(charTypeTop==4){_newmap = true;charTypeTop=1;}
 
 			//IF both edge don't hit anything, the player can freely move to left or right
 			if(charTypeTop < 2 && charTypeBot < 2){
@@ -244,12 +239,19 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 						_position.X = X2*map.GetTileDimension().X-_spriteDimension.X-1;
 					}
 						
-				else if(charTypeTop == 5){
-					float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
-					if(!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y - 2))){
-						_position.X += dx;
+					else if(charTypeTop == 5){
+						float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
+						float h = map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y));
+						if(h <= 0){
+							_position.X += dx;
+						}
+						else if(_velocity.Y > 0 && h < 4 &&
+							map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y - h - 1)) <= 0){
+							_position.X += dx;
+							_position.Y -= h;
+						}
+						
 					}
-				}
 					else {
 						float newpos;
 						bool handled = false;
@@ -286,8 +288,14 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 				if((charTypeBot == 5 && (charTypeTop <2 || charTypeTop == 5) && charTypeTop != 2) ||
 					(charTypeTop == 5 && (charTypeBot <2 || charTypeBot == 5) && charTypeBot != 2))		{
 					float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
-					if(!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y - 2))){
+					float h = map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y));
+					if(h <= 0){
 						_position.X += dx;
+					}
+					else if(_velocity.Y > 0 && h < 4 && 
+						map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X + dx, -map.GetMapPosition().Y - h - 1)) <= 0){
+						_position.X += dx;
+						_position.Y -= h;
 					}
 				}
 			}
@@ -306,5 +314,5 @@ void Player::HandleCollision(Map map, int screenWidth, int screenHeight, float t
 	}
 }
 Point2D Player::GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };
-bool Player::NewMapEnabled() { return _newmap;};
-void Player::SetNewMap(Point2D position){_position=position; _newmap=false;};
+//bool Player::NewMapEnabled() { return _newmap;};
+//void Player::SetNewMap(Point2D position){_position=position; _newmap=false;};

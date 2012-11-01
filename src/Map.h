@@ -31,6 +31,7 @@ protected:
 	std::vector<DrawingObject> _drawObjects;
 	char _spawnLocation, _newMapChar;
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
+	bool _newMap;
 public:
 	Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map="");
 	void Draw(WindowSurface screen);
@@ -44,12 +45,13 @@ public:
 	Point2D GetMapPosition();
 	Point2D GetSpawnLocation();
 	bool HandleEvent(SDL_Event sEvent);
-	bool Map::CheckDrawCollision(Rectangle playerBound);
+	float CheckDrawCollision(Rectangle playerBound);
 	void SetMapPosition(float x, float y);
 	TileData GetTileData(unsigned int x, unsigned int y);
 	float GetHeightAtPosition(Point2D position);
 	float GetSlopeHeight(Point2D position);
 	void SetNewMapPosition(Point2D screenSize, Point2D centerPoint);
+	bool NewMapEnabled();
 	bool NewMap(std::string map, unsigned int tileWidth=0, unsigned int tileHeight=0, std::string tileSheet="");
 };
 #endif

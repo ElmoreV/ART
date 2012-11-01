@@ -36,6 +36,7 @@ Map::Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight,
 	_spawnLocation = '#';
 	_newMapChar = '@';
 	if(map != "") ReadFile(map);
+	_newMap = false;
 }
 void Map::LoadTileSheet(std::string tileSheet){
 	_tileSheet.LoadImage(tileSheet.c_str(), 255, 255, 255);
@@ -44,6 +45,7 @@ void Map::LoadTileSheet(std::string tileSheet){
 bool Map::ReadFile(std::string filename)
 {
 	_mapArray.clear();
+	_drawObjects.clear();
 	_lines=0;
 	std::ifstream streamer;
 	streamer.open(filename.c_str());
@@ -151,7 +153,7 @@ int Map::GetCharType(Point2D collisionPoint){
 	if(_mapArray.size() > collisionPoint.Y){
 		charline = _mapArray.at((int)collisionPoint.Y).c_str();
 		if(strlen(charline) > collisionPoint.X){
-			if(charline[(int)collisionPoint.X] == _newMapChar) return 4;
+			if(charline[(int)collisionPoint.X] == _newMapChar) {_newMap = true; return 1;}
 			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return 1;
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
@@ -163,13 +165,15 @@ int Map::GetCharType(Point2D collisionPoint){
 	}
 	return 0;
 }
-bool Map::CheckDrawCollision(Rectangle playerBound){
+float Map::CheckDrawCollision(Rectangle playerBound){
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
-		if(_drawObjects.at(i).CheckCollision(playerBound))
-		{return true;}	
+		float h = _drawObjects.at(i).CheckCollision(playerBound);
+		if(h>0)
+		{return h;}	
 	}
-	return false;
+	return 0;
 }
+bool Map::NewMapEnabled(){return _newMap; }
 //Returns the dimensions of a single tile
 Point2D Map::GetTileDimension() { return _tileDimension; }
 //Returns the position of the map which is displayed
@@ -287,5 +291,6 @@ bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeigh
 	_spawnPosition.X =0; _spawnPosition.Y = 0;
 	ReadFile(map);
 	_drawObjects.clear();
+	_newMap=false;
 	return true;
 }

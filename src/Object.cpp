@@ -137,7 +137,7 @@ bool Object::CheckCollisionR(Object objB)
         for(int x = 0; x < collisionRect.W; x++)
 		{
 			//Return true if two non-transpirant pixels collide
-			if(GetAlphaXY(this, normalA.X + x, normalA.X + y) && GetAlphaXY(&objB, normalB.X + x, normalB.X + y))
+			if(GetAlphaXY(this, (int)(normalA.X + x), int(normalA.X + y)) && GetAlphaXY(&objB, normalB.X + x, normalB.X + y))
                 return true;
 		}
 	}

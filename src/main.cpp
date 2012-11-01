@@ -72,14 +72,14 @@ int main( int argc, char* args[] )
 			map1.HandleEvent(sEvent);
 		}
 		//IF a new map can be load
-		if(player.NewMapEnabled()){
+		if(map1.NewMapEnabled()){
 			map1.NewMap("Map/map2.txt");
-			player.SetNewMap(map1.GetSpawnLocation());
+			player.SetPosition(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
 		//if (drawer4.CheckCollision(player.GetBound())){}	//Handle collision
 		screen.ClearWindow();
-		map1.SetNewMapPosition(Point2D((float)screen.GetWidth(), (float)screen.GetHeight()), player.GetCenter());
+		//map1.SetNewMapPosition(Point2D((float)screen.GetWidth(), (float)screen.GetHeight()), player.GetCenter());
 		map1.Draw(screen);
 		//drawer.Draw(screen);
 		///drawer2.Draw(screen);
