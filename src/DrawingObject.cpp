@@ -76,51 +76,66 @@ void DrawingObject::Draw(WindowSurface sfScreen)
 float DrawingObject::CheckCollision(Rectangle ObjectRect)
 {
 	Point2D objectPosition(ObjectRect.X,ObjectRect.Y);
-	float objectWidth=ObjectRect.W, objectHeight=ObjectRect.H;
-	//Make the object's position relative
 	objectPosition-=_canvas.GetOffset();
+	Point2D objectPositionMax(objectPosition.X+ObjectRect.W,objectPosition.Y+ObjectRect.H);
+	
+	//First check if the object is touching the surface
 	float x1 = Maximum(objectPosition.X, 0);
 	float y1 = Maximum(objectPosition.Y, 0);
-	float x2 = Minimum(objectPosition.X + objectWidth, _canvas.GetWidth());
-	float y2 = Minimum(objectPosition.Y + objectHeight, _canvas.GetHeight());
-	float width = x2 - x1; float height = y2 - y1;
+	float x2 = Minimum(objectPositionMax.X, _canvas.GetWidth());
+	float y2 = Minimum(objectPositionMax.Y, _canvas.GetHeight());
+	float width = x2 - x1; 
+	float height = y2 - y1;
 	if(width >= 0.0f && height >= 0.0f) 
 	{
+		float highestPoint=objectPositionMax.Y;
 		for (unsigned int i=1;i<_canvas.GetSize();i++)
 		{
 			Point2D point1=_canvas.GetPoint(i-1);
 			Point2D point2=_canvas.GetPoint(i);
 			if (!FloatEq(point1.X,-0xFFFF)&&!FloatEq(point2.X,-0xFFFF))
 			{
+				//Make a box of the 2 points, and check if the object box is inside the 'point box'
 				float l=Minimum(point1.X,point2.X);
-				float r=Maximum(point1.X,point2.X);
 				float t=Minimum(point1.Y,point2.Y);
+				float r=Maximum(point1.X,point2.X);
 				float b=Maximum(point1.Y,point2.Y);
 				
-				float width = Minimum(objectPosition.X + objectWidth, r) -Maximum(objectPosition.X, l); 
-				float height =Minimum(objectPosition.Y + objectHeight, b) - Maximum(objectPosition.Y, t);
+				float mostLeft=Maximum(objectPosition.X, l);
+				float mostTop=Maximum(objectPosition.Y, t);
+				float mostRight=Minimum(objectPositionMax.X, r);
+				float mostBot=Minimum(objectPositionMax.Y, b);
+				float width = mostRight -mostLeft; 
+				float height =mostBot - mostTop;
 				if(width >= 0.0f && height >=0.0f) 
 				{
+					//Check if the line actually hits the object
 					float mostTopL,mostTopR;
 					if (!FloatEq(point1.X,point2.X))
 					{
-						mostTopL=GetYForXBetweenPoints(objectPosition.X,point1.X,point1.Y,point2.X,point2.Y);
-						mostTopR=GetYForXBetweenPoints(objectPosition.X+objectWidth,point1.X,point1.Y,point2.X,point2.Y);
+						//Calculate the Y-values for the left collision edge and the right collision edge
+						mostTopL=GetYForXBetweenPoints(mostLeft,point1.X,point1.Y,point2.X,point2.Y);
+						mostTopR=GetYForXBetweenPoints(mostRight,point1.X,point1.Y,point2.X,point2.Y);
 					}else
 					{
-						mostTopL=objectPosition.Y+0.5f*objectWidth;
-						mostTopR=objectPosition.Y+0.5f*objectWidth;
+						//Otherwise, it's just the highest collision point
+						mostTopL=mostTop;
+						mostTopR=mostTop;
 					}
 					if ((mostTopR>=objectPosition.Y||mostTopL>=objectPosition.Y)&&
-						(mostTopR<objectPosition.Y+objectHeight||mostTopL<objectPosition.Y+objectHeight))
+						(mostTopR<objectPositionMax.Y||mostTopL<objectPositionMax.Y))
 					{
-						//Calculate the heighest point on the line hitting the player, and return it.
-						float heighestPointOfLine=Minimum(mostTopR,mostTopL);
-						if (heighestPointOfLine<0.0f){heighestPointOfLine=0.0f;}
-						return objectPosition.Y+objectHeight-heighestPointOfLine;
+						//Calculate the heighest point on the line hitting the player, and store it.
+						float tempHighestPoint=Minimum(mostTopR,mostTopL);
+						if (tempHighestPoint<highestPoint)
+						{highestPoint=tempHighestPoint;}
 					}
 				}
 			}
+		}
+		if (!FloatEq(highestPoint,objectPositionMax.Y)&&highestPoint>=0.0f)
+		{
+			return objectPositionMax.Y-highestPoint;
 		}
 	}
 	return false;

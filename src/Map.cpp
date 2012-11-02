@@ -166,12 +166,13 @@ int Map::GetCharType(Point2D collisionPoint){
 	return 0;
 }
 float Map::CheckDrawCollision(Rectangle playerBound){
+	float maxH=0.0f;
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
 		float h = _drawObjects.at(i).CheckCollision(playerBound);
-		if(h>0)
-		{return h;}	
+		if(h>maxH)
+		{maxH=h;}	
 	}
-	return 0;
+	return maxH;
 }
 bool Map::NewMapEnabled(){return _newMap; }
 //Returns the dimensions of a single tile
