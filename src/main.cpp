@@ -3,7 +3,7 @@
 #include "Player.h"
 #include "Map.h"
 #include "DrawingObject.h"
-
+#include "Assets.h"
 
 class FPS
 {
@@ -33,10 +33,6 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	//DrawingObject drawer(64,36,64*5,36*5);
-	//DrawingObject drawer2(64,36,64*6,36*5);
-	//DrawingObject drawer3(64,36,64*5,36*6);
-	//DrawingObject drawer4(64,36,64*6,36*6);
 	Map map1("Images/tilesheet.png", 64, 36, "Map/map1.txt");
 	map1.AddTile('x', 0, 0, 0, 36);
 	map1.AddTile('y', 64, 0, 36, 0);
@@ -65,10 +61,6 @@ int main( int argc, char* args[] )
 			if (sEvent.type == SDL_VIDEORESIZE )
 			{screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
 			player.HandleEvent(sEvent);
-			//drawer.HandleEvent(sEvent);
-			//drawer2.HandleEvent(sEvent);
-			//drawer3.HandleEvent(sEvent);
-			//drawer4.HandleEvent(sEvent);
 			map1.HandleEvent(sEvent);
 		}
 		//IF a new map can be load
@@ -77,14 +69,8 @@ int main( int argc, char* args[] )
 			player.SetPosition(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
-		//if (drawer4.CheckCollision(player.GetBound())){}	//Handle collision
 		screen.ClearWindow();
-		//map1.SetNewMapPosition(Point2D((float)screen.GetWidth(), (float)screen.GetHeight()), player.GetCenter());
 		map1.Draw(screen);
-		//drawer.Draw(screen);
-		///drawer2.Draw(screen);
-		//drawer3.Draw(screen);
-		//drawer4.Draw(screen);
 		player.Draw(screen, map1.GetMapPosition());
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 
@@ -92,7 +78,6 @@ int main( int argc, char* args[] )
 		fps.Delay();
 	}
 	player.Free();
-	//ball2.Free();
 	ClearSDL();
 	return 0;
 }

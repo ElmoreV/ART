@@ -3,11 +3,6 @@
 
 inline bool FloatEq(float a,float b){return (a-b>-0.0001&&a-b<0.0001);}
 
-inline float GetXForYBetweenPoints(float Y, float x1, float y1, float x2, float y2)
-{
-	//x=(y-y1)*(x2-x1)/(y2-y1)+x1
-	return (Y-y1)*(x2-x1)/(y2-y1)+x1;
-}
 inline float GetYForXBetweenPoints(float X, float x1, float y1, float x2, float y2)
 {
 	//y=(x-x1)*(y2-y1)/(x2-x1)+y1
@@ -44,7 +39,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent)
 	{
 
 		if (sEvent.key.keysym.sym==SDLK_RETURN)
-			_canvas.Optimize(1);
+			_canvas.Optimize(0.5f);
 		if (sEvent.key.keysym.sym==SDLK_DELETE)
 			_canvas.Clear();
 	}

@@ -6,7 +6,7 @@
 class VectorDraw
 {
 public:
-	VectorDraw(int width, int height);
+	VectorDraw(float width, float height);
 	void SetNewPoint(float x, float y);
 	void SetOffset(float X, float Y);
 	void ChangeOffset(float relativeX, float relativeY);
@@ -15,13 +15,13 @@ public:
 	inline Point2D GetPoint(int index){return _points[index];};
 	unsigned int GetSize(){return _points.size();}
 	Point2D GetOffset(){return _offset;};
-	int GetWidth(){return _width;}
-	int GetHeight(){return _height;}
+	float GetWidth(){return _width;}
+	float GetHeight(){return _height;}
 	void Clear(){_points.clear();}
 private:
 	unsigned int _recurseChecker;
 	bool _drawing;
-	int _width, _height;
+	float _width, _height;
 	Point2D _offset;
 	Point2D _lastPoint;
 	std::vector<Point2D> _points;

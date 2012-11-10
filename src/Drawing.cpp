@@ -17,28 +17,28 @@ inline float GetGradient(float x1, float y1, float x2, float y2)
 	return (y2-y1)/(x2-x1);
 }
 
-inline Point2D ResolveEdgePointWhenOutside(Point2D outside,Point2D point2, int width, int height)
+inline Point2D ResolveEdgePointWhenOutside(Point2D outside,Point2D point2, float width, float height)
 {
 	float nextX=0,nextY=0;
 	float tempX=outside.X, tempY=outside.Y;
 	if (outside.X<0.0||outside.X>=width)
 	{
 		//X=0, or X=_width, depending on which boundary is crossed by surfaceX
-		nextX=outside.X<0.0?0.0f:width-0.01f;
+		nextX=outside.X<0.0?0.0f:width-0.001f;
 		nextY=::GetYForXBetweenPoints(nextX,outside.X,outside.Y,point2.X,point2.Y);
 		tempX=nextX; tempY=nextY;
 	}
 	if (tempY<0.0||tempY>=height)
 	{
 		//y=0 or y=_height, depending on crossing top or bottom
-		nextY=tempY<0.0?0.0f:height-0.01f;
+		nextY=tempY<0.0?0.0f:height-0.001f;
 		nextX=GetXForYBetweenPoints(nextY,tempX,tempY,point2.X,point2.Y);
 	}
 	return Point2D(nextX,nextY);
 }
 
 
-VectorDraw::VectorDraw(int width, int height):_width(width),_height(height),_lastPoint(-0xFFFF,-0xFFFF),_drawing(false)
+VectorDraw::VectorDraw(float width, float height):_width(width),_height(height),_lastPoint(-0xFFFF,-0xFFFF),_drawing(false)
 	,_recurseChecker(0)
 {
 	Point2D start(-0xFFFF,-0xFFFF);

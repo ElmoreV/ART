@@ -149,6 +149,7 @@ int Map::GetCharType(Point2D collisionPoint){
 	//2 = normal
 	//3 = slope
 	//4 = newMap
+	//5 = drawable
 	const char* charline;
 	if(_mapArray.size() > collisionPoint.Y){
 		charline = _mapArray.at((int)collisionPoint.Y).c_str();
