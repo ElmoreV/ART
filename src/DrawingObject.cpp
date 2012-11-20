@@ -42,6 +42,13 @@ void DrawingObject::HandleEvent(SDL_Event sEvent)
 			_canvas.Optimize(0.5f);
 		if (sEvent.key.keysym.sym==SDLK_DELETE)
 			_canvas.Clear();
+		if (sEvent.key.keysym.sym==SDLK_INSERT)
+		{
+			_canvas.SetDrawMode();
+			_canvas.SetNewPoint(0,3*36+4);
+			_canvas.SetNewPoint(200,3*36+4);
+			_canvas.SetDrawMode(false);
+		}
 	}
 }
 void DrawingObject::Draw(WindowSurface sfScreen)
