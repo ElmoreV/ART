@@ -76,25 +76,24 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 		//IF both edges dont hit anything, the player can walk freely upwards or downwards
 		int charTypeLeft = map.GetCharType(left);
 		int charTypeRight = map.GetCharType(right);
-		if(charTypeLeft < 2 && charTypeRight < 2){
+		int charTypeLeft2 = map.GetCharType(Point2D((float)X1, (float)Y2));
+		int charTypeRight2 = map.GetCharType(Point2D((float)X2, (float)Y2));
+		if(charTypeLeft < 2 && charTypeRight < 2 && charTypeLeft2 < 2 && charTypeRight2 < 2){
 			_position.Y += _velocity.Y*timeDiff;
 		}
 		//The player hit a block, so now it can only walk the difference between player and the block
 		else {
-			if(_velocity.Y < 0){if(charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3){
+			if(_velocity.Y < 0){
+				if(charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3){
 					_position.Y = (Y+1)*map.GetTileDimension().Y;
 					_velocity.Y = 0;
 				}
-				else {
-					if (map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)) == 0
-						//&& map.CheckDrawCollision(GetPreviousBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)) == 0
-						&& map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y)) == 0
-						//&& map.CheckDrawCollision(GetPreviousBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y)) == 0
-						)
+				else if(charTypeLeft == 5 || charTypeLeft2 == 5 || charTypeRight == 5 || charTypeRight2 == 5){
+					if (!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)))
 						_position.Y += _velocity.Y*timeDiff;
-					else 
-						_velocity.Y = 0;
+					else _velocity.Y = 0;
 				}
+				else _position.Y += _velocity.Y*timeDiff;
 			}
 			else {
 				if(charTypeLeft == 2 || charTypeRight == 2){
