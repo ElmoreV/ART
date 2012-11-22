@@ -3,12 +3,18 @@
 Player::Player(std::string filename, float X, float Y, int interval, int spriteX, int spriteY):Object(filename, X, Y, spriteX, spriteY)
 {
 	_maxVelocity = 250;
+	_previousPosition = _position;
 	_interval = interval;
 	if(_interval <= 0) _interval = 1;
 	_countInterval = 0;
 	_animationState = 0;
 	_lastFrame = 1;
 };
+Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
+{
+	Rectangle bound(_previousPosition.X+velocityX, _previousPosition.Y+velocityY, _spriteDimension.X, _spriteDimension.Y);
+	return bound;
+}
 void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
 void Player::Update(Map& map1, int screenWidth, int screenHeight, long lastTick){
 	//Update animation image for the player
@@ -56,16 +62,11 @@ void Player::Draw(WindowSurface screen, Point2D mapPosition)
 	_surface.Draw(screen, (Sint16)(_position.X - mapPosition.X), (Sint16)(_position.Y - mapPosition.Y), &GetFrame());
 }
 void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float timeDiff){
-	if(timeDiff*_velocity.Y <= map.GetTileDimension().Y && timeDiff*_velocity.X<=map.GetTileDimension().X){
-		int Y;
-		if(_velocity.Y < 0){
-			//The new y position after walking if up
-			Y = (int)((_position.Y + _velocity.Y*timeDiff) / map.GetTileDimension().Y);
-		}
-		else {
-			//The new y position after walking if down
-			Y = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y) / map.GetTileDimension().Y);
-		}
+	if(timeDiff*_velocity.Y <= map.GetTileDimension().Y && timeDiff*_velocity.X<=map.GetTileDimension().X&&
+		timeDiff*_velocity.Y<=_spriteDimension.Y&&timeDiff*_velocity.X<=map.GetTileDimension().X){
+		int Y1 = (int)((_position.Y + _velocity.Y*timeDiff) / map.GetTileDimension().Y);
+		int Y2 = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y) / map.GetTileDimension().Y);
+		int Y = (_velocity.Y < 0)?Y1:Y2;
 		//The left edge x coord
 		int X1 = (int)(_position.X / map.GetTileDimension().X);
 		//The right edge x coord
@@ -80,26 +81,25 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 		}
 		//The player hit a block, so now it can only walk the difference between player and the block
 		else {
-			if(_velocity.Y < 0){
-				if ((charTypeLeft == 5 && charTypeRight < 2) || (charTypeRight == 5 && charTypeLeft < 2) ||
-					(charTypeLeft == 5 && charTypeRight == 5)){
-					if(!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)))
+			if(_velocity.Y < 0){if(charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3){
+					_position.Y = (Y+1)*map.GetTileDimension().Y;
+					_velocity.Y = 0;
+				}
+				else {
+					if (map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)) == 0
+						//&& map.CheckDrawCollision(GetPreviousBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)) == 0
+						&& map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y)) == 0
+						//&& map.CheckDrawCollision(GetPreviousBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y)) == 0
+						)
 						_position.Y += _velocity.Y*timeDiff;
 					else 
 						_velocity.Y = 0;
 				}
-				else {
-				//double yDiff = abs(_position.Y - ((Y+1) * map.GetTileDimension().Y));
-				_position.Y = (Y+1)*map.GetTileDimension().Y;
-				_velocity.Y = 0;
-				}
 			}
-			else if(_velocity.Y > 0) {
-				//double yDiff = abs(_position.Y + _spriteDimension.Y - (Y *map.GetTileDimension().Y));
-				//_position.Y = (Y*map.GetTileDimension().Y) - _spriteDimension.Y;
+			else {
 				if(charTypeLeft == 2 || charTypeRight == 2){
 					_position.Y = (Y*map.GetTileDimension().Y) - _spriteDimension.Y;
-					_velocity.Y = 50;
+					_velocity.Y = 0;
 					_jumpEnable = true;
 				}
 				else if(charTypeLeft == 3 || charTypeRight == 3){
@@ -117,13 +117,14 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 							if(!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y + newpos - _position.Y))){
 								_position.Y = newpos;
 							}
-							else {_velocity.Y = 50; _jumpEnable = true;	}
+							else {_velocity.Y = 0; 
+							_jumpEnable = true;	}
 						}
 						else {
 							if(!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y + newpos - _position.Y))){
 								_position.Y = newpos;
 							}
-							_velocity.Y = 50;
+							//_velocity.Y = 50;
 							_jumpEnable = true;
 						}
 						
@@ -139,7 +140,7 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 							_position.Y += _velocity.Y*timeDiff;
 						else {
 							_position.Y = newpos;
-							_velocity.Y = 50;
+							_velocity.Y = 0;
 							_jumpEnable = true;
 						}
 					}
@@ -161,7 +162,7 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 							_position.Y += _velocity.Y*timeDiff;
 						else {
 							_position.Y = newpos - _spriteDimension.Y;
-							_velocity.Y = 50;
+							_velocity.Y = 0;
 							_jumpEnable = true;
 						}
 					}
@@ -171,7 +172,7 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 					if(!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y + _velocity.Y*timeDiff)))
 						_position.Y += _velocity.Y*timeDiff;
 					else {
-						_velocity.Y = 50;
+						_velocity.Y = 0;
 						_jumpEnable = true;}
 				}
 			}
@@ -311,6 +312,7 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 				}
 			}
 		}
+		_previousPosition=_position;
 	}
 }
 Point2D Player::GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };

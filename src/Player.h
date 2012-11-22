@@ -5,11 +5,13 @@
 class Player : public Object
 {
 protected:
+	Point2D _previousPosition;
 	//For the animations
 	int _interval, _countInterval, _animationState, _lastFrame;
 	int _maxVelocity;
 	bool _jumpEnable;
 	void HandleCollision(Map& map, int screenWidth, int screenHeight, float timeDiff);
+	Rectangle GetPreviousBoundR(float velocityX, float velocityY);
 	//bool _newmap;
 public:
 	//To set the default values
