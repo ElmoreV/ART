@@ -182,6 +182,10 @@ Point2D Map::GetTileDimension() { return _tileDimension; }
 Point2D Map::GetMapPosition() { return _mapPosition; }
 //Returns the spawnposition of the player
 Point2D Map::GetSpawnLocation(){return _spawnPosition; }
+Point2D Map::GetMapDimension()
+{
+	return Point2D(_mapArray.at(0).size() * _tileDimension.X, _mapArray.size() * _tileDimension.Y);
+}
 //Sets the offset of the map, so from where it must be showed
 void Map::SetMapPosition(float x, float y){ _mapPosition.X = x; _mapPosition.Y = y; };
 //Returns the height of empty pixels @ the position

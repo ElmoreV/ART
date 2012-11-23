@@ -44,6 +44,7 @@ public:
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
 	Point2D GetSpawnLocation();
+	Point2D GetMapDimension();
 	bool HandleEvent(SDL_Event sEvent);
 	float CheckDrawCollision(Rectangle playerBound);
 	void SetMapPosition(float x, float y);

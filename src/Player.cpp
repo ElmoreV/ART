@@ -42,18 +42,32 @@ void Player::Update(Map& map1, int screenWidth, int screenHeight, long lastTick)
 	//Handles walking and collision
 	HandleCollision(map1, screenWidth, screenHeight, timeDiff);
 	map1.SetNewMapPosition(Point2D((float)screenWidth, (float)screenHeight), GetCenter());
+
 	//Prevents the player from walking out of screen
+	Point2D mapDim = map1.GetMapDimension();
 	if(_position.X - map1.GetMapPosition().X < 0) 
 		_position.X = map1.GetMapPosition().X ;
-	else if(_position.X + _spriteDimension.X - map1.GetMapPosition().X > screenWidth) 
-		_position.X = screenWidth - _spriteDimension.X + map1.GetMapPosition().X ;
-	if(_position.Y -  map1.GetMapPosition().Y< 0) {
+	else if(mapDim.X > screenWidth)
+	{
+		if(_position.X + _spriteDimension.X - map1.GetMapPosition().X > screenWidth)
+			_position.X = screenWidth - _spriteDimension.X +  map1.GetMapPosition().X;
+	}
+	else if(_position.X + _spriteDimension.X > mapDim.X)
+		_position.X = mapDim.X - _spriteDimension.X;
+	
+	if(_position.Y -  map1.GetMapPosition().Y< 0){
 		_position.Y = map1.GetMapPosition().Y;
 		_velocity.Y = 0;
 	}
-	else if(_position.Y + _spriteDimension.Y -  map1.GetMapPosition().Y > screenHeight) {
+	else if(mapDim.Y > screenHeight){
+		if(_position.Y + _spriteDimension.Y -  map1.GetMapPosition().Y > screenHeight){
+			_position.Y = screenHeight - _spriteDimension.Y +  map1.GetMapPosition().Y;
+			_jumpEnable = true;
+		}
+	}
+	else if(_position.Y + _spriteDimension.X > mapDim.Y){
+		_position.Y = mapDim.Y - _spriteDimension.Y;
 		_jumpEnable = true;
-		_position.Y = screenHeight - _spriteDimension.Y +  map1.GetMapPosition().Y;
 	}
 }
 void Player::Draw(WindowSurface screen, Point2D mapPosition)
@@ -213,7 +227,7 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 				TileData slopeLeft = map.GetTileData(X1, Y2);
 				TileData slopeRight = map.GetTileData(X2, Y2);
 				TileData slopeTop = _buttonLeft?map.GetTileData(X1, Y1):map.GetTileData(X2, Y1);
-				if(Y1<Y2 && charTypeTop == 3 && (top.X != bot.X || top.Y != bot.Y ){
+				if(Y1<Y2 && charTypeTop == 3 && (top.X != bot.X || top.Y != bot.Y )){
 					if(_buttonLeft)
 						_position.X -= (X+1) * map.GetTileDimension().X ;
 					else 
