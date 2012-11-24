@@ -4,6 +4,7 @@
 #include "Map.h"
 #include "DrawingObject.h"
 #include "Assets.h"
+#include "Menu.h"
 
 class FPS
 {
@@ -48,6 +49,18 @@ int main( int argc, char* args[] )
 	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 	player.MaskColor(120, 195, 128);
 
+	Settings setting;
+
+	std::vector<std::string> option; option.push_back("Ja"); option.push_back("Nee"); option.push_back("Ooit");option.push_back("Misschien");
+
+	Menu menu("Menu", &setting);
+	menu.AddChild("Hallo");
+	menu.GetChild(0)->AddChild("hallo");
+	menu.GetChild(0)->AddOptionChild(option, &Settings::OnOptionClick);
+	menu.AddChild("Cool");
+	menu.AddButtonChild("Wat", &Settings::OnClick);
+	menu.AddOptionChild(option, &Settings::OnOptionClick);
+
 	/* If using array for map
 		const char* map1Array[] = {
 		"x-x-x-x-x-x", 
@@ -62,6 +75,7 @@ int main( int argc, char* args[] )
 			{screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
 			player.HandleEvent(sEvent);
 			map1.HandleEvent(sEvent,player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y));
+			menu.HandleEvent(sEvent);
 		}
 		//IF a new map can be load
 		if(map1.NewMapEnabled()){
@@ -72,6 +86,7 @@ int main( int argc, char* args[] )
 		screen.ClearWindow();
 		map1.Draw(screen);
 		player.Draw(screen, map1.GetMapPosition());
+		menu.Open(screen, Point2D(50, 50));
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 
 		screen.UpdateWindow();

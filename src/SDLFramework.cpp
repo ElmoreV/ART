@@ -311,6 +311,8 @@ bool Surface::SetTransparency(int alpha)
 	}
 	return false;
 };
+int Surface::GetWidth(){return _surface->w;}
+int Surface::GetHeight(){return _surface->h;}
 void Surface::Free()//Freeing the surface
 {
 	if (_surface!=0)//When the surface is actually initialized, free the surface

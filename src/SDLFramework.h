@@ -9,6 +9,7 @@
 //#define AUDIO
 #define DRAWING
 #define ERROR
+#define FONT
 //General declarations
 #include <string>
 
@@ -133,6 +134,8 @@ public:
 	void Surface::GetMaskColor(int& r,int& g, int& b);
 	bool Draw(WindowSurface windowSurface,unsigned int x=0, unsigned int y=0, SDL_Rect* clip=0);
 	bool SetTransparency(int alpha);
+	int GetWidth();
+	int GetHeight();
 	void Free();
 private:
 	int _r,_g,_b;
