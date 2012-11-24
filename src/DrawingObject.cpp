@@ -8,31 +8,166 @@ inline float GetYForXBetweenPoints(float X, float x1, float y1, float x2, float 
 	//y=(x-x1)*(y2-y1)/(x2-x1)+y1
 	return (X-x1)*(y2-y1)/(x2-x1)+y1;
 }
+float CheckCollisionForTwoPoints(Point2D point1, Point2D point2, Point2D objectPosition, Point2D objectPositionMax)
+{
+	//Make a box of the 2 points, and check if the object box is inside the 'point box'
+	float l=Minimum(point1.X,point2.X);
+	float t=Minimum(point1.Y,point2.Y);
+	float r=Maximum(point1.X,point2.X);
+	float b=Maximum(point1.Y,point2.Y);
 
+	float mostLeft=Maximum(objectPosition.X, l);
+	float mostTop=Maximum(objectPosition.Y, t);
+	float mostRight=Minimum(objectPositionMax.X, r);
+	float mostBot=Minimum(objectPositionMax.Y, b);
+	float width = mostRight -mostLeft; 
+	float height =mostBot - mostTop;
+	if(width >= 0.0f && height >=0.0f) 
+	{
+		//Check if the line actually hits the object
+		float mostTopL,mostTopR;
+		if (!FloatEq(point1.X,point2.X))
+		{
+			//Calculate the Y-values for the left collision edge and the right collision edge
+			mostTopL=GetYForXBetweenPoints(mostLeft,point1.X,point1.Y,point2.X,point2.Y);
+			mostTopR=GetYForXBetweenPoints(mostRight,point1.X,point1.Y,point2.X,point2.Y);
+		}else
+		{
+			//Otherwise, it's just the highest collision point
+			mostTopL=mostTop;
+			mostTopR=mostTop;
+		}
+		if ((mostTopR>=objectPosition.Y||mostTopL>=objectPosition.Y)&&
+			(mostTopR<objectPositionMax.Y||mostTopL<objectPositionMax.Y))
+		{
+			//Calculate the heighest point on the line hitting the player, and store it.
+			float tempHighestPoint=Minimum(mostTopR,mostTopL);
+			return tempHighestPoint;
+			//if (tempHighestPoint<highestPoint)
+			//{highestPoint=tempHighestPoint;}
+		}
+	}
+	return objectPositionMax.Y;
+}
 DrawingObject::DrawingObject(float width, float height, float x, float y):_canvas(width,height)
 {
-	_mousePressed=false;
+	_cursorPressed=false;
+	_cursorOnPlayer=false;
+	_cursorOutOfRange=false;
 	_canvas.SetDrawMode(false);
 	_canvas.SetOffset(x,y);
 };
-void DrawingObject::HandleEvent(SDL_Event sEvent)
+void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 {
+	Point2D playerMiddle(playerBound.X+0.5f*playerBound.W, playerBound.Y+0.5f*playerBound.H);
+	float outsideDrawRadius=100;
+	Uint16 mouseX = sEvent.button.x;
+	Uint16 mouseY = sEvent.button.y;
+	Point2D mouseRelPlayer=playerMiddle;
+	mouseRelPlayer-=Point2D(mouseX,mouseY);
+	Point2D lastPoint(-0xFFFF,-0xFFFF);
+	if (_canvas.GetSize())
+		lastPoint=_canvas.GetPoint(_canvas.GetSize()-1);
+	Point2D relativePlayer=Point2D(playerBound.X-2,playerBound.Y-2);
+	Point2D relativeMouse=Point2D(mouseX,mouseY);
+	relativeMouse-=_canvas.GetOffset();
+	relativePlayer-=_canvas.GetOffset();
+	Point2D relativePlayerMax=Point2D(relativePlayer.X+playerBound.W+2,relativePlayer.Y+playerBound.H);
+	//cursor button down
 	if (sEvent.type==SDL_MOUSEBUTTONDOWN)
 	{
-		_canvas.SetDrawMode(true);
+		//Check if the cursor is outside the draw range
+		if ((mouseRelPlayer.X)*(mouseRelPlayer.X)+(mouseRelPlayer.Y)*(mouseRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
+		{
+			_cursorOutOfRange=true;
+		}else
+		{
+			_cursorOutOfRange=false;
+		}
+		//Or if it's inside the minimal draw range
+		if (mouseX>playerBound.X-2&&mouseY>playerBound.Y-2&&mouseX<playerBound.X+playerBound.W+2&&mouseY<playerBound.Y+playerBound.H)
+		{_cursorOnPlayer=true;}
+
+		if (lastPoint.X!=-0xFFFF)
+		{
+			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeMouse,
+				relativePlayer,relativePlayerMax),relativePlayerMax.Y))
+			{_cursorOnPlayer=true;}
+		}
+
+		if (!_cursorOnPlayer&&!_cursorOutOfRange)
+		{
+			_canvas.SetDrawMode(true);
+		}
 		_canvas.SetNewPoint(sEvent.button.x,sEvent.button.y);
-		_mousePressed=true;
+		_cursorPressed=true;
 
 	}else if (sEvent.type==SDL_MOUSEMOTION)
 	{
+		bool cursorIsOnPlayer=false;
+		//Check if it's outside of the draw range. Stop drawing if so. Restart drawing if it WAS true, but not anymore
+		if ((mouseRelPlayer.X)*(mouseRelPlayer.X)+(mouseRelPlayer.Y)*(mouseRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
+		{
+			if (_cursorPressed)
+			{
+				_cursorOutOfRange=true;
+				_canvas.SetDrawMode(false);
+			}
+		}else
+		{
+			if (_cursorOutOfRange)
+			{
+				_cursorOutOfRange=false;
+				_canvas.SetDrawMode(true);
+			}
+		}
 
-		if (_mousePressed)
+		//Check if it's inside of the minimal draw range
+		if (mouseX>playerBound.X-2&&mouseY>playerBound.Y-2&&mouseX<playerBound.X+playerBound.W+2&&mouseY<playerBound.Y+playerBound.H)
+		{cursorIsOnPlayer=true;}
+
+		//Check if you're not drawing through the character
+		if (!FloatEq(lastPoint.X,-0xFFFF))
+		{
+			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeMouse,
+				relativePlayer,relativePlayerMax),relativePlayerMax.Y))
+			{cursorIsOnPlayer=true;}
+		}else
+		{
+			if (!FloatEq(CheckCollisionForTwoPoints(_canvas.GetOutsideReferencePoint(),relativeMouse,
+				relativePlayer,relativePlayerMax),relativePlayerMax.Y))
+			{cursorIsOnPlayer=true;}
+		}
+
+		//If the line to be drawn goes on/through the player
+		//Stop drawing
+		//If it was true, but not anymore
+		//Restart drawing
+		if (cursorIsOnPlayer)
+		{
+			if (_cursorPressed)
+			{
+				_cursorOnPlayer=true;
+				_canvas.SetDrawMode(false);
+			}
+		}else
+		{
+			if (_cursorOnPlayer)
+			{
+				_canvas.SetDrawMode(true);
+				_cursorOnPlayer=false;
+			}
+		}
+		//Only add new points when the cursor is pressed
+		if (_cursorPressed)
 		{
 			_canvas.SetNewPoint(sEvent.button.x,sEvent.button.y);
 		}
 	}else if (sEvent.type==SDL_MOUSEBUTTONUP)
 	{
-		_mousePressed=false;
+		_cursorOnPlayer=false;
+		_cursorOutOfRange=false;
+		_cursorPressed=false;
 		_canvas.SetDrawMode(false);
 
 	}else if (sEvent.type==SDL_KEYDOWN)
@@ -41,7 +176,12 @@ void DrawingObject::HandleEvent(SDL_Event sEvent)
 		if (sEvent.key.keysym.sym==SDLK_RETURN)
 			_canvas.Optimize(0.5f);
 		if (sEvent.key.keysym.sym==SDLK_DELETE)
-			_canvas.Clear();
+		{	_canvas.Clear();
+		_cursorOnPlayer=false;
+		_cursorOutOfRange=false;
+		_cursorPressed=false;
+		_canvas.SetDrawMode(false);
+		}
 		if (sEvent.key.keysym.sym==SDLK_INSERT)
 		{
 			_canvas.SetDrawMode();
@@ -74,6 +214,7 @@ void DrawingObject::Draw(WindowSurface sfScreen)
 		}
 	}
 }
+
 //Return the heighest point on the line to collide with the object rectangle. With no collision, it return false
 float DrawingObject::CheckCollision(Rectangle ObjectRect)
 {
@@ -97,7 +238,10 @@ float DrawingObject::CheckCollision(Rectangle ObjectRect)
 			Point2D point2=_canvas.GetPoint(i);
 			if (!FloatEq(point1.X,-0xFFFF)&&!FloatEq(point2.X,-0xFFFF))
 			{
-				//Make a box of the 2 points, and check if the object box is inside the 'point box'
+				float tempHighestPoint=CheckCollisionForTwoPoints(point1,point2,objectPosition,objectPositionMax);
+				if (tempHighestPoint<highestPoint)
+						{highestPoint=tempHighestPoint;}
+				/*//Make a box of the 2 points, and check if the object box is inside the 'point box'
 				float l=Minimum(point1.X,point2.X);
 				float t=Minimum(point1.Y,point2.Y);
 				float r=Maximum(point1.X,point2.X);
@@ -132,7 +276,7 @@ float DrawingObject::CheckCollision(Rectangle ObjectRect)
 						if (tempHighestPoint<highestPoint)
 						{highestPoint=tempHighestPoint;}
 					}
-				}
+				}*/
 			}
 		}
 		if (!FloatEq(highestPoint,objectPositionMax.Y)&&highestPoint>=0.0f)

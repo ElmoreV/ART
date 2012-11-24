@@ -61,7 +61,7 @@ int main( int argc, char* args[] )
 			if (sEvent.type == SDL_VIDEORESIZE )
 			{screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
 			player.HandleEvent(sEvent);
-			map1.HandleEvent(sEvent);
+			map1.HandleEvent(sEvent,player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y));
 		}
 		//IF a new map can be load
 		if(map1.NewMapEnabled()){

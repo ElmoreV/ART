@@ -32,6 +32,9 @@ void Error::HandleError(ErrorState error,std::string errorMessage, int errorCode
 		LogError(errorMessage,errorCode);
 		if (showSDLError)
 		{LogError(SDL_GetError(),-1);}
+	}else if (error==CaptionOnly)
+	{
+		MessageError(errorMessage,errorCode);
 	}else if (error==Log)//The error isn't that severe, and should be just logged
 	{
 		LogError(errorMessage,errorCode);

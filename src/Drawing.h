@@ -13,6 +13,7 @@ public:
 	void SetDrawMode(bool startDrawing=true);
 	void Optimize(float precision);
 	inline Point2D GetPoint(int index){return _points[index];};
+	inline Point2D GetOutsideReferencePoint(){return _lastPoint;}
 	unsigned int GetSize(){return _points.size();}
 	Point2D GetOffset(){return _offset;};
 	float GetWidth(){return _width;}

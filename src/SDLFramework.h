@@ -42,13 +42,13 @@
 #include "SDLSound.h"
 #endif
 
-enum ErrorState{None,Log,Caption,Exit};
+enum ErrorState{None,Log,Caption,CaptionOnly,Exit};
 class Error
 {
 public:
 	Error();
-	Error(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=true);
-	void HandleError(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=true);
+	Error(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false);
+	void HandleError(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false);
 private:
 	void LogError(std::string message, int code);
 	void MessageError(std::string message, int code);

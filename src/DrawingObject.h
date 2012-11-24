@@ -9,14 +9,15 @@ class DrawingObject
 {
 public:
 	DrawingObject(float width, float height, float x, float y);
-	void HandleEvent(SDL_Event sEvent);
+	void HandleEvent(SDL_Event sEvent,Rectangle playerBound);
 	float CheckCollision(Rectangle ObjectRect);
 	void Draw(WindowSurface sfScreen);
 	inline VectorDraw& GetDrawing(){return _canvas;}
 private:
-	bool _mousePressed;
+	bool _cursorPressed;
+	bool _cursorOnPlayer;
+	bool _cursorOutOfRange;
 	VectorDraw _canvas;
 };
-
 
 #endif

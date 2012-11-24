@@ -82,9 +82,9 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
 
 }
-bool Map::HandleEvent(SDL_Event sEvent){
+bool Map::HandleEvent(SDL_Event sEvent, Rectangle playerBound){
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
-		_drawObjects.at(i).HandleEvent(sEvent);
+		_drawObjects.at(i).HandleEvent(sEvent,playerBound);
 	}
 	return true;
 }
