@@ -54,13 +54,13 @@ int main( int argc, char* args[] )
 	std::vector<std::string> option; option.push_back("Ja"); option.push_back("Nee"); option.push_back("Ooit");option.push_back("Misschien");
 
 	Menu menu("Menu", &setting);
-	menu.AddChild("Hallo");
-	menu.GetChild(0)->AddChild("hallo");
+	menu.AddChild("Hallo", 255, 5, 255);
+	menu.GetChild(0)->AddChild("hallo", 255, 0, 0);
 	menu.GetChild(0)->AddOptionChild(option, &Settings::OnOptionClick);
 	menu.AddChild("Cool");
 	menu.AddButtonChild("Wat", &Settings::OnClick);
 	menu.AddOptionChild(option, &Settings::OnOptionClick);
-
+	menu.AddTextChild(&Settings::OnTextChange, "Welkom", 10, false, 50, 50, 255);
 	/* If using array for map
 		const char* map1Array[] = {
 		"x-x-x-x-x-x", 
