@@ -55,12 +55,15 @@ int main( int argc, char* args[] )
 	std::vector<std::string> option; option.push_back("Ja"); option.push_back("Nee"); option.push_back("Ooit");option.push_back("Misschien");
 
 	Menu menu("Menu", &setting);
-	menu.AddChild("Hallo");
-	menu.GetChild(0)->AddChild("hallo");
+	menu.AddChild("Hallo", 255, 5, 255);
+	menu.GetChild(0)->AddChild("hallo", 255, 0, 0);
 	menu.GetChild(0)->AddOptionChild(option, &Settings::OnOptionClick);
 	menu.AddChild("Cool");
 	menu.AddButtonChild("Wat", &Settings::OnClick);
 	menu.AddOptionChild(option, &Settings::OnOptionClick);
+	menu.AddTextChild(&Settings::OnTextChange, "Welkom", 10, true, 50, 50, 255);
+	menu.AddSliderChild(&Settings::OnValueChange, 150, 30, 100, 100, 100);
+	menu.AddButtonChild("h)llo");
 
 	/* If using array for map
 		const char* map1Array[] = {
@@ -91,7 +94,7 @@ int main( int argc, char* args[] )
 		player.Draw(screen, map1.GetMapPosition());
 		tail.Draw(screen);
 		Rectangle playerBounds=player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y);
-		::aaellipseRGBA(screen,playerBounds.X+0.5*playerBounds.W,playerBounds.Y+0.5*playerBounds.H,100,100,255,255,255,255);
+		::aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
 		menu.Open(screen, Point2D(50, 50));
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 		screen.UpdateWindow();
