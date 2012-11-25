@@ -7,7 +7,7 @@ class Settings
 {
 public:
 	bool OnClick(){
-		return true;
+		return false;
 	}
 	bool OnOptionClick(int id){
 		Error r; std::stringstream ss;
@@ -16,7 +16,11 @@ public:
 		return false;
 	}
 	bool OnTextChange(std::string text){
-		
+		Error r;
+		r.HandleError(Caption, text);
+		return false;
+	}
+	bool OnValueChange(float value){
 		return false;
 	}
 };

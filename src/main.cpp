@@ -60,7 +60,10 @@ int main( int argc, char* args[] )
 	menu.AddChild("Cool");
 	menu.AddButtonChild("Wat", &Settings::OnClick);
 	menu.AddOptionChild(option, &Settings::OnOptionClick);
-	menu.AddTextChild(&Settings::OnTextChange, "Welkom", 10, false, 50, 50, 255);
+	menu.AddTextChild(&Settings::OnTextChange, "Welkom", 10, true, 50, 50, 255);
+	menu.AddSliderChild(&Settings::OnValueChange, 150, 30, 100, 100, 100);
+	menu.AddButtonChild("h)llo");
+
 	/* If using array for map
 		const char* map1Array[] = {
 		"x-x-x-x-x-x", 
@@ -87,7 +90,7 @@ int main( int argc, char* args[] )
 		map1.Draw(screen);
 		player.Draw(screen, map1.GetMapPosition());
 		Rectangle playerBounds=player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y);
-		::aaellipseRGBA(screen,playerBounds.X+0.5*playerBounds.W,playerBounds.Y+0.5*playerBounds.H,100,100,255,255,255,255);
+		::aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
 		menu.Open(screen, Point2D(50, 50));
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 		screen.UpdateWindow();

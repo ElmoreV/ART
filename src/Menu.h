@@ -8,7 +8,7 @@
 
 enum MenuType 
 {
-	Normal, Button, Option, Text, Slider
+	NormalItem, ButtonItem, OptionItem, TextItem, SliderItem
 };
 class Options 
 {
@@ -36,19 +36,18 @@ class MenuItem
 {
 protected:
 	MenuType _type;
-	std::string _text;
-	std::string _header;
 	std::vector<MenuItem> _childs;
 	Rectangle _bounds;
 	Point2D _custom;
-
-	int _r, _g, _b, _maxTextLength;
+	std::string _optionText;
+	int _r, _g, _b, _maxLength, _status;
 	
 	bool (Settings::*OnClick)(); //ButtonItem
 	bool (Settings::*OnOptionClick)(int id); //OptionItem
 	bool (Settings::*onTextChange)(std::string text); //TextItem
+	bool (Settings::*onValueChange)(float percentage); //SliderItem
 	std::vector<Options> _options;
-	bool _optionBoundSet, _clickEventAssigned, _hover, _customSet, _clickable, _digitOnly, _selected;
+	bool _optionBoundSet, _clickEventAssigned, _hover, _customSet, _digitOnly, _selected;
 public:
 	MenuItem();
 	MenuItem(std::string title, int r=255, int g=255, int b=255);
@@ -61,26 +60,24 @@ public:
 	void AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), int r=255, int g=255, int b=255);
 	void AddTextChild(std::string title="", int maxLength=0, bool digit=false, int r=255, int g=255, int b=255);
 	void AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=0, bool digit=false, int r=255, int g=255, int b=255);
-	bool IsCustomPosition();
-
+	void AddSliderChild(int width, int height, int r=255, int g=255, int b=255);
+	void AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, int r=255, int g=255, int b=255);
+	
 	int HandleEvent(SDL_Event sEvent, Settings* setting);
 	void Draw(WindowSurface screen, Font font, Point2D offset);
 
+	bool HoverEnabled, IsClickable;
+	std::string Text, Header;
+
 	void SetBoundingBox(float X, float Y, float Width, float Height);
 	void SetHover(bool value);
-	void SetText(std::string text);
-	void SetHeader(std::string text);
-	void SetClickable(bool value);
 	void SetColor(int r, int g, int b);
-	
-	int GetMaxLength();
+	std::string GetText();
+	bool IsCustomPosition();
 	bool IsSelected();
 	void SetSelect(bool value);
-	bool IsDigitOnly();
 
 	Rectangle* GetBoundingBox();
-	std::string GetText();
-	std::string GetHeader();
 	int GetColorR();
 	int GetColorG();
 	int GetColorB();
@@ -90,8 +87,9 @@ public:
 	int CountChild();
 	bool IsEventAssigned();
 	bool IsHover();
-	bool Clickabe();
 	void SetCustomPosition(float x, float y);
+	bool IsDigitOnly();
+	int GetMaxLength();
 };
 class ButtonMenuItem : public MenuItem
 {
@@ -119,9 +117,18 @@ class TextMenuItem : public MenuItem
 {
 public:
 	TextMenuItem(std::string title = "", int r=255, int g=255, int b=255);
-	TextMenuItem(std::string title="", int maxLength=0, bool digit=false, int r=255, int g=255, int b=255);
+	TextMenuItem(std::string title, int maxLength=0, bool digit=false, int r=255, int g=255, int b=255);
 	TextMenuItem(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=0, bool digit=false, int r=255, int g=255, int b=255);
 };
+class SliderMenuItem : public MenuItem
+{
+public:
+	SliderMenuItem(int width, int height, int r=255, int g=255, int b=255);
+	SliderMenuItem(bool (Settings::*onValueChange)(float value), int width, int height, int r=255, int g=255, int b=255);
+	float GetPercentage();
+	void SetStatus(int status);
+};
+
 class Menu
 {
 private:
@@ -143,7 +150,9 @@ public:
 	void AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), int r=255, int g=255, int b=255);
 	void AddTextChild(std::string title="", int maxLength=0, bool digit=false, int r=255, int g=255, int b=255);
 	void AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=0, bool digit=false, int r=255, int g=255, int b=255);
-	
+	void AddSliderChild(int width, int height, int r=255, int g=255, int b=255);
+	void AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, int r=255, int g=255, int b=255);
+
 	void HandleEvent(SDL_Event sEvent);
 	void Reset();
 	void Back(unsigned int index = 1);
