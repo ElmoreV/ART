@@ -35,20 +35,18 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	Map map1("Images/tilesheet.png", 64, 36, "Map/map1.txt");
-	map1.AddTile('x', 0, 0, 0, 36);
-	map1.AddTile('y', 64, 0, 36, 0);
-	map1.AddTile('a', 0, 36);
-	map1.AddTile('b', 64, 36);
- 	map1.AddTile('c', 0, 72, 0, 18);
- 	map1.AddTile('d', 64, 72, 18, 36);
- 	map1.AddTile('e', 0, 108, 36, 18);
- 	map1.AddTile('f', 64, 108, 18, 0);
-	map1.AddTile('z', 65, 65, false, true);
+	Map map1("Images/tilesheet.png", 100, 50, "Map/map2.txt");
 
-	Player player("Images/player.png", map1.GetSpawnLocation().X, map1.GetSpawnLocation().Y, 3, 3, 4);
+	map1.AddTile('x', 0, 50, 0, 50);
+	map1.AddTile('y', 100, 50, 50, 0);
+	map1.AddTile('a', 0, 0);
+	map1.AddTile('b', 100, 0);
+	map1.AddTile('z', 65, 65, false, true);
+	map1.SetMaskColor(255, 242, 0);
+
+	Player player("Images/Rat.png", map1.GetSpawnLocation().X, map1.GetSpawnLocation().Y, 3, 3, 2);
 	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
-	player.MaskColor(120, 195, 128);
+	player.MaskColor(255, 242, 0);
 	Tail tail;
 	Settings setting;
 

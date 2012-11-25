@@ -52,6 +52,7 @@ public:
 	float GetHeightAtPosition(Point2D position);
 	float GetSlopeHeight(Point2D position);
 	void SetNewMapPosition(Point2D screenSize, Point2D centerPoint);
+	void SetMaskColor(int r=255, int g=255, int b=255);
 	bool NewMapEnabled();
 	bool NewMap(std::string map, unsigned int tileWidth=0, unsigned int tileHeight=0, std::string tileSheet="");
 };
