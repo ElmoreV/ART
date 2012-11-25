@@ -326,5 +326,17 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 	}
 }
 Point2D Player::GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };
+HorizontalDirection Player::GetHorizontalDir()
+{
+	if(_buttonLeft) return HDirLeft;
+	else /*if(_buttonRight)*/ return HDirRight;
+	//else return HDirNone;
+}
+VerticalDirection Player::GetVerticalDir()
+{
+	if(_velocity.Y < 0) return VDirUp;
+	else if(_velocity.Y>0) return VDirDown;
+	else return VDirNone;
+}
 //bool Player::NewMapEnabled() { return _newmap;};
 //void Player::SetNewMap(Point2D position){_position=position; _newmap=false;};

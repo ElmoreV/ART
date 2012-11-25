@@ -3,7 +3,6 @@
 #include <math.h>
 inline bool FloatEq(float a,float b){return (a-b>-0.0001&&a-b<0.0001);}
 
-
 Point2D GetIntersectionRayCircle(Point2D point1, Point2D point2, Point2D center, float radius)
 {
 	Point2D result(point1);
@@ -30,9 +29,6 @@ Point2D GetIntersectionRayCircle(Point2D point1, Point2D point2, Point2D center,
 	}
 	return result;
 }
-
-
-
 
 inline float GetYForXBetweenPoints(float X, float x1, float y1, float x2, float y2)
 {
@@ -74,8 +70,6 @@ float CheckCollisionForTwoPoints(Point2D point1, Point2D point2, Point2D objectP
 			//Calculate the heighest point on the line hitting the player, and store it.
 			float tempHighestPoint=Minimum(mostTopR,mostTopL);
 			return tempHighestPoint;
-			//if (tempHighestPoint<highestPoint)
-			//{highestPoint=tempHighestPoint;}
 		}
 	}
 	return objectPositionMax.Y;
@@ -172,12 +166,6 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 				if (lastPoint.X!=-0xFFFF)
 				{
 						newPoint=GetIntersectionRayCircle(lastPoint+_canvas.GetOffset(),newPoint,playerMiddle,outsideDrawRadius);
-						if ((playerBound.X-newPoint.X)*(playerBound.X-newPoint.X)+(playerBound.Y-newPoint.Y)*(playerBound.Y-newPoint.Y)
-		>outsideDrawRadius*outsideDrawRadius+5)
-						{
-							Point2D testPoint=GetIntersectionRayCircle(lastPoint+_canvas.GetOffset(),Point2D(mouseX,mouseY),playerMiddle,outsideDrawRadius);
-							Error error(CaptionOnly,"lol",1);
-						}
 						_canvas.SetNewPoint(newPoint.X,newPoint.Y);
 				}else
 				{
@@ -189,14 +177,15 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 					}
 				}
 				_canvas.SetDrawMode(false);
-			}else
+			}
+		}
+		else
+		{
+			if (_cursorOutOfRange)
 			{
-				if (_cursorOutOfRange)
-				{
-					_cursorOutOfRange=false;
-					if (!cursorIsOnPlayer)
-					{_canvas.SetDrawMode(true);}
-				}
+				_cursorOutOfRange=false;
+				if (!cursorIsOnPlayer)
+				{_canvas.SetDrawMode(true);}
 			}
 		}
 		//If the line to be drawn goes on/through the player
@@ -302,42 +291,6 @@ float DrawingObject::CheckCollision(Rectangle ObjectRect)
 				float tempHighestPoint=CheckCollisionForTwoPoints(point1,point2,objectPosition,objectPositionMax);
 				if (tempHighestPoint<highestPoint)
 						{highestPoint=tempHighestPoint;}
-				/*//Make a box of the 2 points, and check if the object box is inside the 'point box'
-				float l=Minimum(point1.X,point2.X);
-				float t=Minimum(point1.Y,point2.Y);
-				float r=Maximum(point1.X,point2.X);
-				float b=Maximum(point1.Y,point2.Y);
-				
-				float mostLeft=Maximum(objectPosition.X, l);
-				float mostTop=Maximum(objectPosition.Y, t);
-				float mostRight=Minimum(objectPositionMax.X, r);
-				float mostBot=Minimum(objectPositionMax.Y, b);
-				float width = mostRight -mostLeft; 
-				float height =mostBot - mostTop;
-				if(width >= 0.0f && height >=0.0f) 
-				{
-					//Check if the line actually hits the object
-					float mostTopL,mostTopR;
-					if (!FloatEq(point1.X,point2.X))
-					{
-						//Calculate the Y-values for the left collision edge and the right collision edge
-						mostTopL=GetYForXBetweenPoints(mostLeft,point1.X,point1.Y,point2.X,point2.Y);
-						mostTopR=GetYForXBetweenPoints(mostRight,point1.X,point1.Y,point2.X,point2.Y);
-					}else
-					{
-						//Otherwise, it's just the highest collision point
-						mostTopL=mostTop;
-						mostTopR=mostTop;
-					}
-					if ((mostTopR>=objectPosition.Y||mostTopL>=objectPosition.Y)&&
-						(mostTopR<objectPositionMax.Y||mostTopL<objectPositionMax.Y))
-					{
-						//Calculate the heighest point on the line hitting the player, and store it.
-						float tempHighestPoint=Minimum(mostTopR,mostTopL);
-						if (tempHighestPoint<highestPoint)
-						{highestPoint=tempHighestPoint;}
-					}
-				}*/
 			}
 		}
 		if (!FloatEq(highestPoint,objectPositionMax.Y)&&highestPoint>=0.0f)

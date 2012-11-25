@@ -5,6 +5,7 @@
 #include "DrawingObject.h"
 #include "Assets.h"
 #include "Menu.h"
+#include "Tail.h"
 
 class FPS
 {
@@ -48,7 +49,7 @@ int main( int argc, char* args[] )
 	Player player("Images/player.png", map1.GetSpawnLocation().X, map1.GetSpawnLocation().Y, 3, 3, 4);
 	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 	player.MaskColor(120, 195, 128);
-
+	Tail tail;
 	Settings setting;
 
 	std::vector<std::string> option; option.push_back("Ja"); option.push_back("Nee"); option.push_back("Ooit");option.push_back("Misschien");
@@ -76,6 +77,7 @@ int main( int argc, char* args[] )
 			player.HandleEvent(sEvent);
 			map1.HandleEvent(sEvent,player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y));
 			menu.HandleEvent(sEvent);
+			tail.HandleEvent(sEvent);
 		}
 		//IF a new map can be load
 		if(map1.NewMapEnabled()){
@@ -83,9 +85,11 @@ int main( int argc, char* args[] )
 			player.SetPosition(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
+		tail.Update(player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y),player.GetHorizontalDir());
 		screen.ClearWindow();
 		map1.Draw(screen);
 		player.Draw(screen, map1.GetMapPosition());
+		tail.Draw(screen);
 		Rectangle playerBounds=player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y);
 		::aaellipseRGBA(screen,playerBounds.X+0.5*playerBounds.W,playerBounds.Y+0.5*playerBounds.H,100,100,255,255,255,255);
 		menu.Open(screen, Point2D(50, 50));

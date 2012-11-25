@@ -2,9 +2,22 @@
 #define PLAYER_H
 #include "SDLFramework.h"
 #include "Object.h"
+enum HorizontalDirection
+{
+	HDirLeft,
+	HDirRight,
+	HDirNone
+};
+enum VerticalDirection
+{
+	VDirUp,
+	VDirDown,
+	VDirNone
+};
 class Player : public Object
 {
 protected:
+	
 	Point2D _previousPosition;
 	//For the animations
 	int _interval, _countInterval, _animationState, _lastFrame;
@@ -21,6 +34,8 @@ public:
 	void Draw(WindowSurface screen, Point2D mapPosition);
 	void Update(Map& map1, int screenWidth, int screenHeight, long lastTick=-1);
 	Point2D GetCenter();
+	HorizontalDirection GetHorizontalDir();
+	VerticalDirection GetVerticalDir();
 	//bool NewMapEnabled();
 	//void SetNewMap(Point2D position);
 };
