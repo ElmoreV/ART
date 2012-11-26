@@ -38,9 +38,20 @@ Tail::Tail():_tip(0.0,0.0),_base(0.0,0.0){}
 
 void Tail::Draw(WindowSurface screen)
 {
-	//Calculate different point of tail, with beginpoint '_base' en endpoint '_tip', first going horizontal, curving towards t
-	//TODO: Implement curvy tail
-	screen.DrawLine(_base.X,_base.Y,_tip.X,_tip.Y,255,155,155);
+	//Draw the different point, giving some thickness near the base
+	for (int i=1;i<=100;i++)
+	{
+		if (i>50)
+		{
+			screen.DrawLine(_bezierCurve[i-1].X+1,_bezierCurve[i-1].Y+1,_bezierCurve[i].X+1,_bezierCurve[i].Y+1,200,100,100);
+		}
+		if (i>75)
+		{
+			screen.DrawLine(_bezierCurve[i-1].X+2,_bezierCurve[i-1].Y-1,_bezierCurve[i].X+2,_bezierCurve[i].Y-1,155,75,75);
+			screen.DrawLine(_bezierCurve[i-1].X+2,_bezierCurve[i-1].Y+2,_bezierCurve[i].X+2,_bezierCurve[i].Y+2,155,75,75);
+		}
+		screen.DrawLine(_bezierCurve[i-1].X,_bezierCurve[i-1].Y,_bezierCurve[i].X,_bezierCurve[i].Y,255,155,155);
+	}
 }
 void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
 {
@@ -61,6 +72,27 @@ void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
 	{
 		_tip=_lastCursor;
 	}
+	//Calculate a Bezier curve
+	Point2D middlePoint(0.5*(_base.X+_tip.X),0.5*(_base.Y+_tip.Y));
+	float dx=_tip.X-_base.X;
+	if (playerDirection==HDirLeft)
+		middlePoint.X+=0.5*-dx+70;
+	else if (playerDirection==HDirRight)
+		middlePoint.X-=0.5*dx+70;
+	for (int i=0;i<=100;i++)
+	{
+		float a=(float)i/100.0f;
+		_bezierCurve[i].X=
+			a*a*_base.X+
+			2*(1-a)*a*middlePoint.X+
+			(1-a)*(1-a)*_tip.X;
+		_bezierCurve[i].Y=
+			(a)*(a)*_base.Y+
+			2*(1-a)*a*middlePoint.Y+
+			(1-a)*(1-a)*_tip.Y;
+	}
+
+
 }
 void Tail::HandleEvent(SDL_Event sEvent)
 {
