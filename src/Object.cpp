@@ -9,14 +9,11 @@ Object::Object(std::string filename, float X, float Y, int spriteX, int spriteY)
 	_spriteX = spriteX; _spriteY = spriteY;
 	_spriteDimension.X = _surface->w / (float)_spriteX;
 	_spriteDimension.Y = _surface->h / (float)_spriteY;
-	_frame = 9;
-	_showing = true;
-	_buttonUp=false; _buttonDown=false; _buttonLeft=false; _buttonRight=false;
 }
 //Get a rectangle of the position and the dimentions
 SDL_Rect Object::GetBound(float velocityX, float velocityY)
 {
-	SDL_Rect bound = {(Sint16)_position.X+velocityX, (Sint16)_position.Y+velocityY, (Sint16)_spriteDimension.X, (Sint16)_spriteDimension.Y};
+	SDL_Rect bound = {(Sint16)(_position.X+velocityX), (Sint16)(_position.Y+velocityY), (Sint16)_spriteDimension.X, (Sint16)_spriteDimension.Y};
 	return bound;
 }
 Rectangle Object::GetBoundR(float velocityX, float velocityY)
@@ -24,28 +21,11 @@ Rectangle Object::GetBoundR(float velocityX, float velocityY)
 	Rectangle bound(_position.X+velocityX, _position.Y+velocityY, _spriteDimension.X, _spriteDimension.Y);
 	return bound;
 }
-//Get a rectangle of the clipimage that is showed on the screen
-SDL_Rect Object::GetFrame()
-{
-	SDL_Rect frames;
-	frames.x = (Sint16)((_frame % _spriteX) * _spriteDimension.X); //Get X on the surface
-	frames.y = (Sint16)((_frame / _spriteY) * _spriteDimension.Y); //Get Y on the surface
-	frames.w = (Sint16)_spriteDimension.X; //Clip width
-	frames.h = (Sint16)_spriteDimension.Y; //Clip Height
-	return frames;
-}
-Rectangle Object::GetFrameR()
-{
-	Rectangle frames(((_frame % _spriteX) * _spriteDimension.X),((_frame / _spriteY) * _spriteDimension.Y),_spriteDimension.X,_spriteDimension.Y);
-	return frames;
-}
+
 //Draws the surface on the screen
 void Object::Draw(WindowSurface screen)
 {
-	if((_spriteX == 1) && (_spriteY == 1))//Check if it is the whole surface
-		_surface.Draw(screen, (Sint16)_position.X, (Sint16)_position.Y, NULL);//Draws whole surface
-	else 
-		_surface.Draw(screen, (Uint16)_position.X, (Uint16)_position.Y, &GetFrame()); //Draws only framepart on the screen
+	_surface.Draw(screen, (Sint16)_position.X, (Sint16)_position.Y, NULL);//Draws whole surface
 }
 //Convert the collision rectangle to the rectangle on the surface
 SDL_Rect Object::ConvertToImagePosition(SDL_Rect rect)
@@ -137,7 +117,7 @@ bool Object::CheckCollisionR(Object objB)
         for(int x = 0; x < collisionRect.W; x++)
 		{
 			//Return true if two non-transpirant pixels collide
-			if(GetAlphaXY(this, (int)(normalA.X + x), int(normalA.X + y)) && GetAlphaXY(&objB, normalB.X + x, normalB.X + y))
+			if(GetAlphaXY(this, (int)(normalA.X + x), int(normalA.X + y)) && GetAlphaXY(&objB, (int)(normalB.X + x), (int)(normalB.X + y)))
                 return true;
 		}
 	}
@@ -193,14 +173,6 @@ void Object::SetPosition(float X, float Y){_position.X = X;_position.Y = Y;}
 void Object::SetPosition(Point2D position){_position = position; }
 //Changes the object velocity
 void Object::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = Y;}
-//Set the clipnumber that will be showed (like a book, from left to right, and then from top to bottom)
-void Object::SetFrame(int frame)
-{
-	int maxFrame=_spriteX*_spriteY;
-	_frame = frame;
-	if(_frame<0){_frame=0;}
-	else if(_frame > maxFrame){_frame=maxFrame;}
-}
 //Set the colorkey (mask) of the surface
 bool Object::MaskColor(int r, int g, int b)
 {
@@ -209,12 +181,3 @@ bool Object::MaskColor(int r, int g, int b)
 }
 //Releases resources of the class
 void Object::Free(){_surface.Free();}
-//Keep up if arrowbuttons are pressed
-void Object::HandleEvent(SDL_Event sEvent)
-{
-	Uint8* keystates = SDL_GetKeyState(NULL);
-	if(keystates[SDLK_DOWN]) _buttonDown = true; else _buttonDown = false;
-	if(keystates[SDLK_UP]) _buttonUp = true; else _buttonUp = false;
-	if(keystates[SDLK_LEFT]) _buttonLeft = true; else _buttonLeft = false;
-	if(keystates[SDLK_RIGHT]) _buttonRight = true; else _buttonRight = false;
-}

@@ -66,6 +66,9 @@ bool Map::ReadFile(std::string filename)
 	}
 	return true;
 }
+void Map::SetMaskColor(int r, int g, int b){
+	_tileSheet.MaskColor(r, g, b);
+}
 //Adds a new normal tile to the dictionary
 bool Map::AddTile(char key, int x, int y, bool solid, bool drawable){
 	TileData value(x, y, (int)_tileDimension.X, (int)_tileDimension.Y,solid, drawable);

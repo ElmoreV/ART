@@ -19,27 +19,22 @@ protected:
 	//spriteY: same as spriteX, but in vertical line
 	//tileWidth: width of the clip (or surfacewidth if spriteX=1)
 	//tileHeight: height of the clip (or surfaceheight if spriteY=1)
-	int _frame, _spriteX, _spriteY; 
+	int _spriteX, _spriteY; 
 	Point2D _position, _velocity, _spriteDimension;
 	Surface _surface;
-	bool _buttonUp, _buttonDown, _buttonLeft, _buttonRight;
 public:
 	//Normal function
 	Object(std::string filename, float X, float Y, int spriteX=1, int spriteY=1); //Constructor
 	Rectangle GetBoundR(float velocityX=0, float velocityY=0);//Get the position and dimentions of the object on the screen
 	SDL_Rect GetBound(float velocityX=0, float velocityY=0);//This is the lower quality SDL_Rect version
-	SDL_Rect GetFrame();//Get the part of the image that is showed
-	Rectangle GetFrameR();//The function with floats
+
 	bool ChangeSprite(std::string filename, int r=-1, int g=-1, int b=-1); //Changes the surface and set maskcolor
 	bool MaskColor(int r, int g, int b); //Set the colorkey (mask)
 	void Draw(WindowSurface screen);//Draws (clip of) surface on the screen
-	void HandleEvent(SDL_Event sEvent); //Keep up if arrowbuttons are pressed
 	void SetPosition(float X, float Y);//Changes the position of the object
 	void SetPosition(Point2D position);
 	void SetVelocity(float X, float Y);
-	void SetFrame(int frame);//Set the animation (if it has more then 1)
 	void Free(); //Releases resources of the object
-	bool _showing;
 	//Collision function
 	SDL_Rect ConvertToImagePosition(SDL_Rect rect); //Convert the collistion rectangle to the position on the surface
 	Rectangle ConvertToImagePositionR(Rectangle rect);

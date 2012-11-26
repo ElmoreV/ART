@@ -8,7 +8,11 @@ Player::Player(std::string filename, float X, float Y, int interval, int spriteX
 	if(_interval <= 0) _interval = 1;
 	_countInterval = 0;
 	_animationState = 0;
-	_lastFrame = 1;
+	_vDir = VDirNone;
+	_hDir = HDirLeft;
+	_frame = 0;
+	_buttonUp=_buttonDown=_buttonLeft=_buttonRight=false;
+	_velocity.Y = 50;
 };
 Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 {
@@ -18,12 +22,21 @@ Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
 void Player::Update(Map& map1, int screenWidth, int screenHeight, long lastTick){
 	//Update animation image for the player
-	_frame = _lastFrame;
-	if((_buttonLeft || _buttonRight) && (_countInterval > _interval)){
-		_countInterval = 0;
-		_animationState++;
-		if(_animationState > 2)
-			_animationState = 0;
+	if(_buttonLeft || _buttonRight){
+		if(_countInterval > _interval){
+			_countInterval = 0;
+			_animationState++;
+			if(_animationState > 2)
+				_animationState = 0;
+		}
+		if(_buttonLeft){
+			_frame=0+_animationState;
+			_hDir = HDirLeft;
+		}
+		else {
+			_hDir = HDirRight;
+			_frame=3+_animationState;
+		}
 	}
 	_countInterval++;
 	
@@ -69,6 +82,9 @@ void Player::Update(Map& map1, int screenWidth, int screenHeight, long lastTick)
 		_position.Y = mapDim.Y - _spriteDimension.Y;
 		_jumpEnable = true;
 	}
+	if(_velocity.Y < 0) _vDir = VDirUp;
+	else if(_velocity.Y>0)_vDir=VDirDown;
+	else _vDir = VDirNone;
 }
 void Player::Draw(WindowSurface screen, Point2D mapPosition)
 {
@@ -79,7 +95,7 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 	if(timeDiff*_velocity.Y <= map.GetTileDimension().Y && timeDiff*_velocity.X<=map.GetTileDimension().X &&
 		timeDiff*_velocity.Y<=_spriteDimension.Y&&timeDiff*_velocity.X<=map.GetTileDimension().X){
 		int Y1 = (int)((_position.Y + _velocity.Y*timeDiff) / map.GetTileDimension().Y);
-		int Y2 = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y) / map.GetTileDimension().Y);
+		int Y2 = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y - 1) / map.GetTileDimension().Y);
 		int Y = (_velocity.Y < 0)?Y1:Y2;
 		//The left edge x coord
 		int X1 = (int)(_position.X / map.GetTileDimension().X);
@@ -98,22 +114,31 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 		//The player hit a block, so now it can only walk the difference between player and the block
 		else {
 			if(_velocity.Y < 0){
-				if(charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3){
-					_position.Y = (Y+1)*map.GetTileDimension().Y;
-					_velocity.Y = 50;
+				int Yt = (int)((_position.Y) / map.GetTileDimension().Y);
+				int botLeft = map.GetCharType(Point2D(X1, Yt));
+				int botRight = map.GetCharType(Point2D(X2, Yt));
+				if(((charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3) && botLeft <2 && botRight < 2) ||
+					(charTypeLeft == 2 && charTypeRight == 2) || (charTypeLeft == 3 && charTypeRight==3)) {
+					//_position.Y = (Y+1)*map.GetTileDimension().Y;
+					_velocity.Y = 0;
 				}
+				else if(charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3)
+					_position.Y += _velocity.Y*timeDiff;
 				else if(charTypeLeft == 5 || charTypeLeft2 == 5 || charTypeRight == 5 || charTypeRight2 == 5){
 					if (!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y+_velocity.Y*timeDiff)))
 						_position.Y += _velocity.Y*timeDiff;
-					else _velocity.Y = 50;
+					else _velocity.Y = 0;
 				}
 				else _position.Y += _velocity.Y*timeDiff;
 			}
 			else {
 				if(charTypeLeft == 2 || charTypeRight == 2){
-					_position.Y = (Y*map.GetTileDimension().Y) - _spriteDimension.Y;
 					_velocity.Y = 50;
 					_jumpEnable = true;
+				}
+				else if((charTypeLeft < 2 && map.GetCharType(Point2D(X1, Y1)) == 3) || 
+					charTypeRight < 2 && map.GetCharType(Point2D(X2, Y1)) == 3){
+
 				}
 				else if(charTypeLeft == 3 || charTypeRight == 3){
 					//_position.Y += _velocity.Y*timeDiff;
@@ -167,12 +192,14 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 						}
 						else {
 							//normal slope \ or /
-							float h = (charTypeLeft == 3 && yl1>yl2)?map.GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):map.GetSlopeHeight(Point2D(_position.X+_spriteDimension.Y, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
+							float h = (charTypeLeft == 3 && yl1>yl2)?map.GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):map.GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
 							newpos = (Y*map.GetTileDimension().Y) + h;
 						}
+
 						//Set the new position
-						if(newpos - _spriteDimension.Y >= _position.Y+_velocity.Y*timeDiff)
+						if(newpos - _spriteDimension.Y >= _position.Y+_velocity.Y*timeDiff){
 							_position.Y += _velocity.Y*timeDiff;
+						}
 						else {
 							_position.Y = newpos - _spriteDimension.Y;
 							_velocity.Y = 50;
@@ -180,7 +207,6 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 						}
 					}
 				}
-				
 				else if(charTypeLeft == 5  || charTypeRight == 5){
 					if(!map.CheckDrawCollision(GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y + _velocity.Y*timeDiff)))
 						_position.Y += _velocity.Y*timeDiff;
@@ -193,14 +219,10 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 		if(_buttonLeft || _buttonRight){
 			int X;
 			if(_buttonLeft){
-				//For animation
-				_frame=5+_animationState;_lastFrame = 4;
 				//The new x position after walking if to left
 				X = (int)((_position.X - _velocity.X*timeDiff) / map.GetTileDimension().X);
 			}
 			else {
-				//For animation
-				_frame=9+_animationState;_lastFrame = 8;
 				//The new x position after walking if to right
 				X = (int)((_position.X + _velocity.X*timeDiff + _spriteDimension.X) / map.GetTileDimension().X);
 			}
@@ -277,14 +299,13 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 						else if(ry1 < ry2 && _buttonRight && hr>_spriteDimension.Y){ //Up
 							float diff = _position.X+_spriteDimension.X-(X2*map.GetTileDimension().X);
 							float ratio = (ry2-ry1)/map.GetTileDimension().X;
+							
 							newpos = Y2 * map.GetTileDimension().Y + map.GetTileDimension().Y - diff * ratio - _spriteDimension.Y;
 							handled = true;
 						}
 						//handles player pos
 						if(handled && newpos < _position.Y){
 							_position.Y = newpos;
-							//_velocity.Y = 50;
-							//_jumpEnable = true;
 						}
 						//checks of the player can walk left or right
 						//(IF there is no ceiling lower then spriteheight)
@@ -328,15 +349,46 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 Point2D Player::GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };
 HorizontalDirection Player::GetHorizontalDir()
 {
+	/*
 	if(_buttonLeft) return HDirLeft;
-	else /*if(_buttonRight)*/ return HDirRight;
+	else /*if(_buttonRight) return HDirRight;
 	//else return HDirNone;
+	*/
+	return _hDir;
 }
 VerticalDirection Player::GetVerticalDir()
 {
-	if(_velocity.Y < 0) return VDirUp;
-	else if(_velocity.Y>0) return VDirDown;
-	else return VDirNone;
+	return _vDir;
 }
-//bool Player::NewMapEnabled() { return _newmap;};
-//void Player::SetNewMap(Point2D position){_position=position; _newmap=false;};
+//Get a rectangle of the clipimage that is showed on the screen
+SDL_Rect Player::GetFrame()
+{
+	SDL_Rect frames;
+	frames.x = (Sint16)((_frame % _spriteX) * _spriteDimension.X); //Get X on the surface
+	frames.y = (Sint16)((_frame / (_spriteY+1)) * _spriteDimension.Y); //Get Y on the surface
+	frames.w = (Sint16)_spriteDimension.X; //Clip width
+	frames.h = (Sint16)_spriteDimension.Y; //Clip Height
+	return frames;
+}
+Rectangle Player::GetFrameR()
+{
+	Rectangle frames(((_frame % _spriteX) * _spriteDimension.X),((_frame / _spriteY) * _spriteDimension.Y),_spriteDimension.X,_spriteDimension.Y);
+	return frames;
+}
+//Set the clipnumber that will be showed (like a book, from left to right, and then from top to bottom)
+void Player::SetFrame(int frame)
+{
+	int maxFrame=_spriteX*_spriteY;
+	_frame = frame;
+	if(_frame<0){_frame=0;}
+	else if(_frame > maxFrame){_frame=maxFrame;}
+}
+//Keep up if arrowbuttons are pressed
+void Player::HandleEvent(SDL_Event sEvent)
+{
+	Uint8* keystates = SDL_GetKeyState(NULL);
+	if(keystates[SDLK_DOWN]) _buttonDown = true; else _buttonDown = false;
+	if(keystates[SDLK_UP]) _buttonUp = true; else _buttonUp = false;
+	if(keystates[SDLK_LEFT]) _buttonLeft = true; else _buttonLeft = false;
+	if(keystates[SDLK_RIGHT]) _buttonRight = true; else _buttonRight = false;
+}
