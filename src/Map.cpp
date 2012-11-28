@@ -265,7 +265,7 @@ float Map::GetSlopeHeight(Point2D position){
 	return h;
 }
 //Center the map
-void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint, int dir){
+void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 	float maxX = _tileDimension.X * _mapArray[0].size();
 	float maxY = _tileDimension.Y * _mapArray.size();
 	float newX=0, newY=0;
