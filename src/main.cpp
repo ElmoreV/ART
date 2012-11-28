@@ -35,7 +35,7 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	Map map1("Images/tilesheet.png", 100, 50, "Map/map2.txt");
+	Map map1("Images/tilesheet.png", 100, 50, "Map/map1.txt");
 
 	map1.AddTile('x', 0, 50, 0, 50);
 	map1.AddTile('y', 100, 50, 50, 0);
@@ -82,7 +82,7 @@ int main( int argc, char* args[] )
 		}
 		//IF a new map can be load
 		if(map1.NewMapEnabled()){
-			map1.NewMap("Map/map2.txt");
+			map1.NewMap("Map/map1.txt");
 			player.SetPosition(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
