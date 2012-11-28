@@ -87,16 +87,14 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 	Point2D playerMiddle(playerBound.X+0.5f*playerBound.W, playerBound.Y+0.5f*playerBound.H);
 	float outsideDrawRadius=100;
 	Point2D cursor(sEvent.button.x,sEvent.button.y);
-	Point2D cursorRelPlayer=playerMiddle;
-	cursorRelPlayer-=cursor;
+	Point2D cursorRelPlayer=playerMiddle-cursor;
+
+	Point2D relativePlayer=Point2D(playerBound.X,playerBound.Y)-_canvas.GetOffset();
+	Point2D relativePlayerMax=Point2D(relativePlayer.X+playerBound.W,relativePlayer.Y+playerBound.H);
+
 	Point2D lastPoint(-0xFFFF,-0xFFFF);
 	if (_canvas.GetSize())
-		lastPoint=_canvas.GetPoint(_canvas.GetSize()-1);
-	Point2D relativePlayer=Point2D(playerBound.X,playerBound.Y);
-	Point2D relativeMouse=cursor;
-	relativeMouse-=_canvas.GetOffset();
-	relativePlayer-=_canvas.GetOffset();
-	Point2D relativePlayerMax=Point2D(relativePlayer.X+playerBound.W,relativePlayer.Y+playerBound.H);
+	{lastPoint=_canvas.GetPoint(_canvas.GetSize()-1);}
 	//cursor button down
 	if (sEvent.type==SDL_MOUSEBUTTONDOWN)
 	{
@@ -116,7 +114,9 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 
 		if (lastPoint.X!=-0xFFFF)
 		{
-			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeMouse,
+			Point2D relativeCursor=cursor;
+			relativeCursor-=_canvas.GetOffset();
+			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeCursor,
 				relativePlayer,relativePlayerMax),relativePlayerMax.Y))
 			{_cursorOnPlayer=true;}
 		}
@@ -142,9 +142,12 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		{cursorIsOnPlayer=true;}
 
 		//Check if you're not drawing through the character
+		Point2D relativeCursor=cursor;
+		relativeCursor-=_canvas.GetOffset();
 		if (!FloatEq(lastPoint.X,-0xFFFF))
 		{
-			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeMouse,
+			
+			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeCursor,
 				relativePlayer,relativePlayerMax),relativePlayerMax.Y))
 			{cursorIsOnPlayer=true;}
 		}else
@@ -152,7 +155,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 			Point2D referenceOutside=_canvas.GetOutsideReferencePoint();
 			if (referenceOutside.X!=-0xFFFF)
 			{
-				if (!FloatEq(CheckCollisionForTwoPoints(referenceOutside,relativeMouse,	relativePlayer,relativePlayerMax),relativePlayerMax.Y))
+				if (!FloatEq(CheckCollisionForTwoPoints(referenceOutside,relativeCursor,	relativePlayer,relativePlayerMax),relativePlayerMax.Y))
 				{cursorIsOnPlayer=true;}
 			}
 		}
@@ -229,24 +232,23 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 			_canvas.Optimize(0.5f);
 		if (sEvent.key.keysym.sym==SDLK_DELETE)
 		{	_canvas.Clear();
-		_cursorOnPlayer=false;
-		_cursorOutOfRange=false;
-		_cursorPressed=false;
-		_canvas.SetDrawMode(false);
+			_cursorOnPlayer=false;
+			_cursorOutOfRange=false;
+			_cursorPressed=false;
+			_canvas.SetDrawMode(false);
 		}
 		if (sEvent.key.keysym.sym==SDLK_INSERT)
 		{
 			_canvas.SetDrawMode();
-			_canvas.SetNewPoint(0,3*36+4);
-			_canvas.SetNewPoint(200,3*36+4);
+			//Can be used for quick line testing
 			_canvas.SetDrawMode(false);
 		}
 	}
 }
 void DrawingObject::Draw(WindowSurface sfScreen)
 {
-	int superSize=_canvas.GetSize();
-	for (int i=1;i<superSize;i++)
+	int vectorSize=_canvas.GetSize();
+	for (int i=1;i<vectorSize;i++)
 	{
 		Point2D point=_canvas.GetPoint(i);
 		Point2D point2=_canvas.GetPoint(i-1);
@@ -254,9 +256,8 @@ void DrawingObject::Draw(WindowSurface sfScreen)
 		{
 		}else
 		{
-			Point2D off=_canvas.GetOffset();
-			off.X=-off.X;
-			off.Y=-off.Y;
+			Point2D off(0,0);
+			off-=_canvas.GetOffset();
 			sfScreen.DrawLine((int)(point.X-off.X-1),(int)(point.Y-off.Y-2),(int)(point2.X-off.X-1),(int)(point2.Y-off.Y-2),255,255,0);
 			sfScreen.DrawLine((int)(point.X-off.X-2),(int)(point.Y-off.Y-1),(int)(point2.X-off.X-2),(int)(point2.Y-off.Y-1),255,0,0);
 			sfScreen.DrawLine((int)(point.X-off.X),(int)(point.Y-off.Y),(int)(point2.X-off.X),(int)(point2.Y-off.Y-1),255,0,255);

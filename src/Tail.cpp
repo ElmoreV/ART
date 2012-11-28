@@ -47,8 +47,8 @@ void Tail::Draw(WindowSurface screen)
 		}
 		if (i>75)
 		{
-			screen.DrawLine(_bezierCurve[i-1].X+2,_bezierCurve[i-1].Y-1,_bezierCurve[i].X+2,_bezierCurve[i].Y-1,155,75,75);
-			screen.DrawLine(_bezierCurve[i-1].X+2,_bezierCurve[i-1].Y+2,_bezierCurve[i].X+2,_bezierCurve[i].Y+2,155,75,75);
+			screen.DrawLine(_bezierCurve[i-1].X+1,_bezierCurve[i-1].Y-1,_bezierCurve[i].X+1,_bezierCurve[i].Y-1,155,75,75);
+			screen.DrawLine(_bezierCurve[i-1].X+1,_bezierCurve[i-1].Y+2,_bezierCurve[i].X+1,_bezierCurve[i].Y+2,155,75,75);
 		}
 		screen.DrawLine(_bezierCurve[i-1].X,_bezierCurve[i-1].Y,_bezierCurve[i].X,_bezierCurve[i].Y,255,155,155);
 	}
@@ -58,7 +58,7 @@ void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
 	//1. Get the base of the tail (need the player bound for that)
 	_base.Y=playerRect.Y+24;
 	_base.X=playerDirection==HDirLeft?playerRect.X+playerRect.W:playerRect.X;
-	//2. Determine the tip of the tail (using the mouse input, and the maximum range)
+	//2. Determine the tip of the tail (using the cursor input, and the maximum range)
 	Point2D playerCenter(playerRect.X+playerRect.W*0.5,playerRect.Y+playerRect.H*0.5);
 	Point2D cursorRelPlayer=playerCenter-_lastCursor;
 	float outsideRadius=100;
@@ -72,13 +72,14 @@ void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
 	{
 		_tip=_lastCursor;
 	}
-	//Calculate a Bezier curve
-	Point2D middlePoint(0.5*(_base.X+_tip.X),0.5*(_base.Y+_tip.Y));
-	float dx=_tip.X-_base.X;
+	//Calculate a Bezier curve, translating 70 pixels away from the mouse
+	Point2D middlePoint(0.5*(_base.X+_tip.X),0.5*(_base.Y+_tip.Y));//();
 	if (playerDirection==HDirLeft)
-		middlePoint.X+=0.5*-dx+70;
+	{middlePoint.X=_base.X+70;}
 	else if (playerDirection==HDirRight)
-		middlePoint.X-=0.5*dx+70;
+	{middlePoint.X=_base.X-70;}
+	
+	
 	for (int i=0;i<=100;i++)
 	{
 		float a=(float)i/100.0f;
