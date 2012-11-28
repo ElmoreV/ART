@@ -190,7 +190,11 @@ Point2D Map::GetMapDimension()
 	return Point2D(_mapArray.at(0).size() * _tileDimension.X, _mapArray.size() * _tileDimension.Y);
 }
 //Sets the offset of the map, so from where it must be showed
-void Map::SetMapPosition(float x, float y){ _mapPosition.X = x; _mapPosition.Y = y; };
+void Map::SetMapPosition(float x, float y){ 
+	for(unsigned int i = 0; i < _drawObjects.size(); i++){
+		_drawObjects.at(i).GetDrawing().ChangeOffset(_mapPosition.X - x, _mapPosition.Y-y);
+	} 
+		_mapPosition.X = x; _mapPosition.Y = y;};
 //Returns the height of empty pixels @ the position
 float Map::GetHeightAtPosition(Point2D position){
 	int y = (int)(position.Y / _tileDimension.Y);
@@ -239,8 +243,8 @@ float Map::GetSlopeHeight(Point2D position){
 	unsigned int x = (int)(position.X / _tileDimension.X);
 	unsigned int y = (int)(position.Y / _tileDimension.Y);
 	//out of range check
-	if(y > _mapArray.size()) return 0;
-	if(x >_mapArray[y].size()) return 0;
+	if(y >= _mapArray.size()) return 0;
+	if(x >=_mapArray[y].size()) return 0;
 
 	const char* charline = _mapArray.at(y).c_str();
 	TileData tiledat = _tileLibrary.find(charline[x])->second;
@@ -261,7 +265,7 @@ float Map::GetSlopeHeight(Point2D position){
 	return h;
 }
 //Center the map
-void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
+void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint, int dir){
 	float maxX = _tileDimension.X * _mapArray[0].size();
 	float maxY = _tileDimension.Y * _mapArray.size();
 	float newX=0, newY=0;

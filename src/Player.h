@@ -5,9 +5,9 @@
 #include "Tail.h"
 enum HorizontalDirection
 {
+	HDirNone,
 	HDirLeft,
-	HDirRight,
-	HDirNone
+	HDirRight
 };
 enum VerticalDirection
 {

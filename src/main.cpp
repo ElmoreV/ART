@@ -93,7 +93,7 @@ int main( int argc, char* args[] )
 		tail.Draw(screen);
 		Rectangle playerBounds=player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y);
 		::aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
-		menu.Open(screen, Point2D(50, 50));
+		menu.Open(screen, Point2D(50, 50));		
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 		screen.UpdateWindow();
 		fps.Delay();
