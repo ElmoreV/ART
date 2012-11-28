@@ -86,15 +86,14 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 {
 	Point2D playerMiddle(playerBound.X+0.5f*playerBound.W, playerBound.Y+0.5f*playerBound.H);
 	float outsideDrawRadius=100;
-	Uint16 mouseX = sEvent.button.x;
-	Uint16 mouseY = sEvent.button.y;
-	Point2D mouseRelPlayer=playerMiddle;
-	mouseRelPlayer-=Point2D(mouseX,mouseY);
+	Point2D cursor(sEvent.button.x,sEvent.button.y);
+	Point2D cursorRelPlayer=playerMiddle;
+	cursorRelPlayer-=cursor;
 	Point2D lastPoint(-0xFFFF,-0xFFFF);
 	if (_canvas.GetSize())
 		lastPoint=_canvas.GetPoint(_canvas.GetSize()-1);
 	Point2D relativePlayer=Point2D(playerBound.X,playerBound.Y);
-	Point2D relativeMouse=Point2D(mouseX,mouseY);
+	Point2D relativeMouse=cursor;
 	relativeMouse-=_canvas.GetOffset();
 	relativePlayer-=_canvas.GetOffset();
 	Point2D relativePlayerMax=Point2D(relativePlayer.X+playerBound.W,relativePlayer.Y+playerBound.H);
@@ -103,7 +102,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 	{
 		Point2D newPoint(sEvent.button.x,sEvent.button.y);
 		//Check if the cursor is outside the draw range
-		if ((mouseRelPlayer.X)*(mouseRelPlayer.X)+(mouseRelPlayer.Y)*(mouseRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
+		if ((cursorRelPlayer.X)*(cursorRelPlayer.X)+(cursorRelPlayer.Y)*(cursorRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
 		{
 			_cursorOutOfRange=true;
 
@@ -112,7 +111,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 			_cursorOutOfRange=false;
 		}
 		//Or if it's inside the minimal draw range
-		if (mouseX>playerBound.X-2&&mouseY>playerBound.Y-2&&mouseX<playerBound.X+playerBound.W+2&&mouseY<playerBound.Y+playerBound.H)
+		if (cursor.X>playerBound.X-2&&cursor.Y>playerBound.Y-2&&cursor.X<playerBound.X+playerBound.W+2&&cursor.Y<playerBound.Y+playerBound.H)
 		{_cursorOnPlayer=true;}
 
 		if (lastPoint.X!=-0xFFFF)
@@ -135,11 +134,11 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		bool cursorIsOnPlayer=false;
 		bool cursorIsOutOfRange=false;
 		//Check if it's outside of the draw range. Stop drawing if so. Restart drawing if it WAS true, but not anymore
-		if ((mouseRelPlayer.X)*(mouseRelPlayer.X)+(mouseRelPlayer.Y)*(mouseRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
+		if ((cursorRelPlayer.X)*(cursorRelPlayer.X)+(cursorRelPlayer.Y)*(cursorRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
 		{cursorIsOutOfRange=true;}
 
 		//Check if it's inside of the minimal draw range
-		if (mouseX>playerBound.X-2&&mouseY>playerBound.Y-2&&mouseX<playerBound.X+playerBound.W+2&&mouseY<playerBound.Y+playerBound.H)
+		if (cursor.X>playerBound.X-2&&cursor.Y>playerBound.Y-2&&cursor.X<playerBound.X+playerBound.W+2&&cursor.Y<playerBound.Y+playerBound.H)
 		{cursorIsOnPlayer=true;}
 
 		//Check if you're not drawing through the character
@@ -163,17 +162,20 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 			if (_cursorPressed)
 			{
 				_cursorOutOfRange=true;
-				if (lastPoint.X!=-0xFFFF)
+				if (!cursorIsOnPlayer)
 				{
+					if (lastPoint.X!=-0xFFFF)
+					{
 						newPoint=GetIntersectionRayCircle(lastPoint+_canvas.GetOffset(),newPoint,playerMiddle,outsideDrawRadius);
 						_canvas.SetNewPoint(newPoint.X,newPoint.Y);
-				}else
-				{
-					Point2D lastReferencePoint=_canvas.GetOutsideReferencePoint();
-					if (lastReferencePoint.X!=-0xFFFF)
+					}else
 					{
-								newPoint=GetIntersectionRayCircle(lastReferencePoint+_canvas.GetOffset(),newPoint,playerMiddle,outsideDrawRadius);
-								_canvas.SetNewPoint(newPoint.X,newPoint.Y);
+						Point2D lastReferencePoint=_canvas.GetOutsideReferencePoint();
+						if (lastReferencePoint.X!=-0xFFFF)
+						{
+							newPoint=GetIntersectionRayCircle(lastReferencePoint+_canvas.GetOffset(),newPoint,playerMiddle,outsideDrawRadius);
+							_canvas.SetNewPoint(newPoint.X,newPoint.Y);
+						}
 					}
 				}
 				_canvas.SetDrawMode(false);
@@ -203,7 +205,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		{
 			if (_cursorOnPlayer)
 			{
-				if (!cursorIsOnPlayer)
+				if (!cursorIsOutOfRange)
 				{_canvas.SetDrawMode(true);}
 				_cursorOnPlayer=false;
 			}

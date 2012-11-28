@@ -3,6 +3,7 @@
 #include "Point.h"
 #include "SDLFramework.h"
 #include "Rectangle.h"
+#include <vector>
 extern enum HorizontalDirection;
 
 class Tail
@@ -15,6 +16,7 @@ public:
 private:
 	Point2D _base;
 	Point2D _tip;
+	Point2D _bezierCurve[101];
 	Point2D _lastCursor;
 };
 
