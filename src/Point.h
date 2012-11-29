@@ -10,5 +10,7 @@ public:
 	inline Point2D& operator -=(Point2D pointToSubstract){X-=pointToSubstract.X;Y-=pointToSubstract.Y; return *this;}
 	inline Point2D operator +(Point2D pointToAdd){return Point2D(X+pointToAdd.X,Y+pointToAdd.Y);}
 	inline Point2D operator -(Point2D pointToSubstract){return Point2D(X-pointToSubstract.X,Y-pointToSubstract.Y);}
+	inline Point2D operator *(Point2D point){return Point2D(X*point.X,Y*point.Y);}
+	inline Point2D operator /(Point2D point){return Point2D(X/point.X,Y/point.Y);}
 };
 #endif

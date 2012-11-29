@@ -83,7 +83,6 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 	Dictionary::iterator it = _tileLibrary.lower_bound(key);
 	if(it != _tileLibrary.end() && !(_tileLibrary.key_comp()(key, it->first))) { return false; } //Key already exist
 	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
-
 }
 bool Map::HandleEvent(SDL_Event sEvent, Rectangle playerBound){
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
@@ -146,28 +145,22 @@ void Map::Draw(WindowSurface screen,const char* mapArray[], unsigned int aantalR
 	}
 }
 //Get the type of collision of the inserten point
-int Map::GetCharType(Point2D collisionPoint){
-	//0 = outofrange
-	//1 = none
-	//2 = normal
-	//3 = slope
-	//4 = newMap
-	//5 = drawable
+TileType Map::GetCharType(Point2D collisionPoint){
 	const char* charline;
 	if(_mapArray.size() > collisionPoint.Y){
 		charline = _mapArray.at((int)collisionPoint.Y).c_str();
 		if(strlen(charline) > collisionPoint.X){
-			if(charline[(int)collisionPoint.X] == _newMapChar) {_newMap = true; return 1;}
-			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return 1;
+			if(charline[(int)collisionPoint.X] == _newMapChar) {_newMap = true; return TileTypeNone;}
+			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return TileTypeNone;
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
-				if(td.IsSlope()) return 3;
-				else if(td.IsDrawable()) return 5;
-				else if(td.IsSolid()) return 2;
+				if(td.IsSlope()) return TileTypeSlope;
+				else if(td.IsDrawable()) return TileTypeDrawing;
+				else if(td.IsSolid()) return TileTypeNormal;
 			}
 		}
 	}
-	return 0;
+	return TileTypeNone;
 }
 float Map::CheckDrawCollision(Rectangle playerBound){
 	float maxH=0.0f;
@@ -203,12 +196,12 @@ float Map::GetHeightAtPosition(Point2D position){
 	float height = 0;
 	int charType = GetCharType(Point2D((float)x, (float)y));
 	
-	if(charType == 2) //NormalBlock
+	if(charType == TileTypeNormal) //NormalBlock
 		return 0; 
 	y--;
 	
 	while(y >= 0){
-		if(GetCharType(Point2D((float)x, (float)y)) >= 2)
+		if(GetCharType(Point2D((float)x, (float)y)) != TileTypeNone)
 			break;
 		else {
 			y--; 
@@ -219,9 +212,9 @@ float Map::GetHeightAtPosition(Point2D position){
 	y = (int)(position.Y / _tileDimension.Y);
 	while((unsigned)y <= _mapArray.size()){
 		charType = GetCharType(Point2D((float)x, (float)y));
-		if(charType == 2) 
+		if(charType == TileTypeNormal) 
 			break;
-		else if(charType == 3) {
+		else if(charType == TileTypeSlope) {
 			TileData td = GetTileData(x, y);
 			int y1, y2; td.GetSlope(y1, y2);
 

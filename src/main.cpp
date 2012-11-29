@@ -5,7 +5,7 @@
 #include "DrawingObject.h"
 #include "Assets.h"
 #include "Menu.h"
-#include "Tail.h"
+#include "Enemy.h" 
 
 class FPS
 {
@@ -35,7 +35,7 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	Map map1("Images/tilesheet.png", 100, 50, "Map/map2.txt");
+	Map map1("Images/tilesheet.png", 100, 50, "Map/map1.txt");
 
 	map1.AddTile('x', 0, 50, 0, 50);
 	map1.AddTile('y', 100, 50, 50, 0);
@@ -47,7 +47,6 @@ int main( int argc, char* args[] )
 	Player player("Images/Rat.png", map1.GetSpawnLocation().X, map1.GetSpawnLocation().Y, 3, 3, 2);
 	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 	player.MaskColor(255, 242, 0);
-	Tail tail;
 	Settings setting;
 
 	std::vector<std::string> option; option.push_back("Ja"); option.push_back("Nee"); option.push_back("Ooit");option.push_back("Misschien");
@@ -62,6 +61,10 @@ int main( int argc, char* args[] )
 	menu.AddTextChild(&Settings::OnTextChange, "Welkom", 10, true, 50, 50, 255);
 	menu.AddSliderChild(&Settings::OnValueChange, 150, 30, 100, 100, 100);
 	menu.AddButtonChild("h)llo");
+
+	EnemyHandler enemies;
+	enemies.AddEnemy(EnemyNormal, Point2D(50, 50));
+	enemies.AddEnemy(EnemyNormal, Point2D(100, 0));
 
 	/* If using array for map
 		const char* map1Array[] = {
@@ -78,7 +81,6 @@ int main( int argc, char* args[] )
 			player.HandleEvent(sEvent);
 			map1.HandleEvent(sEvent,player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y));
 			menu.HandleEvent(sEvent);
-			tail.HandleEvent(sEvent);
 		}
 		//IF a new map can be load
 		if(map1.NewMapEnabled()){
@@ -86,11 +88,11 @@ int main( int argc, char* args[] )
 			player.SetPosition(map1.GetSpawnLocation());
 		}
 		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
-		tail.Update(player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y),player.GetHorizontalDir());
+		enemies.Update(&map1, &player, Timer);
 		screen.ClearWindow();
 		map1.Draw(screen);
+		enemies.Draw(screen, map1.GetMapPosition());
 		player.Draw(screen, map1.GetMapPosition());
-		tail.Draw(screen);
 		Rectangle playerBounds=player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y);
 		::aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
 		menu.Open(screen, Point2D(50, 50));		
