@@ -18,6 +18,7 @@ enum VerticalDirection
 class Player : public Object
 {
 protected:
+	Tail tail;
 	Point2D _previousPosition;
 	VerticalDirection _vDir;
 	HorizontalDirection _hDir;

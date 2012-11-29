@@ -34,7 +34,11 @@ public:
 	void SetPosition(float X, float Y);//Changes the position of the object
 	void SetPosition(Point2D position);
 	void SetVelocity(float X, float Y);
+	void SetVelocity(Point2D velocity);
+	Point2D GetVelocity();
+	Point2D GetPosition();
 	void Free(); //Releases resources of the object
+#ifdef OBJ_PIXEL_COLLISION
 	//Collision function
 	SDL_Rect ConvertToImagePosition(SDL_Rect rect); //Convert the collistion rectangle to the position on the surface
 	Rectangle ConvertToImagePositionR(Rectangle rect);
@@ -43,5 +47,6 @@ public:
 	bool CheckCollision(Object objB); //Check if there is pixelcollision
 	bool CheckCollisionR(Object objB);
     bool GetAlphaXY(Object* obj, int x, int y);//Get if the selected pixel is transpirant
+#endif
 };
 #endif

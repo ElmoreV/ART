@@ -6,6 +6,9 @@
 #include <map>
 #include <fstream>
 #include <vector>
+enum TileType {
+	TileTypeNone, TileTypeNormal, TileTypeSlope, TileTypeNewMap, TileTypeDrawing
+};
 class TileData{
 private:
 	bool _isSlope, _isSolid, _isDrawable;
@@ -40,7 +43,7 @@ public:
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
 	bool ReadFile(std::string filename);
 	void LoadTileSheet(std::string tileSheet);
-	int GetCharType(Point2D collisionPoint);
+	TileType GetCharType(Point2D collisionPoint);
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
 	Point2D GetSpawnLocation();

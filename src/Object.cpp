@@ -21,12 +21,12 @@ Rectangle Object::GetBoundR(float velocityX, float velocityY)
 	Rectangle bound(_position.X+velocityX, _position.Y+velocityY, _spriteDimension.X, _spriteDimension.Y);
 	return bound;
 }
+void Object::SetVelocity(Point2D velocity){_velocity=velocity; }
+Point2D Object::GetVelocity(){ return _velocity; }
+Point2D Object::GetPosition(){ return _position; }
 
-//Draws the surface on the screen
-void Object::Draw(WindowSurface screen)
-{
-	_surface.Draw(screen, (Sint16)_position.X, (Sint16)_position.Y, NULL);//Draws whole surface
-}
+#ifdef OBJ_PIXEL_COLLISION
+
 //Convert the collision rectangle to the rectangle on the surface
 SDL_Rect Object::ConvertToImagePosition(SDL_Rect rect)
 {
@@ -162,6 +162,7 @@ bool Object::GetAlphaXY(Object* obj, int x, int y)
 	}
 		
 };
+#endif
 //Changes the sprite to the new sprite with the rgb data for the mask color
 bool Object::ChangeSprite(std::string filename, int r, int g, int b )
 {
