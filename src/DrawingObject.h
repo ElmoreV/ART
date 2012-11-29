@@ -17,6 +17,7 @@ private:
 	bool _cursorPressed;
 	bool _cursorOnPlayer;
 	bool _cursorOutOfRange;
+	Point2D _prevCursor;
 	VectorDraw _canvas;
 };
 
