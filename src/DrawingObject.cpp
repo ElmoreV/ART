@@ -247,11 +247,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		if (sEvent.key.keysym.sym==SDLK_RETURN)
 			_canvas.Optimize(0.5f);
 		if (sEvent.key.keysym.sym==SDLK_DELETE)
-		{	_canvas.Clear();
-			_cursorOnPlayer=false;
-			_cursorOutOfRange=false;
-			_cursorPressed=false;
-			_canvas.SetDrawMode(false);
+		{	Reset();
 		}
 		if (sEvent.key.keysym.sym==SDLK_INSERT)
 		{
