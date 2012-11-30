@@ -36,7 +36,6 @@ Map::Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight,
 	_spawnLocation = '#';
 	_newMapChar = '@';
 	if(map != "") ReadFile(map);
-	_newMap = false;
 }
 void Map::LoadTileSheet(std::string tileSheet){
 	_tileSheet.LoadImage(tileSheet.c_str(), 255, 255, 255);
@@ -61,6 +60,7 @@ bool Map::ReadFile(std::string filename)
 			_spawnPosition.X = int(dx)*_tileDimension.X;
 			_spawnPosition.Y = _lines*_tileDimension.Y;
 		}
+
 		_mapArray.push_back(line);
 		_lines++;
 	}
@@ -150,7 +150,7 @@ TileType Map::GetCharType(Point2D collisionPoint){
 	if(_mapArray.size() > collisionPoint.Y){
 		charline = _mapArray.at((int)collisionPoint.Y).c_str();
 		if(strlen(charline) > collisionPoint.X){
-			if(charline[(int)collisionPoint.X] == _newMapChar) {_newMap = true; return TileTypeNone;}
+			if(charline[(int)collisionPoint.X] == _newMapChar) return TileTypeNone;
 			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return TileTypeNone;
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
@@ -171,7 +171,27 @@ float Map::CheckDrawCollision(Rectangle playerBound){
 	}
 	return maxH;
 }
-bool Map::NewMapEnabled(){return _newMap; }
+bool Map::NewMapEnabled(Rectangle playerBoundingBox){
+	int X1 = (int)(playerBoundingBox.X/_tileDimension.X);
+	int Y1 = (int)(playerBoundingBox.Y/_tileDimension.Y);
+	int X2 = (int)((playerBoundingBox.X + playerBoundingBox.W)/_tileDimension.X);
+	int Y2 = (int)((playerBoundingBox.Y + playerBoundingBox.H)/_tileDimension.Y);
+	Point2D collisionPoint[4];
+	collisionPoint[0] = Point2D(X1, Y1);
+	collisionPoint[1] = Point2D(X1, Y2);
+	collisionPoint[2] = Point2D(X2, Y1);
+	collisionPoint[3] = Point2D(X2, Y2);
+	for(int i = 0; i < 4; i++){
+		const char* charline;
+		if(_mapArray.size() > collisionPoint[i].Y){
+			charline = _mapArray.at((int)collisionPoint[i].Y).c_str();
+			if(strlen(charline) > collisionPoint[i].X)
+				if(charline[(int)collisionPoint[i].X] == _newMapChar) 
+					return true;
+		}
+	}
+	return false;
+}
 //Returns the dimensions of a single tile
 Point2D Map::GetTileDimension() { return _tileDimension; }
 //Returns the position of the map which is displayed
@@ -297,6 +317,20 @@ bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeigh
 	_spawnPosition.X =0; _spawnPosition.Y = 0;
 	ReadFile(map);
 	_drawObjects.clear();
-	_newMap=false;
 	return true;
+}
+std::vector<std::string> Map::GetMapArray(){ return _mapArray; }
+void Map::RemoveEnemiesFromArray(std::vector<char> enemies){
+	std::string charline;
+	for(unsigned int y = 0; y <_mapArray.size(); y++){
+		charline = _mapArray.at(y);
+		for (unsigned int i = 0; i < enemies.size(); ++i)
+		{
+			for (int x = 0; x < charline.length(); ++x) {
+				if (charline[x] == enemies.at(i))
+					charline[x] = '-';
+				}
+		}
+		_mapArray.at(y) = charline;
+	}
 }

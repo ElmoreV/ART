@@ -6,6 +6,9 @@
 #include <map>
 #include <fstream>
 #include <vector>
+#include <algorithm>
+#include <iostream>
+#include <string>
 enum TileType {
 	TileTypeNone, TileTypeNormal, TileTypeSlope, TileTypeNewMap, TileTypeDrawing
 };
@@ -34,9 +37,8 @@ protected:
 	std::vector<DrawingObject> _drawObjects;
 	char _spawnLocation, _newMapChar;
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
-	bool _newMap;
 public:
-	Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map="");
+	Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
 	void Draw(WindowSurface screen);
 	void Draw(WindowSurface screen, const char* mapArray[], unsigned int aantalRijen);
 	bool AddTile(char key, int x, int y, bool solid=true, bool drawable=false);
@@ -56,7 +58,9 @@ public:
 	float GetSlopeHeight(Point2D position);
 	void SetNewMapPosition(Point2D screenSize, Point2D centerPoint);
 	void SetMaskColor(int r=255, int g=255, int b=255);
-	bool NewMapEnabled();
+	bool NewMapEnabled(Rectangle playerBoundingBox);
 	bool NewMap(std::string map, unsigned int tileWidth=0, unsigned int tileHeight=0, std::string tileSheet="");
+	std::vector<std::string> GetMapArray();
+	void RemoveEnemiesFromArray(std::vector<char> enemies);
 };
 #endif

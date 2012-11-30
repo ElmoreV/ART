@@ -1,27 +1,26 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 #include "SDLFramework.h"
-#include <sstream>
 
 class Settings
 {
 public:
-	bool OnClick(){
+	Settings(){
+		betweenLevelOptions = 0;
+		newGame = false;
+		loadGame = false;
+		exitGame = false;
+	}
+	int betweenLevelOptions;
+	bool newGame;
+	bool loadGame;
+	bool exitGame;
+	bool NewLevelOptions(int id){
+		betweenLevelOptions = id+1;
 		return false;
 	}
-	bool OnOptionClick(int id){
-		Error r; std::stringstream ss;
-		ss << id;
-		r.HandleError(Caption, ss.str());
-		return false;
-	}
-	bool OnTextChange(std::string text){
-		Error r;
-		r.HandleError(Caption, text);
-		return false;
-	}
-	bool OnValueChange(float value){
-		return false;
-	}
+	bool OnClickNewGame(){ newGame=true;return false; }
+	bool OnClickLoadGame(){loadGame=true;return false;}
+	bool OnClickExitGame(){exitGame=true;return false;}
 };
 #endif

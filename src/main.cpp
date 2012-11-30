@@ -6,6 +6,7 @@
 #include "Assets.h"
 #include "Menu.h"
 #include "Enemy.h" 
+#include "GameState.h" 
 
 class FPS
 {
@@ -35,67 +36,148 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	Map map1("Images/tilesheet.png", 100, 50, "Map/map1.txt");
 
-	map1.AddTile('x', 0, 50, 0, 50);
-	map1.AddTile('y', 100, 50, 50, 0);
-	map1.AddTile('a', 0, 0);
-	map1.AddTile('b', 100, 0);
-	map1.AddTile('z', 65, 65, false, true);
-	map1.SetMaskColor(255, 242, 0);
-
-	Player player("Images/Rat.png", map1.GetSpawnLocation().X, map1.GetSpawnLocation().Y, 3, 3, 2);
-	player.SetVelocity(100, 250); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
-	player.MaskColor(255, 242, 0);
 	Settings setting;
+	Maps levels;
+	GameStateManager gameStates(&setting);
+	gameStates.NewState(GSIntro);
 
-	std::vector<std::string> option; option.push_back("Ja"); option.push_back("Nee"); option.push_back("Ooit");option.push_back("Misschien");
 
-	Menu menu("Menu", &setting);
-	menu.AddChild("Hallo", 255, 5, 255);
-	menu.GetChild(0)->AddChild("hallo", 255, 0, 0);
-	menu.GetChild(0)->AddOptionChild(option, &Settings::OnOptionClick);
-	menu.AddChild("Cool");
-	menu.AddButtonChild("Wat", &Settings::OnClick);
-	menu.AddOptionChild(option, &Settings::OnOptionClick);
-	menu.AddTextChild(&Settings::OnTextChange, "Welkom", 10, true, 50, 50, 255);
-	menu.AddSliderChild(&Settings::OnValueChange, 150, 30, 100, 100, 100);
-	menu.AddButtonChild("h)llo");
-
+	Surface gameLogo;gameLogo.LoadImage("Images/titlescreen.png", 34, 177, 76);
+	int introCount=0; float logoPositionY = 0;
+	
 	EnemyHandler enemies;
-	enemies.AddEnemy(EnemyNormal, Point2D(50, 50));
-	enemies.AddEnemy(EnemyNormal, Point2D(100, 0));
+	Map map("Images/tilesheet.png", 100, 50, "Map/map1.txt");
+	levels.count++;
 
-	/* If using array for map
-		const char* map1Array[] = {
-		"x-x-x-x-x-x", 
-		"yxyxyxyxyxy"};
-	*/
+	map.AddTile('x', 0, 50, 0, 50);
+	map.AddTile('y', 100, 50, 50, 0);
+	map.AddTile('a', 0, 0);
+	map.AddTile('b', 100, 0);
+	map.AddTile('z', 65, 65, false, true);
+	map.SetMaskColor(255, 242, 0);
+
+	Player player("Images/Rat.png", map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
+	player.SetVelocity(200, 300); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
+	player.MaskColor(255, 242, 0);
+
+	Menu menu("Main menu", &setting, 255, 255, 255);
+	menu.ShowHeader(false);
+	menu.SetCenter(true);
+	menu.SetVerticalSpace(20);
+	menu.AddButtonChild("New game", &Settings::OnClickNewGame);
+	menu.AddButtonChild("Load game", &Settings::OnClickLoadGame);
+	menu.AddChild("Options", true);
+		menu.GetChild(2)->SetVerticalSpace(20);
+		menu.GetChild(2)->AddChild("Graphics");
+		menu.GetChild(2)->AddChild("Sounds");
+		menu.GetChild(2)->AddChild("Keys");
+	menu.AddButtonChild("Exit", &Settings::OnClickExitGame);
+
+	Menu newLevelMenu("Level completed", &setting);
+	newLevelMenu.AddChild("Congratulations");
+	newLevelMenu.AddChild("");
+	newLevelMenu.AddChild("What do you want to do?");
+	std::vector<std::string> opt; opt.push_back("Main menu"); opt.push_back("Restart"); opt.push_back("Next level");
+	newLevelMenu.AddOptionChild(opt, &Settings::NewLevelOptions, "       ");
+	//((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(1)->Enabled = false;
+
 	while (gameRunning)
 	{
 		while (SDL_PollEvent(&sEvent))
 		{
-			if (sEvent.type==SDL_QUIT){gameRunning=false;}
-			if (sEvent.type == SDL_VIDEORESIZE )
-			{screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
-			player.HandleEvent(sEvent);
-			map1.HandleEvent(sEvent,player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y));
-			menu.HandleEvent(sEvent);
+			if (sEvent.type==SDL_QUIT || setting.exitGame){gameRunning=false;}
+			if (sEvent.type == SDL_VIDEORESIZE ) {screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
+
+			switch(gameStates.CurrentState()){
+				case GSMenuMain:
+					if(sEvent.type == SDL_KEYDOWN) 
+						if(sEvent.key.keysym.sym == SDLK_ESCAPE) 
+						{gameStates.BackState();menu.Reset();}
+					menu.HandleEvent(sEvent);
+					break;
+				case GSGame:
+					if(sEvent.type == SDL_KEYDOWN) if(sEvent.key.keysym.sym == SDLK_ESCAPE) gameStates.PushState(GSMenuMain);
+					player.HandleEvent(sEvent);
+					map.HandleEvent(sEvent,player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y));
+					break;
+				case GSMenuNewLevel:
+					newLevelMenu.HandleEvent(sEvent);
+					break;
+			}
 		}
-		//IF a new map can be load
-		if(map1.NewMapEnabled()){
-			map1.NewMap("Map/map1.txt");
-			player.SetPosition(map1.GetSpawnLocation());
-		}
-		player.Update(map1, screen.GetWidth(), screen.GetHeight(), Timer);
-		enemies.Update(&map1, &player, Timer);
+		if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
 		screen.ClearWindow();
-		map1.Draw(screen);
-		enemies.Draw(screen, map1.GetMapPosition());
-		player.Draw(screen, map1.GetMapPosition());
-		Rectangle playerBounds=player.GetBoundR(-map1.GetMapPosition().X, -map1.GetMapPosition().Y);
-		::aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
-		menu.Open(screen, Point2D(50, 50));		
+		switch(gameStates.CurrentState()){
+			case GSIntro:
+				if(introCount > 255){
+					logoPositionY -= 5;
+					if(logoPositionY <= 20){ logoPositionY = 20; gameStates.NewState(GSMenuMain); }
+					gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+				}
+				else {
+					gameLogo.SetTransparency(introCount);
+					logoPositionY = screen.GetHeight()/2 - gameLogo.GetHeight()/2;
+					gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+				}
+				introCount+=4;
+				break;
+			case GSMenuMain:
+				if(setting.newGame){
+					setting.newGame = false;
+					levels.count = 1;
+					map.NewMap(levels.levels[0]);
+					enemies.PopulateEnemies(&map);
+					player.SetPosition(map.GetSpawnLocation());
+					gameStates.NewState(GSGame);
+				}
+				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+				menu.Open(screen, Point2D(50, logoPositionY + gameLogo.GetHeight()));
+				break;
+
+			case GSGame:
+				if(gameStates.CurrentState() != GSMenuNewLevel){
+					if(map.NewMapEnabled(player.GetBoundR())) 
+						gameStates.PushState(GSMenuNewLevel);
+				}
+				player.Update(map, screen.GetWidth(), screen.GetHeight(), Timer);
+				enemies.Update(&map, &player, Timer);
+			
+				map.Draw(screen);
+				enemies.Draw(screen, map.GetMapPosition());
+				player.Draw(screen, map.GetMapPosition());
+			
+				break;
+
+			case GSMenuNewLevel:
+				if(setting.betweenLevelOptions == 0){
+					newLevelMenu.Open(screen, Point2D(100, 100));
+					if(levels.count == levels.maxCount)
+						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = false;
+					else
+						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = true;
+				}
+				else {
+					if(setting.betweenLevelOptions == 1) //MainMenu
+						gameStates.NewState(GSMenuMain);
+					else if(setting.betweenLevelOptions == 2){ //Restart 
+						map.NewMap(levels.levels[levels.count-1]);
+						enemies.PopulateEnemies(&map);
+						player.SetPosition(map.GetSpawnLocation());
+						gameStates.BackState();
+					}
+					else {//next level
+						map.NewMap(levels.levels[levels.count]);
+						enemies.PopulateEnemies(&map);
+						levels.count++;
+						player.SetPosition(map.GetSpawnLocation());
+						gameStates.BackState();
+					}
+					setting.betweenLevelOptions = 0;
+				}
+				break;
+		}
+
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 		screen.UpdateWindow();
 		fps.Delay();
@@ -103,4 +185,4 @@ int main( int argc, char* args[] )
 	player.Free();
 	ClearSDL();
 	return 0;
-}
+};

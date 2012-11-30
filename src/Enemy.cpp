@@ -47,7 +47,7 @@ void Enemy::SetFrame(int frame){
 }
 
 EnemyHandler::EnemyHandler(){
-
+	enemyChars.push_back('!');
 }
 void EnemyHandler::AddEnemy(EnemyType type, Point2D position){
 	std::string file = ""; Point2D velocity; bool canwalkoff = true; bool canwalkslope = true;
@@ -56,7 +56,13 @@ void EnemyHandler::AddEnemy(EnemyType type, Point2D position){
 		file = "Images/enemy1.png";
 		velocity = Point2D(100, 100);
 		canwalkoff = false; 
-		canwalkslope = true;
+		canwalkslope = false;
+		break;
+	default:
+		file = "Images/enemy1.png";
+		velocity = Point2D(100, 100);
+		canwalkoff = false; 
+		canwalkslope = false;
 		break;
 	}
 	Enemy newE(type, file, position.X, position.Y, 3, 1, 1);
@@ -239,4 +245,23 @@ void EnemyHandler::Draw(WindowSurface screen, Point2D mapPosition){
 	for(unsigned int i = 0; i <_enemyList.size(); i++){
 		_enemyList.at(i).Draw(screen, mapPosition);
 	}
+}
+void EnemyHandler::PopulateEnemies(Map* map){
+	_enemyList.clear();
+	std::vector<std::string> mapArray = map->GetMapArray();
+	std::string str;
+	char chararcter;
+	for(unsigned int y = 0; y < mapArray.size(); y++){
+		str = mapArray.at(y);
+		for(unsigned int x = 0; x < str.length(); x++){
+			chararcter = str[x];
+			for(int i = 0; i < enemyChars.size(); i++){
+				if(enemyChars[i]==chararcter){
+					AddEnemy((EnemyType)i, (Point2D(x, y)*map->GetTileDimension()));
+				}
+			}
+		}
+
+	}
+	map->RemoveEnemiesFromArray(enemyChars);
 }
