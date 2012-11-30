@@ -4,8 +4,9 @@
 #include "Map.h"
 #include "Player.h"
 #include <vector>
+
 enum EnemyType{
-	EnemyNormal, EnemyCool, 
+	EnemyNormal, 
 };
 class Enemy : public Object
 {
@@ -26,10 +27,12 @@ public:
 class EnemyHandler{
 private:
 	std::vector<Enemy> _enemyList;
+	std::vector<char> enemyChars;
 public:
 	EnemyHandler();
 	void AddEnemy(EnemyType type, Point2D position);
 	void Update(Map* map, Player* player, long timediff=-1);
 	void Draw(WindowSurface screen, Point2D mapPosition);
+	void PopulateEnemies(Map* map);
 };
 #endif ENEMY_H

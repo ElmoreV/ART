@@ -13,11 +13,11 @@ Options::Options(std::string text,int r, int g, int b){
 	_hover=false;
 	_bound = Rectangle(0,0,0,0);
 }
-int Options::GetColorR(){return _r;}
-int Options::GetColorG(){return _g;}
-int Options::GetColorB(){return _b;}
+int Options::GetColorR(){return (Enabled)?_r:127;}
+int Options::GetColorG(){return (Enabled)?_g:127;}
+int Options::GetColorB(){return (Enabled)?_b:127;}
 Rectangle Options::GetBound(){return _bound;}
-bool Options::GetHover(){return _hover;}
+bool Options::GetHover(){return (_hover&&Enabled)?true:false;}
 std::string Options::GetText(){return _text;}
 void Options::SetBound(float x, float y, float width, float height){
 	_boundSet=true;
@@ -35,21 +35,23 @@ void Options::SetColor(int r, int g, int b){
 }
 bool Options::IsBoundingBox(){return _boundSet;}
 
-ButtonMenuItem::ButtonMenuItem(std::string title, int r, int g, int b):MenuItem(title, r, g, b){
+ButtonMenuItem::ButtonMenuItem(std::string title, bool center, int r, int g, int b):MenuItem(title, center, r, g, b){
 	_type = ButtonItem;
 	_clickEventAssigned = false;
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
 }
-ButtonMenuItem::ButtonMenuItem(std::string title, bool(Settings::*clickEvent)(), int r, int g, int b):MenuItem(title, r, g, b){
+ButtonMenuItem::ButtonMenuItem(std::string title, bool(Settings::*clickEvent)(), bool center, int r, int g, int b):MenuItem(title, center, r, g, b){
 	OnClick = clickEvent;
 	_type = ButtonItem; 
 	_clickEventAssigned = true;
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
 }
 
-OptionMenuItem::OptionMenuItem(std::vector<Options> options, int r, int g, int b){
+OptionMenuItem::OptionMenuItem(std::vector<Options> options, bool center, int r, int g, int b){
 	_type=OptionItem;
 	Text = Header = "UNDEFINED";
 	_optionText = "";
@@ -61,8 +63,13 @@ OptionMenuItem::OptionMenuItem(std::vector<Options> options, int r, int g, int b
 	_r=r;_g=g;_b=b;
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
+	_optionSpace = " ";
+	_hover = false;
+	_verticalSpace = 1;
+	_center = center;
 }
-OptionMenuItem::OptionMenuItem(std::vector<std::string> options, int r, int g, int b):MenuItem(){
+OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool center, int r, int g, int b):MenuItem(){
 	_type=OptionItem;
 	Text = Header = "UNDEFINED";
 	_optionText = "";
@@ -74,8 +81,12 @@ OptionMenuItem::OptionMenuItem(std::vector<std::string> options, int r, int g, i
 	_r=r;_g=g;_b=b;
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
+	_optionSpace = " ";
+	_hover = false;
+	_center = center;
 }
-OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), int r, int g, int b){
+OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), bool center, int r, int g, int b){
 	_type=OptionItem;
 	Text = Header = "UNDEFINED";
 	_optionText = "";
@@ -88,6 +99,11 @@ OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool(Settings::
 	_r=r;_g=g;_b=b;
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
+	_optionSpace = " ";
+	_hover = false;
+	_verticalSpace = 1;
+	_center = center;
 }
 
 int OptionMenuItem::OptionCount(){return _options.size(); }
@@ -96,25 +112,27 @@ Rectangle OptionMenuItem::GetOptionBound(int index){ return _options.at(index).G
 bool OptionMenuItem::GetOptionHover(int index) { return _options.at(index).GetHover(); }
 void OptionMenuItem::SetOptionHover(int index, bool value){ _options.at(index).SetHover(value); }
 void OptionMenuItem::SetOptionBound(int index, float x, float y, float w, float h){_options.at(index).SetBound(x, y, w, h); }
-Options OptionMenuItem::GetOption(int index){return _options.at(index); }
+Options* OptionMenuItem::GetOption(int index){return &_options.at(index); }
 
-TextMenuItem::TextMenuItem(std::string text, int r, int g, int b):MenuItem(text,r,g,b){
+TextMenuItem::TextMenuItem(std::string text, bool center, int r, int g, int b):MenuItem(text, center,r,g,b){
 	_type=TextItem;
 	_maxLength = 10;
 	_digitOnly = false;
 	SDL_EnableUNICODE(SDL_ENABLE);
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
 }
-TextMenuItem::TextMenuItem(std::string text, int maxLength, bool digit, int r, int g, int b):MenuItem(text,r,g,b){
+TextMenuItem::TextMenuItem(std::string text, int maxLength, bool digit, bool center, int r, int g, int b):MenuItem(text, center,r,g,b){
 	_type=TextItem;
 	_maxLength = maxLength;
 	_digitOnly = digit;
 	SDL_EnableUNICODE(SDL_ENABLE);
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
 }
-TextMenuItem::TextMenuItem(bool (Settings::*ontextchange)(std::string text), std::string text, int maxLength, bool digit, int r, int g, int b):MenuItem(text,r,g,b){
+TextMenuItem::TextMenuItem(bool (Settings::*ontextchange)(std::string text), std::string text, int maxLength, bool digit, bool center, int r, int g, int b):MenuItem(text,center,r,g,b){
 	_type=TextItem;
 	_maxLength = maxLength;
 	_digitOnly = digit;
@@ -123,9 +141,11 @@ TextMenuItem::TextMenuItem(bool (Settings::*ontextchange)(std::string text), std
 	_clickEventAssigned = true;
 	_selected =false;
 	HoverEnabled = true;
+	_headerShown = true;
+	_hover = false;
 }
 
-SliderMenuItem::SliderMenuItem(int width, int height, int r, int g, int b){
+SliderMenuItem::SliderMenuItem(int width, int height, bool center, int r, int g, int b){
 	_bounds.W = (float)width;
 	_bounds.H = (float)height;
 	_type = SliderItem;
@@ -134,8 +154,12 @@ SliderMenuItem::SliderMenuItem(int width, int height, int r, int g, int b){
 	_status = width;
 	_selected =false;
 	HoverEnabled = false;
+	_headerShown = true;
+	_hover = false;
+	_verticalSpace = 1;
+	_center = center;
 }
-SliderMenuItem::SliderMenuItem(bool (Settings::*onvaluechange)(float value), int width, int height, int r, int g, int b){
+SliderMenuItem::SliderMenuItem(bool (Settings::*onvaluechange)(float value), int width, int height, bool center, int r, int g, int b){
 	_bounds.W = (float)width;
 	_bounds.H = (float)height;
 	_type = SliderItem;
@@ -146,6 +170,10 @@ SliderMenuItem::SliderMenuItem(bool (Settings::*onvaluechange)(float value), int
 	_clickEventAssigned = true;
 	_selected =false;
 	HoverEnabled = false;
+	_headerShown = true;
+	_hover = false;
+	_verticalSpace = 1;
+	_center = center;
 }
 float SliderMenuItem::GetPercentage(){
 	float status = (((float)_status)/((float)_maxLength))*100;
@@ -167,8 +195,13 @@ MenuItem::MenuItem(){
 	_customSet = false;
 	HoverEnabled = false;
 	_digitOnly=false;
+	_headerShown = true;
+	_optionSpace = " ";
+	_hover = false;
+	_verticalSpace = 1;
+	_center = false;
 }
-MenuItem::MenuItem(std::string title, int r, int g, int b){
+MenuItem::MenuItem(std::string title, bool center, int r, int g, int b){
 	Text = Header = title;
 	IsClickable = false;
 	_type = NormalItem;
@@ -178,10 +211,15 @@ MenuItem::MenuItem(std::string title, int r, int g, int b){
 	_customSet = false;
 	HoverEnabled = false;
 	_digitOnly=false;
+	_headerShown = true;
+	_optionSpace = " ";
+	_hover = false;
+	_verticalSpace = 1;
+	_center = center;
 }
-void MenuItem::AddChild(std::string title, int r, int g, int b){
+void MenuItem::AddChild(std::string title, bool center, int r, int g, int b){
 	if(_type == NormalItem) IsClickable = true;
-	_childs.push_back(MenuItem(title, r, g, b));
+	_childs.push_back(MenuItem(title, center, r, g, b));
 	HoverEnabled = true;
 }
 void MenuItem::AddChild(MenuItem* item){
@@ -189,44 +227,48 @@ void MenuItem::AddChild(MenuItem* item){
 	_childs.push_back(*item);
 	HoverEnabled = true;
 }
-void MenuItem::AddButtonChild(std::string title, int r, int g, int b){
+void MenuItem::AddButtonChild(std::string title, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(ButtonMenuItem(title, r, g, b));
+	_childs.push_back(ButtonMenuItem(title, center, r, g, b));
 	HoverEnabled = true;
 }
-void MenuItem::AddButtonChild(std::string title, bool(Settings::*onclick)(), int r, int g, int b){
+void MenuItem::AddButtonChild(std::string title, bool(Settings::*onclick)(), bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(ButtonMenuItem(title, onclick, r, g, b));
+	_childs.push_back(ButtonMenuItem(title, onclick, center, r, g, b));
 	HoverEnabled = true;
 }
-void MenuItem::AddOptionChild(std::vector<std::string> options, int r, int g, int b){
+void MenuItem::AddOptionChild(std::vector<std::string> options, std::string optionSpace, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(OptionMenuItem(options, r, g, b));
+	OptionMenuItem item(options, center, r, g, b);
+	item.SetOptionSpace(optionSpace);
+	_childs.push_back(item);
 	HoverEnabled = true;
 }
-void MenuItem::AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), int r, int g, int b){
+void MenuItem::AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), std::string optionSpace, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(OptionMenuItem(options, optionclicks, r, g, b));
+	OptionMenuItem item(options, optionclicks, center, r, g, b);
+	item.SetOptionSpace(optionSpace);
+	_childs.push_back(item);
 	HoverEnabled = true;
 }
-void MenuItem::AddTextChild(std::string title, int maxLength, bool digit, int r, int g, int b){
+void MenuItem::AddTextChild(std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(TextMenuItem(title, maxLength, digit, r, g, b));
+	_childs.push_back(TextMenuItem(title, maxLength, digit, center, r, g, b));
 	HoverEnabled = true;
 }
-void MenuItem::AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title, int maxLength, bool digit, int r, int g, int b){
+void MenuItem::AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(TextMenuItem(onTextChange, title, maxLength, digit, r, g, b));
+	_childs.push_back(TextMenuItem(onTextChange, title, maxLength, digit, center, r, g, b));
 	HoverEnabled = true;
 }
-void MenuItem::AddSliderChild(int width, int height, int r, int g, int b){
+void MenuItem::AddSliderChild(int width, int height, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(SliderMenuItem(width, height, r, g, b));
+	_childs.push_back(SliderMenuItem(width, height, center, r, g, b));
 	HoverEnabled = true;
 }
-void MenuItem::AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, int r, int g, int b){
+void MenuItem::AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(SliderMenuItem(onValueChange, width, height, r, g, b));
+	_childs.push_back(SliderMenuItem(onValueChange, width, height, center, r, g, b));
 	HoverEnabled = true;
 }
 
@@ -258,10 +300,12 @@ int MenuItem::HandleEvent(SDL_Event sEvent, Settings* setting){
 								float offsetX = rec.X;
 								for(int j = 0; j < oItem->OptionCount(); j++){
 									if(offsetX <= sEvent.button.x && offsetX + oItem->GetOptionBound(j).W >= sEvent.button.x){
-										if((setting->*child->OnOptionClick)(j))
-											return i;
+										if(oItem->GetOption(j)->Enabled){
+											if((setting->*child->OnOptionClick)(j))
+												return i;
+										}
 									}
-									offsetX += oItem->GetOptionBound(j).W + 7;
+									offsetX += oItem->GetOptionBound(j).W + oItem->GetOptionSpaceWidth();
 								}
 							}
 							break;
@@ -307,7 +351,7 @@ int MenuItem::HandleEvent(SDL_Event sEvent, Settings* setting){
 								oItem->SetOptionHover(j, true);
 							else
 								oItem->SetOptionHover(j, false);
-							offsetX += oItem->GetOptionBound(j).W + 7;
+							offsetX += oItem->GetOptionBound(j).W + oItem->GetOptionSpaceWidth();
 						}
 				}
 				}
@@ -355,30 +399,59 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 	float y = offset.Y;
 	float x = offset.X;
 
-	Surface render; 
-	font.SetColor(_r, _g, _b);
-	if(Header != "") render.RenderText(font, Header); 
-	else render.RenderText(font, " ");
-	render.Draw(screen, (int)x, (int)y);
-	SetBoundingBox(x, y, (float)render.GetWidth(), (float)render.GetHeight());
-	y += render.GetHeight(); 
-	if(IsHover()) screen.DrawLine((int)x, (int)y, (int)(x + render.GetWidth()), (int)y, _r, _g, _b);
-	x+=5;
+	Surface render;
+	if(_headerShown){
+		font.SetColor(_r, _g, _b);
+		if(Header != "") render.RenderText(font, Header); 
+		else render.RenderText(font, " ");
+		if(_center) x = ((float)screen.GetWidth() / 2) - ((float)render.GetWidth() / 2);
+		render.Draw(screen, (int)x, (int)y);
+		SetBoundingBox(x, y, (float)render.GetWidth(), (float)render.GetHeight());
+		y += render.GetHeight();
+		if(IsHover()) screen.DrawLine((int)x, (int)y, (int)(x + render.GetWidth()), (int)y, _r, _g, _b);
+		y += _verticalSpace; 
+		x+=5;
+	}
 
 	for(unsigned int i = 0; i < _childs.size(); i++){
 		MenuItem* item = &_childs.at(i);
-		render.RenderText(font, " "); int spaceWidth = render.GetWidth();
-		if(item->GetType() != SliderItem){
+		if(item->GetType() != SliderItem && item->GetType() != OptionItem){
 			font.SetColor(item->GetColorR(), item->GetColorG(), item->GetColorB());
 			render.RenderText(font, item->GetText());
+			if(_center) x = screen.GetWidth() / 2 - render.GetWidth() / 2;
 			if(item->IsCustomPosition())
 				item->SetBoundingBox(item->GetCustomPosition().X, item->GetCustomPosition().Y, (float)render.GetWidth(), (float)render.GetHeight());
 			else
 				item->SetBoundingBox(x, y, (float)render.GetWidth(), (float)render.GetHeight());
-			render.Draw(screen, (Uint32)item->GetBoundingBox()->X, (Uint32)item->GetBoundingBox()->Y);y += render.GetHeight() + 1; 
+			render.Draw(screen, (Uint32)item->GetBoundingBox()->X, (Uint32)item->GetBoundingBox()->Y);
+			y += render.GetHeight() + _verticalSpace; 
+		}
+		else if(item->GetType() == OptionItem){
+			render.RenderText(font, item->GetText());
+			OptionMenuItem* oItem = (OptionMenuItem*)item;
+			if(_center) x = screen.GetWidth() / 2 - render.GetWidth() / 2;
+			if(item->IsCustomPosition())
+				item->SetBoundingBox(item->GetCustomPosition().X, item->GetCustomPosition().Y, (float)render.GetWidth(), (float)render.GetHeight());
+			else
+				item->SetBoundingBox(x, y, (float)render.GetWidth(), (float)render.GetHeight());
+			float tempX = item->GetBoundingBox()->X;
+			for(unsigned int i = 0; i < oItem->OptionCount(); i++){
+				Options* option = oItem->GetOption(i);
+				font.SetColor(option->GetColorR(), option->GetColorG(), option->GetColorB());
+				render.RenderText(font, option->GetText());
+				render.Draw(screen, (Uint32)tempX, (Uint32)item->GetBoundingBox()->Y);
+				tempX += render.GetWidth();
+				
+				font.SetColor(item->GetColorR(), item->GetColorG(), item->GetColorB());
+				render.RenderText(font, oItem->GetOptionSpace());
+				render.Draw(screen, (Uint32)tempX, (Uint32)item->GetBoundingBox()->Y);
+				tempX += render.GetWidth();
+				oItem->SetOptionSpaceWidth(render.GetWidth());
+			}
 		}
 		else {
 			SliderMenuItem* sItem = (SliderMenuItem*)item;
+			if(_center) x = screen.GetWidth() / 2 - render.GetWidth() / 2;
 			if(sItem->IsCustomPosition())
 				sItem->SetBoundingBox(sItem->GetCustomPosition().X, sItem->GetCustomPosition().Y, -1, -1);
 			else
@@ -388,17 +461,18 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 			float w = (sItem->GetPercentage()/100)*sItem->GetMaxLength();
 			float h = (1-sItem->GetPercentage()/100)*(bound->H/4);
 			screen.DrawFilledRect((int)(bound->X + w - 5), (int)(bound->Y+h), (int)(bound->X + w + 5), (int)(bound->Y + bound->H - h), sItem->GetColorR(), sItem->GetColorG(), sItem->GetColorB());
-			y += bound->H+1;
+			y += bound->H+_verticalSpace;
 		}
 
 		
 		if(item->GetType() == OptionItem){
 			OptionMenuItem* oItem = (OptionMenuItem*)item;
+			render.RenderText(font, oItem->GetOptionSpace()); int spaceWidth = render.GetWidth(); oItem->SetOptionSpaceWidth(spaceWidth);
 			if(!_optionBoundSet){
 				_optionBoundSet=true;
 				float offsetX = item->GetBoundingBox()->X;
 				for(int j = 0; j < oItem->OptionCount(); j++){
-					font.SetColor(oItem->GetOption(j).GetColorR(), oItem->GetOption(j).GetColorG(), oItem->GetOption(j).GetColorB()); 
+					font.SetColor(oItem->GetOption(j)->GetColorR(), oItem->GetOption(j)->GetColorG(), oItem->GetOption(j)->GetColorB()); 
 					render.RenderText(font, oItem->GetOptionText(j));
 					oItem->SetOptionBound(j, offsetX, item->GetBoundingBox()->Y, (float)render.GetWidth(), (float)render.GetHeight());
 					offsetX += oItem->GetOptionBound(j).W + spaceWidth;
@@ -409,7 +483,7 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 				for(int j = 0; j < oItem->OptionCount(); j++){
 					if(oItem->GetOptionHover(j)){
 						screen.DrawLine((int)offsetX, (int)(item->GetBoundingBox()->Y + item->GetBoundingBox()->H), 
-							(int)(offsetX + oItem->GetOptionBound(j).W), (int)(item->GetBoundingBox()->Y + item->GetBoundingBox()->H), oItem->GetOption(j).GetColorR(), oItem->GetOption(j).GetColorG(), oItem->GetOption(j).GetColorB());
+							(int)(offsetX + oItem->GetOptionBound(j).W), (int)(item->GetBoundingBox()->Y + item->GetBoundingBox()->H), oItem->GetOption(j)->GetColorR(), oItem->GetOption(j)->GetColorG(), oItem->GetOption(j)->GetColorB());
 						break;
 					}
 					offsetX += oItem->GetOptionBound(j).W + spaceWidth;
@@ -425,8 +499,13 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 
 bool MenuItem::IsSelected(){return _selected;}
 std::string MenuItem::GetText(){
-	if(_type==OptionItem && _optionText != " ") return _optionText;
-	else if(Text != "") return Text; return " "; 
+	if(_type==OptionItem) { Text = "";
+		for(unsigned int i = 0; i < _options.size(); i++){
+			Text += _options.at(i).GetText() + _optionSpace;
+		}
+	}
+	if(Text != "") return Text; 
+	return " "; 
 }
 int MenuItem::GetMaxLength(){return _maxLength;}
 bool MenuItem::IsDigitOnly(){return _digitOnly;}
@@ -462,7 +541,7 @@ void MenuItem::SetColor(int r, int g, int b) {
 void MenuItem::SetCustomPosition(float x, float y){ _customSet=true;_custom = Point2D(x, y); }
 
 Menu::Menu(std::string text, Settings* setting, int r, int g, int b){
-	_mainItem = MenuItem(text, r, g, b);
+	_mainItem = MenuItem(text, false, r, g, b);
 	_currentItem = &_mainItem;
 	_font.OpenFont("Another.ttf");
 	_font.SetColor(r, g, b);
@@ -470,41 +549,41 @@ Menu::Menu(std::string text, Settings* setting, int r, int g, int b){
 }
 void Menu::Open(WindowSurface screen, Point2D offset){
 	if(_itemTracker.size() == 0) _currentItem = &_mainItem;
-	_currentItem->Draw(screen, _font, offset);
+	_currentItem->Draw(screen, _font,offset);
 }
 MenuItem* Menu::GetChild(unsigned int index){
 	return _mainItem.GetChild(index);
 }
 
-void Menu::AddChild(std::string text, int r, int g, int b){
-	_mainItem.AddChild(text, r, g, b);
+void Menu::AddChild(std::string text, bool center, int r, int g, int b){
+	_mainItem.AddChild(text, center, r, g, b);
 }
 void Menu::AddChild(MenuItem* item){
 	_mainItem.AddChild(item);
 }
-void Menu::AddButtonChild(std::string title, int r, int g, int b){
-	_mainItem.AddButtonChild(title, r, g, b);
+void Menu::AddButtonChild(std::string title, bool center, int r, int g, int b){
+	_mainItem.AddButtonChild(title, center, r, g, b);
 }
-void Menu::AddButtonChild(std::string title, bool(Settings::*onclick)(), int r, int g, int b){
-	_mainItem.AddButtonChild(title, onclick, r, g, b);
+void Menu::AddButtonChild(std::string title, bool(Settings::*onclick)(), bool center, int r, int g, int b){
+	_mainItem.AddButtonChild(title, onclick, center, r, g, b);
 }
-void Menu::AddOptionChild(std::vector<std::string> options, int r, int g, int b){
-	_mainItem.AddOptionChild(options, r, g, b);
+void Menu::AddOptionChild(std::vector<std::string> options, std::string optionSpace, bool center, int r, int g, int b){
+	_mainItem.AddOptionChild(options, optionSpace, center, r, g, b);
 }
-void Menu::AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), int r, int g, int b){
-	_mainItem.AddOptionChild(options, optionclicks,r,g,b);
+void Menu::AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), std::string optionSpace, bool center, int r, int g, int b){
+	_mainItem.AddOptionChild(options, optionclicks, optionSpace, center, r, g, b);
 }
-void Menu::AddTextChild(std::string title, int maxLength, bool digit, int r, int g, int b){
-	_mainItem.AddTextChild(title, maxLength, digit, r, g, b);
+void Menu::AddTextChild(std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
+	_mainItem.AddTextChild(title, maxLength, digit, center, r, g, b);
 }
-void Menu::AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title, int maxLength, bool digit, int r, int g, int b){
-	_mainItem.AddTextChild(onTextChange, title, maxLength, digit, r, g, b);
+void Menu::AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
+	_mainItem.AddTextChild(onTextChange, title, maxLength, digit, center, r, g, b);
 }
-void Menu::AddSliderChild(int width, int height, int r, int g, int b){
-	_mainItem.AddSliderChild(width, height, r, g, b);
+void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b){
+	_mainItem.AddSliderChild(width, height, center, r, g, b);
 }
-void Menu::AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, int r, int g, int b){
-	_mainItem.AddSliderChild(onValueChange, width, height, r, g, b);
+void Menu::AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, bool center, int r, int g, int b){
+	_mainItem.AddSliderChild(onValueChange, width, height, center, r, g, b);
 }
 
 void Menu::HandleEvent(SDL_Event sEvent){

@@ -6,9 +6,10 @@ enum GameStates
 {
 	GSNone,
 	GSIntro,
-	GSMenu,
+	GSMenuMain,
+	GSMenuNewLevel,
 	GSGame,
-	GSGAme_Over
+	GSGame_Over,
 };
 class GameStateManager
 {

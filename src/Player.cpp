@@ -120,6 +120,8 @@ void Player::Draw(WindowSurface screen, Point2D mapPosition)
 	//Draws the player on the screen
 	_surface.Draw(screen, (Sint16)(_position.X - mapPosition.X), (Sint16)(_position.Y - mapPosition.Y), &GetFrame());
 	tail.Draw(screen);
+	Rectangle playerBounds=GetBoundR(-mapPosition.X, -mapPosition.Y);
+	aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
 }
 void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float timeDiff){
 	if(timeDiff*_velocity.Y <= map.GetTileDimension().Y && timeDiff*_velocity.X<=map.GetTileDimension().X &&
