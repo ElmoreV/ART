@@ -127,7 +127,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		}
 		_canvas.SetNewPoint(newPoint.X,newPoint.Y);
 		_cursorPressed=true;
-
+		_prevCursor=cursor;
 	}else if (sEvent.type==SDL_MOUSEMOTION)
 	{
 		Point2D newPoint(sEvent.button.x,sEvent.button.y);
@@ -190,7 +190,12 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 			{
 				_cursorOutOfRange=false;
 				if (!cursorIsOnPlayer)
-				{_canvas.SetDrawMode(true);}
+				{_canvas.SetDrawMode(true);
+				
+				 newPoint=GetIntersectionRayCircle(_prevCursor,newPoint,playerMiddle,outsideDrawRadius);
+				 _canvas.SetNewPoint(newPoint.X,newPoint.Y);
+				 //_canvas.SetNewPoint(cursor.X,cursor.Y);
+				}
 			}
 		}
 		//If the line to be drawn goes on/through the player
@@ -218,6 +223,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		{
 			_canvas.SetNewPoint(newPoint.X,newPoint.Y);
 		}
+		_prevCursor=cursor;
 	}else if (sEvent.type==SDL_MOUSEBUTTONUP)
 	{
 		_cursorOnPlayer=false;
