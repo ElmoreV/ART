@@ -82,6 +82,16 @@ DrawingObject::DrawingObject(float width, float height, float x, float y):_canva
 	_canvas.SetDrawMode(false);
 	_canvas.SetOffset(x,y);
 };
+void DrawingObject::Reset()
+{
+	_cursorPressed=false;
+	_cursorOnPlayer=false;
+	_cursorOutOfRange=false;
+	_canvas.SetDrawMode(false);
+	_canvas.Clear();
+	_prevCursor.X=0;
+	_prevCursor.Y=0;
+}
 void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 {
 	Point2D playerMiddle(playerBound.X+0.5f*playerBound.W, playerBound.Y+0.5f*playerBound.H);
@@ -98,7 +108,6 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 	//cursor button down
 	if (sEvent.type==SDL_MOUSEBUTTONDOWN)
 	{
-		Point2D newPoint(sEvent.button.x,sEvent.button.y);
 		//Check if the cursor is outside the draw range
 		if ((cursorRelPlayer.X)*(cursorRelPlayer.X)+(cursorRelPlayer.Y)*(cursorRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
 		{
@@ -125,7 +134,7 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		{
 			_canvas.SetDrawMode(true);
 		}
-		_canvas.SetNewPoint(newPoint.X,newPoint.Y);
+		_canvas.SetNewPoint(cursor.X,cursor.Y);
 		_cursorPressed=true;
 		_prevCursor=cursor;
 	}else if (sEvent.type==SDL_MOUSEMOTION)
@@ -144,22 +153,24 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		//Check if you're not drawing through the character
 		Point2D relativeCursor=cursor;
 		relativeCursor-=_canvas.GetOffset();
-		if (!FloatEq(lastPoint.X,-0xFFFF))
+		if (!cursorIsOnPlayer)
 		{
-			
-			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeCursor,
-				relativePlayer,relativePlayerMax),relativePlayerMax.Y))
-			{cursorIsOnPlayer=true;}
-		}else
-		{
-			Point2D referenceOutside=_canvas.GetOutsideReferencePoint();
-			if (referenceOutside.X!=-0xFFFF)
+			if(!FloatEq(lastPoint.X,-0xFFFF))
 			{
-				if (!FloatEq(CheckCollisionForTwoPoints(referenceOutside,relativeCursor,	relativePlayer,relativePlayerMax),relativePlayerMax.Y))
+
+				if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeCursor,
+					relativePlayer,relativePlayerMax),relativePlayerMax.Y))
 				{cursorIsOnPlayer=true;}
+			}else
+			{
+				Point2D referenceOutside=_canvas.GetOutsideReferencePoint();
+				if (referenceOutside.X!=-0xFFFF)
+				{
+					if (!FloatEq(CheckCollisionForTwoPoints(referenceOutside,relativeCursor,relativePlayer,relativePlayerMax),relativePlayerMax.Y))
+					{cursorIsOnPlayer=true;}
+				}
 			}
 		}
-
 		if (cursorIsOutOfRange)
 		{
 			if (_cursorPressed)
@@ -194,7 +205,6 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 				
 				 newPoint=GetIntersectionRayCircle(_prevCursor,newPoint,playerMiddle,outsideDrawRadius);
 				 _canvas.SetNewPoint(newPoint.X,newPoint.Y);
-				 //_canvas.SetNewPoint(cursor.X,cursor.Y);
 				}
 			}
 		}
