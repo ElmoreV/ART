@@ -103,6 +103,10 @@ void Map::Draw(WindowSurface screen)
 			if(_tileLibrary.count(charline[x]) != 0 && charline[x] != _spawnLocation)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
+				SDL_Rect clip = td.Rect();
+				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
+				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 				if(td.IsDrawable()){
 					if(_drawObjects.size() > drawings){
 						_drawObjects.at(drawings).Draw(screen);
@@ -112,12 +116,6 @@ void Map::Draw(WindowSurface screen)
 						_drawObjects.at(drawings).Draw(screen);
 					}
 					drawings++;
-				}
-				else{
-					SDL_Rect clip = td.Rect();
-					//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-					_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
-					//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 				}
 			}
 		}

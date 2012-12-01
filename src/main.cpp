@@ -67,39 +67,64 @@ int main( int argc, char* args[] )
 	map.AddTile('D', 0, 50);
 	map.AddTile('E', 50, 50);
 	map.AddTile('F', 100, 50);
-	map.AddTile('G', 0, 150);
-	map.AddTile('H', 50, 150);
-	map.AddTile('I', 100, 150);
-	map.AddTile('J', 0, 100);
-	map.AddTile('K', 50, 100);
-	map.AddTile('L', 100, 100);
-	map.AddTile('M', 150, 100);
-	map.AddTile('N', 150, 0, 50, 0);
-	map.AddTile('O', 150, 50, 0, 50);
-	map.AddTile('P', 200, 0, 50, 0);
-	map.AddTile('Q', 200, 50, 0, 50);
-	
-	map.AddTile('a', 250, 50);
-	map.AddTile('b', 300, 50);
-	map.AddTile('c', 350, 50);
-	map.AddTile('d', 250, 100);
-	map.AddTile('e', 300, 100);
-	map.AddTile('f', 350, 100);
-	map.AddTile('g', 250, 150);
-	map.AddTile('h', 300, 150);
-	map.AddTile('i', 350, 150);
-	map.AddTile('n', 400, 100, 50, 0);
-	map.AddTile('o', 400, 150, 0, 50);
-	map.AddTile('p', 400, 0, 50, 0);
-	map.AddTile('q', 400, 50, 0, 50);
-	map.AddTile('r', 250, 0);
-	map.AddTile('s', 300, 0);
-	map.AddTile('t', 350, 0);
+	map.AddTile('G', 0, 100);
+	map.AddTile('H', 50, 100);
+	map.AddTile('I', 100, 100);
+	map.AddTile('J', 0, 150);
+	map.AddTile('K', 50, 150);
+	map.AddTile('L', 100, 150);
+	map.AddTile('M', 150, 0);
+	map.AddTile('N', 150, 50);
+	map.AddTile('O', 150, 100);
 
-	map.AddTile('w', 200, 150);
-	map.AddTile('x', 150, 150, 0, 50);
-	map.AddTile('y', 200, 100, 50, 0);
-	map.AddTile('z', 65, 65, false, true);
+	map.AddTile('P', 200, 0);
+	map.AddTile('Q', 250, 0);
+	map.AddTile('R', 200, 50);
+	map.AddTile('S', 250, 50);
+	map.AddTile('T', 200, 100);
+	map.AddTile('U', 250, 100);
+	map.AddTile('V', 150, 150);
+	map.AddTile('W', 200, 150);
+	map.AddTile('X', 250, 150);
+	map.AddTile('Y', 150, 200);
+	map.AddTile('Z', 200, 200);
+	map.AddTile('(', 250, 200);
+	map.AddTile(')', 300, 200);
+
+	map.AddTile('>', 300, 0, 50, 0);
+	map.AddTile('<', 300, 50, 0, 50);
+	map.AddTile('\\', 300, 100, 50, 0);
+	map.AddTile('/', 300, 150, 0, 50);
+
+	map.AddTile('a', 350, 50);
+	map.AddTile('b', 400, 50);
+	map.AddTile('c', 450, 50);
+	map.AddTile('d', 350, 100);
+	map.AddTile('e', 400, 100);
+	map.AddTile('f', 450, 100);
+	map.AddTile('g', 350, 150);
+	map.AddTile('h', 400, 150);
+	map.AddTile('i', 450, 150);
+	map.AddTile('j', 350, 0);
+	map.AddTile('k', 400, 0);
+	map.AddTile('l', 450, 0);
+
+	map.AddTile('w', 500, 0, 50, 0);
+	map.AddTile('v', 500, 50, 0, 50);
+	map.AddTile('x', 500, 100, 50, 0);
+	map.AddTile('y', 500, 150, 0, 50);
+	
+	map.AddTile('m', 0, 200);
+	map.AddTile('n', 50, 200);
+	map.AddTile('o', 100, 200);
+	
+	map.AddTile('p', 350, 200);
+	map.AddTile('q', 400, 200);
+	map.AddTile('r', 450, 200);
+	map.AddTile('s', 500, 200);
+
+	map.AddTile('z', 50, 250, false, true);
+	map.AddTile('@', 0, 255);
 	map.SetMaskColor(255, 242, 0);
 
 	Player player("Images/Rat.png", map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
@@ -118,7 +143,6 @@ int main( int argc, char* args[] )
 		menu.GetChild(2)->AddChild("Sounds");
 		menu.GetChild(2)->AddChild("Keys");
 	menu.AddButtonChild("Exit", &Settings::OnClickExitGame);
-
 	Menu newLevelMenu("Level completed", &setting);
 	newLevelMenu.AddChild("Congratulations");
 	newLevelMenu.AddChild("");

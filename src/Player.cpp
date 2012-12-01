@@ -281,20 +281,26 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 				else {_position.X += _velocity.X*timeDiff;}
 			}
 			else if(charTypeBot != TileTypeSlope && charTypeTop == TileTypeSlope && charTypeBotO == TileTypeSlope){
-				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
-				else {_position.X += _velocity.X*timeDiff;}
-				float h = 0;
-				if(_buttonLeft) h = map->GetSlopeHeight(Point2D(_position.X, _position.Y));
-				else h = map->GetSlopeHeight(Point2D(_position.X + _spriteDimension.X, _position.Y));
-				_position.Y = Y1*map->GetTileDimension().Y + h - _spriteDimension.Y;
+				TileData td = map->GetTileData(XO, Y2);
+				int y1, y2; td.GetSlope(y1, y2);
+				if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
+					if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+					else {_position.X += _velocity.X*timeDiff;}
+					float h = 0;
+					if(_buttonLeft) h = map->GetSlopeHeight(Point2D(_position.X, _position.Y));
+					else h = map->GetSlopeHeight(Point2D(_position.X + _spriteDimension.X, _position.Y));
+					_position.Y = Y1*map->GetTileDimension().Y + h - _spriteDimension.Y;
+				}
 			}
 			else if(charTypeBot == TileTypeNormal && charTypeBotO == TileTypeSlope){
 				TileData td = map->GetTileData(XO, Y2);
 				int y1, y2; td.GetSlope(y1, y2);
-				int yv = (_buttonLeft)?y1:y2;
-				_position.Y =(Y2+1)*map->GetTileDimension().Y -yv - _spriteDimension.Y;
-				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
-				else {_position.X += _velocity.X*timeDiff;}
+				if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
+					int yv = (_buttonLeft)?y1:y2;
+					_position.Y =(Y2+1)*map->GetTileDimension().Y -yv - _spriteDimension.Y;
+					if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+					else {_position.X += _velocity.X*timeDiff;}
+				}
 
 			}
 			//If it is a slope
@@ -389,11 +395,15 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 				}
 			}
 			else if(charTypeBot == TileTypeNone && charTypeTop == TileTypeSlope){
-				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
-				else {_position.X += _velocity.X*timeDiff;}
-				_position.Y -= 10;
-				_velocity.Y = 0;
-				_jumpEnable=true;
+				TileData td = map->GetTileData(XO, Y2);
+				int y1, y2; td.GetSlope(y1, y2);
+				if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
+					if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+					else {_position.X += _velocity.X*timeDiff;}
+					//_position.Y -= 10;
+					_velocity.Y = 0;
+					_jumpEnable=true;
+				}
 			}
 			//Minimal one edge hit a block, so now it can only move the difference between the block and the player
 			else{
