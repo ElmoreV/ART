@@ -16,7 +16,6 @@ class GameStateManager
 private:
 	std::vector<GameStates> _states;
 	void (Settings::*onStateChange)(GameStates previous, GameStates current);
-	bool _eventSet;
 	Settings* _setting;
 public:
 	GameStateManager(Settings* setting);

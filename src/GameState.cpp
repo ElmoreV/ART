@@ -1,22 +1,21 @@
 #include "GameState.h"
 
 GameStateManager::GameStateManager(Settings* setting){
-	_eventSet = false;
 	_setting = setting;
+	onStateChange=0;
 }
 GameStateManager::GameStateManager(Settings* setting, void (Settings::*onstatechange)(GameStates previous, GameStates current)){
-	_eventSet = true;
 	onStateChange = onstatechange;
 	_setting = setting;
 }
 void GameStateManager::CleanUp(){
-	if(_eventSet){
+	if(onStateChange!=0){
 		(_setting->*this->onStateChange)(CurrentState(), GSNone);
 	}
 	_states.clear();
 }
 void GameStateManager::PushState(GameStates state){
-	if(_eventSet){
+	if(onStateChange!=0){
 		(_setting->*this->onStateChange)(CurrentState(), state);
 	}
 	_states.push_back(state);
@@ -28,7 +27,7 @@ void GameStateManager::BackState(int count){
 	else 
 	{
 		for(int i = 0; i < count; i++){
-			if(_eventSet){
+			if(onStateChange!=0){
 				(_setting->*this->onStateChange)(CurrentState(), (_states.size() > 1) ? _states.at(_states.size() - 2) : GSNone);
 			}
 			_states.pop_back();
@@ -36,7 +35,7 @@ void GameStateManager::BackState(int count){
 	}
 }
 void GameStateManager::NewState(GameStates state){
-	if(_eventSet){
+	if(onStateChange!=0){
 		(_setting->*this->onStateChange)(CurrentState(), state);
 	}
 	_states.clear();
@@ -52,5 +51,4 @@ GameStates GameStateManager::StateAt(int index){
 }
 void GameStateManager::SetOnStateChange(void (Settings::*onstatechange)(GameStates previous, GameStates current)){
 	onStateChange = onstatechange;
-	_eventSet = true;
 }

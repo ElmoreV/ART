@@ -26,9 +26,11 @@ public:
 	bool StopStart(int fade=1000);
 	bool Loop();
 	void SetLoopPosition(int loopPosition);
+	void SetVolumeModifier(float modifier);
 private:
 	Mix_Music* _music;
 	int _volume;
+	float _volumeModifier;
 	bool _playing;
 	int _startTime;
 	int _position;
