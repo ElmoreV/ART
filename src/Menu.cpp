@@ -451,12 +451,12 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 		}
 		else {
 			SliderMenuItem* sItem = (SliderMenuItem*)item;
-			if(_center) x = screen.GetWidth() / 2 - render.GetWidth() / 2;
+			Rectangle* bound = sItem->GetBoundingBox();
+			if(_center) x = screen.GetWidth() / 2 - bound->W / 2;
 			if(sItem->IsCustomPosition())
 				sItem->SetBoundingBox(sItem->GetCustomPosition().X, sItem->GetCustomPosition().Y, -1, -1);
 			else
 				sItem->SetBoundingBox(x, y, -1, -1);
-			Rectangle* bound = sItem->GetBoundingBox();
 			screen.DrawLine((int)bound->X, (int)(bound->Y + bound->H/2), (int)(bound->X + bound->W), (int)(bound->Y + bound->H/2), sItem->GetColorR(), sItem->GetColorG(), sItem->GetColorB());
 			float w = (sItem->GetPercentage()/100)*sItem->GetMaxLength();
 			float h = (1-sItem->GetPercentage()/100)*(bound->H/4);
