@@ -47,18 +47,58 @@ int main( int argc, char* args[] )
 	int introCount=0; float logoPositionY = 0;
 	
 	EnemyHandler enemies;
-	Map map("Images/tilesheet.png", 100, 50, "Map/map1.txt");
+	Map map("Images/tilesheet.png", 50, 50, "Map/map1.txt");
 	levels.count++;
-
+	/*
 	map.AddTile('x', 0, 50, 0, 50);
 	map.AddTile('y', 100, 50, 50, 0);
 	map.AddTile('a', 0, 0);
 	map.AddTile('b', 100, 0);
+	*/
+	
+	map.AddTile('A', 0, 0);
+	map.AddTile('B', 50, 0);
+	map.AddTile('C', 100, 0);
+	map.AddTile('D', 0, 50);
+	map.AddTile('E', 50, 50);
+	map.AddTile('F', 100, 50);
+	map.AddTile('G', 0, 150);
+	map.AddTile('H', 50, 150);
+	map.AddTile('I', 100, 150);
+	map.AddTile('J', 0, 100);
+	map.AddTile('K', 50, 100);
+	map.AddTile('L', 100, 100);
+	map.AddTile('M', 150, 100);
+	map.AddTile('N', 150, 0, 50, 0);
+	map.AddTile('O', 150, 50, 0, 50);
+	map.AddTile('P', 200, 0, 50, 0);
+	map.AddTile('Q', 200, 50, 0, 50);
+	
+	map.AddTile('a', 250, 50);
+	map.AddTile('b', 300, 50);
+	map.AddTile('c', 350, 50);
+	map.AddTile('d', 250, 100);
+	map.AddTile('e', 300, 100);
+	map.AddTile('f', 350, 100);
+	map.AddTile('g', 250, 150);
+	map.AddTile('h', 300, 150);
+	map.AddTile('i', 350, 150);
+	map.AddTile('n', 400, 100, 50, 0);
+	map.AddTile('o', 400, 150, 0, 50);
+	map.AddTile('p', 400, 0, 50, 0);
+	map.AddTile('q', 400, 50, 0, 50);
+	map.AddTile('r', 250, 0);
+	map.AddTile('s', 300, 0);
+	map.AddTile('t', 350, 0);
+
+	map.AddTile('w', 200, 150);
+	map.AddTile('x', 150, 150, 0, 50);
+	map.AddTile('y', 200, 100, 50, 0);
 	map.AddTile('z', 65, 65, false, true);
 	map.SetMaskColor(255, 242, 0);
 
 	Player player("Images/Rat.png", map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
-	player.SetVelocity(200, 300); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
+	player.SetVelocity(200, 400); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 	player.MaskColor(255, 242, 0);
 
 	Menu menu("Main menu", &setting, 255, 255, 255);
