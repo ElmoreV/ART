@@ -20,13 +20,13 @@ void GameStateManager::PushState(GameStates state){
 	}
 	_states.push_back(state);
 }
-void GameStateManager::BackState(int count){
-	if(_states.size() < count || count < 0){
+void GameStateManager::BackState(unsigned int count){
+	if(_states.size() <= count){
 		CleanUp();
 	}
 	else 
 	{
-		for(int i = 0; i < count; i++){
+		for(unsigned int i = 0; i < count; i++){
 			if(onStateChange!=0){
 				(_setting->*this->onStateChange)(CurrentState(), (_states.size() > 1) ? _states.at(_states.size() - 2) : GSNone);
 			}
@@ -44,7 +44,7 @@ void GameStateManager::NewState(GameStates state){
 GameStates GameStateManager::CurrentState(){
 	return (_states.size() > 0) ? _states.at(_states.size() - 1) : GSNone;
 }
-GameStates GameStateManager::StateAt(int index){
+GameStates GameStateManager::StateAt(unsigned int index){
 	if(index < _states.size())
 		return _states.at(index);
 	else return GSNone;

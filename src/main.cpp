@@ -47,8 +47,9 @@ int main( int argc, char* args[] )
 	Maps levels;
 	GameStateManager gameStates(&setting);
 	gameStates.NewState(GSIntro);
-
-
+	GlobalSettings gSettings;
+	gSettings.SetVolume(100);
+	gSettings._SfxMusicProportion=0.5;
 	Surface gameLogo;gameLogo.LoadImage("Images/titlescreen.png", 34, 177, 76);
 	int introCount=0; float logoPositionY = 0;
 	
@@ -120,9 +121,11 @@ int main( int argc, char* args[] )
 			menu.GetChild(2)->GetChild(0)->AddChild("Resolution");
 		menu.GetChild(2)->AddChild("Sounds",true);
 			menu.GetChild(2)->GetChild(1)->AddChild("Master Volume");
-			menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,155,155,155);
+			menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,155,155,155,&SetNewVolume,&gSettings);
+			((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(1)))->SetStatus((int)(gSettings._volume*256));
 			menu.GetChild(2)->GetChild(1)->AddChild("SFX-Music");
 			menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30);
+			((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._SfxMusicProportion*256));
 		menu.GetChild(2)->AddChild("Keys");
 	menu.AddButtonChild("Exit", &Settings::OnClickExitGame);
 
@@ -168,18 +171,19 @@ int main( int argc, char* args[] )
 		}
 		if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
 		screen.ClearWindow();
+		musicHandler.SetGlobalVolume((int)(gSettings._volume*128));
 		switch(gameStates.CurrentState())
 		{
 		case GSIntro:
 			if(introCount > 255){
 				logoPositionY -= 5;
 				if(logoPositionY <= 20){ logoPositionY = 20; gameStates.NewState(GSMenuMain); }
-				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 			}
 			else {
 				gameLogo.SetTransparency(introCount);
-				logoPositionY = screen.GetHeight()/2 - gameLogo.GetHeight()/2;
-				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+				logoPositionY = (float)screen.GetHeight()/2 - (float)gameLogo.GetHeight()/2;
+				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 			}
 			introCount+=2;
 			break;
@@ -194,7 +198,7 @@ int main( int argc, char* args[] )
 				gameStates.NewState(GSGame);
 			}
 			musicHandler.Update();
-			gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+			gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 			menu.Open(screen, Point2D(50, logoPositionY + gameLogo.GetHeight()));
 			break;
 

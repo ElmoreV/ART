@@ -2,6 +2,22 @@
 #define SETTINGS_H
 #include "SDLFramework.h"
 
+class GlobalSettings
+{
+public:
+	bool SetVolume(float percentage)
+	{
+		if (percentage>100.0f){percentage=100.0f;}
+		if (percentage<0.0f){percentage=0.0f;}
+		_volume=percentage*0.01f;
+		return true;
+	};
+	float _volume;
+	float _SfxMusicProportion;
+};
+static bool SetNewVolume(float percentage,void* globalSettings)
+{return ((GlobalSettings*)globalSettings)->SetVolume(percentage);};
+
 class Settings
 {
 public:

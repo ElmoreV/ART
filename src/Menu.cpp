@@ -106,7 +106,7 @@ OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool(Settings::
 	_center = center;
 }
 
-int OptionMenuItem::OptionCount(){return _options.size(); }
+unsigned int OptionMenuItem::OptionCount(){return _options.size(); }
 std::string OptionMenuItem::GetOptionText(int index){ return _options.at(index).GetText(); }
 Rectangle OptionMenuItem::GetOptionBound(int index){ return _options.at(index).GetBound(); }
 bool OptionMenuItem::GetOptionHover(int index) { return _options.at(index).GetHover(); }
@@ -144,7 +144,7 @@ TextMenuItem::TextMenuItem(bool (Settings::*ontextchange)(std::string text), std
 	_headerShown = true;
 	_hover = false;
 }
-
+/*
 SliderMenuItem::SliderMenuItem(int width, int height, bool center, int r, int g, int b){
 	_bounds.W = (float)width;
 	_bounds.H = (float)height;
@@ -158,22 +158,25 @@ SliderMenuItem::SliderMenuItem(int width, int height, bool center, int r, int g,
 	_hover = false;
 	_verticalSpace = 1;
 	_center = center;
-}
-SliderMenuItem::SliderMenuItem(bool (Settings::*onvaluechange)(float value), int width, int height, bool center, int r, int g, int b){
+}*/
+SliderMenuItem::SliderMenuItem(int width, int height, bool center, int r, int g, int b,bool (*onvaluechange)(float value,void* pRev),void* pRev){
 	_bounds.W = (float)width;
 	_bounds.H = (float)height;
 	_type = SliderItem;
 	_maxLength = width;
-	_r=r;_g=g;_b=b;
-	onValueChange=onvaluechange;
+	_r=r;_g=g;_b=b;	
 	_status = width;
-	_clickEventAssigned = true;
+	
 	_selected =false;
 	HoverEnabled = false;
 	_headerShown = true;
 	_hover = false;
 	_verticalSpace = 1;
 	_center = center;
+	onValueChange=onvaluechange;
+	onValueChangeRef=pRev;
+	if (onValueChange)
+	{_clickEventAssigned = true;}
 }
 float SliderMenuItem::GetPercentage(){
 	float status = (((float)_status)/((float)_maxLength))*100;
@@ -260,15 +263,15 @@ void MenuItem::AddTextChild(bool (Settings::*onTextChange)(std::string text), st
 	if(_type == NormalItem)IsClickable=true;
 	_childs.push_back(TextMenuItem(onTextChange, title, maxLength, digit, center, r, g, b));
 	HoverEnabled = true;
-}
+}/*
 void MenuItem::AddSliderChild(int width, int height, bool center, int r, int g, int b){
 	if(_type == NormalItem)IsClickable=true;
 	_childs.push_back(SliderMenuItem(width, height, center, r, g, b));
 	HoverEnabled = true;
-}
-void MenuItem::AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, bool center, int r, int g, int b){
+}*/
+void MenuItem::AddSliderChild(int width, int height, bool center, int r, int g, int b,bool (*onValueChange)(float value,void* pRev),void* pRev){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(SliderMenuItem(onValueChange, width, height, center, r, g, b));
+	_childs.push_back(SliderMenuItem(width, height, center, r, g, b,onValueChange,pRev));
 	HoverEnabled = true;
 }
 
@@ -298,7 +301,7 @@ int MenuItem::HandleEvent(SDL_Event sEvent, Settings* setting){
 							if(child->IsEventAssigned()){
 								OptionMenuItem* oItem = (OptionMenuItem*)child;
 								float offsetX = rec.X;
-								for(int j = 0; j < oItem->OptionCount(); j++){
+								for(unsigned int j = 0; j < oItem->OptionCount(); j++){
 									if(offsetX <= sEvent.button.x && offsetX + oItem->GetOptionBound(j).W >= sEvent.button.x){
 										if(oItem->GetOption(j)->Enabled){
 											if((setting->*child->OnOptionClick)(j))
@@ -338,15 +341,15 @@ int MenuItem::HandleEvent(SDL_Event sEvent, Settings* setting){
 						SliderMenuItem* item = (SliderMenuItem*)&_childs.at(i);
 						item->SetStatus(sEvent.button.x - (int)item->GetBoundingBox()->X);
 						if(item->IsEventAssigned())
-							if((setting->*item->onValueChange)(item->GetPercentage()))
-									return i;
+							if(item->onValueChange(item->GetPercentage(),item->onValueChangeRef))
+									return -3;
 				}
 				else if(_childs.at(i).GetBoundingBox()->Contains(sEvent.button.x, sEvent.button.y) && _childs.at(i).GetType() != SliderItem){
 					_childs.at(i).SetHover(true);
 					if(_childs.at(i).GetType() == OptionItem){
 						OptionMenuItem* oItem = (OptionMenuItem*)&_childs.at(i);
 						float offsetX = oItem->GetBoundingBox()->X;
-						for(int j = 0; j < oItem->OptionCount(); j++){
+						for(unsigned int j = 0; j < oItem->OptionCount(); j++){
 							if(offsetX <= sEvent.button.x && offsetX + oItem->GetOptionBound(j).W >= sEvent.button.x)
 								oItem->SetOptionHover(j, true);
 							else
@@ -418,7 +421,7 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 		if(item->GetType() != SliderItem && item->GetType() != OptionItem){
 			font.SetColor(item->GetColorR(), item->GetColorG(), item->GetColorB());
 			render.RenderText(font, item->GetText());
-			if(_center) x = screen.GetWidth() / 2 - render.GetWidth() / 2;
+			if(_center) x = (float)screen.GetWidth() * 0.5f - (float)render.GetWidth() * 0.5f;
 			if(item->IsCustomPosition())
 				item->SetBoundingBox(item->GetCustomPosition().X, item->GetCustomPosition().Y, (float)render.GetWidth(), (float)render.GetHeight());
 			else
@@ -429,7 +432,7 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 		else if(item->GetType() == OptionItem){
 			render.RenderText(font, item->GetText());
 			OptionMenuItem* oItem = (OptionMenuItem*)item;
-			if(_center) x = screen.GetWidth() / 2 - render.GetWidth() / 2;
+			if(_center) x = (float)screen.GetWidth() * 0.5f - (float)render.GetWidth() * 0.5f;
 			if(item->IsCustomPosition())
 				item->SetBoundingBox(item->GetCustomPosition().X, item->GetCustomPosition().Y, (float)render.GetWidth(), (float)render.GetHeight());
 			else
@@ -471,7 +474,7 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 			if(!_optionBoundSet){
 				_optionBoundSet=true;
 				float offsetX = item->GetBoundingBox()->X;
-				for(int j = 0; j < oItem->OptionCount(); j++){
+				for(unsigned int j = 0; j < oItem->OptionCount(); j++){
 					font.SetColor(oItem->GetOption(j)->GetColorR(), oItem->GetOption(j)->GetColorG(), oItem->GetOption(j)->GetColorB()); 
 					render.RenderText(font, oItem->GetOptionText(j));
 					oItem->SetOptionBound(j, offsetX, item->GetBoundingBox()->Y, (float)render.GetWidth(), (float)render.GetHeight());
@@ -480,7 +483,7 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 			}
 			if(item->IsHover() && item->HoverEnabled){
 				float offsetX = item->GetBoundingBox()->X;
-				for(int j = 0; j < oItem->OptionCount(); j++){
+				for(unsigned int j = 0; j < oItem->OptionCount(); j++){
 					if(oItem->GetOptionHover(j)){
 						screen.DrawLine((int)offsetX, (int)(item->GetBoundingBox()->Y + item->GetBoundingBox()->H), 
 							(int)(offsetX + oItem->GetOptionBound(j).W), (int)(item->GetBoundingBox()->Y + item->GetBoundingBox()->H), oItem->GetOption(j)->GetColorR(), oItem->GetOption(j)->GetColorG(), oItem->GetOption(j)->GetColorB());
@@ -579,11 +582,11 @@ void Menu::AddTextChild(std::string title, int maxLength, bool digit, bool cente
 void Menu::AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
 	_mainItem.AddTextChild(onTextChange, title, maxLength, digit, center, r, g, b);
 }
-void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b){
-	_mainItem.AddSliderChild(width, height, center, r, g, b);
-}
-void Menu::AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, bool center, int r, int g, int b){
-	_mainItem.AddSliderChild(onValueChange, width, height, center, r, g, b);
+//void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b){
+//	_mainItem.AddSliderChild(width, height, center, r, g, b);
+//}
+void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b,bool (*onValueChange)(float value,void* pRev),void* pRev){
+	_mainItem.AddSliderChild(width, height, center, r, g, b,onValueChange,pRev);
 }
 
 void Menu::HandleEvent(SDL_Event sEvent){

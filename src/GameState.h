@@ -22,10 +22,10 @@ public:
 	GameStateManager(Settings* setting, void (Settings::*onStateChange)(GameStates previous, GameStates current));
 	void CleanUp();
 	void PushState(GameStates state);
-	void BackState(int count = 1);
+	void BackState(unsigned int count = 1);
 	void NewState(GameStates state);
 	GameStates CurrentState();
-	GameStates StateAt(int index);
+	GameStates StateAt(unsigned int index);
 	void SetOnStateChange(void (Settings::*onStateChange)(GameStates previous, GameStates current));
 };
 #endif

@@ -46,7 +46,8 @@ protected:
 	bool (Settings::*OnClick)(); //ButtonItem
 	bool (Settings::*OnOptionClick)(int id); //OptionItem
 	bool (Settings::*onTextChange)(std::string text); //TextItem
-	bool (Settings::*onValueChange)(float percentage); //SliderItem
+	bool (*onValueChange)(float percentage,void* ref); //SliderItem
+	void* onValueChangeRef;
 	std::vector<Options> _options;
 	bool _optionBoundSet, _clickEventAssigned, _hover, _customSet, _digitOnly, _selected, _headerShown, _center;
 	std::string _optionSpace;
@@ -67,8 +68,7 @@ public:
 	void AddTextChild(std::string title="", int maxLength=0, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
 	void AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=0, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
 	
-	void AddSliderChild(int width, int height, bool center=false, int r=255, int g=255, int b=255);
-	void AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, bool center=false, int r=255, int g=255, int b=255);
+	void AddSliderChild( int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
 	
 	int HandleEvent(SDL_Event sEvent, Settings* setting);
 	void Draw(WindowSurface screen, Font font, Point2D offset=Point2D());
@@ -118,7 +118,7 @@ public:
 	void SetOptionBound(int index, float x, float y, float w, float h);
 	void SetOptionHover(int index, bool value);
 	
-	int OptionCount();
+	unsigned int OptionCount();
 	
 	std::string GetOptionText(int index);
 	Rectangle GetOptionBound(int index);
@@ -148,8 +148,7 @@ public:
 class SliderMenuItem : public MenuItem
 {
 public:
-	SliderMenuItem(int width, int height, bool center=false, int r=255, int g=255, int b=255);
-	SliderMenuItem(bool (Settings::*onValueChange)(float value), int width, int height, bool center=false, int r=255, int g=255, int b=255);
+	SliderMenuItem(int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
 	float GetPercentage();
 	void SetStatus(int status);
 };
@@ -190,8 +189,7 @@ public:
 	void AddTextChild(std::string title="", int maxLength=10, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
 	void AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=10, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
 	
-	void AddSliderChild(int width, int height, bool center=false, int r=255, int g=255, int b=255);
-	void AddSliderChild(bool (Settings::*onValueChange)(float value), int width, int height, bool center=false, int r=255, int g=255, int b=255);
+	void AddSliderChild(int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
 
 	void HandleEvent(SDL_Event sEvent);
 	void Reset();

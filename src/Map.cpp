@@ -172,15 +172,17 @@ float Map::CheckDrawCollision(Rectangle playerBound){
 	return maxH;
 }
 bool Map::NewMapEnabled(Rectangle playerBoundingBox){
+	//Ik wed dat deze functie beter kan, dan van float->int->float->int te gaan.
+	//Als ik nu eens snapte waar deze functie voor was
 	int X1 = (int)(playerBoundingBox.X/_tileDimension.X);
 	int Y1 = (int)(playerBoundingBox.Y/_tileDimension.Y);
 	int X2 = (int)((playerBoundingBox.X + playerBoundingBox.W)/_tileDimension.X);
 	int Y2 = (int)((playerBoundingBox.Y + playerBoundingBox.H)/_tileDimension.Y);
 	Point2D collisionPoint[4];
-	collisionPoint[0] = Point2D(X1, Y1);
-	collisionPoint[1] = Point2D(X1, Y2);
-	collisionPoint[2] = Point2D(X2, Y1);
-	collisionPoint[3] = Point2D(X2, Y2);
+	collisionPoint[0] = Point2D((float)X1, (float)Y1);
+	collisionPoint[1] = Point2D((float)X1, (float)Y2);
+	collisionPoint[2] = Point2D((float)X2, (float)Y1);
+	collisionPoint[3] = Point2D((float)X2, (float)Y2);
 	for(int i = 0; i < 4; i++){
 		const char* charline;
 		if(_mapArray.size() > collisionPoint[i].Y){
@@ -326,7 +328,7 @@ void Map::RemoveEnemiesFromArray(std::vector<char> enemies){
 		charline = _mapArray.at(y);
 		for (unsigned int i = 0; i < enemies.size(); ++i)
 		{
-			for (int x = 0; x < charline.length(); ++x) {
+			for (unsigned int x = 0; x < charline.length(); ++x) {
 				if (charline[x] == enemies.at(i))
 					charline[x] = '-';
 				}

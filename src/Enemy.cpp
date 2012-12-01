@@ -255,9 +255,9 @@ void EnemyHandler::PopulateEnemies(Map* map){
 		str = mapArray.at(y);
 		for(unsigned int x = 0; x < str.length(); x++){
 			chararcter = str[x];
-			for(int i = 0; i < enemyChars.size(); i++){
+			for(unsigned int i = 0; i < enemyChars.size(); i++){
 				if(enemyChars[i]==chararcter){
-					AddEnemy((EnemyType)i, (Point2D(x, y)*map->GetTileDimension()));
+					AddEnemy((EnemyType)i, Point2D((float)x, (float)y)*map->GetTileDimension());
 				}
 			}
 		}
