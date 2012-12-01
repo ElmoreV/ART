@@ -39,8 +39,9 @@ int main( int argc, char* args[] )
 	SDL_Event sEvent;
 	MusicHandler musicHandler;
 	Sounds sounds;
-	sounds._titleScreen.InitIfNeccessary("Music/ratIntro.ogg",128);
+	sounds._titleScreen.InitIfNeccessary("Music/ratintro.ogg",128);
 	sounds._titleScreen.SetLoopPosition(48300);
+	sounds._titleScreen.SetVolumeModifier(0.4f);
 	musicHandler.SetNewMusic(&sounds._titleScreen);
 	Settings setting;
 	Maps levels;
@@ -114,8 +115,14 @@ int main( int argc, char* args[] )
 	menu.AddButtonChild("Load game", &Settings::OnClickLoadGame);
 	menu.AddChild("Options", true);
 		menu.GetChild(2)->SetVerticalSpace(20);
-		menu.GetChild(2)->AddChild("Graphics");
-		menu.GetChild(2)->AddChild("Sounds");
+		menu.GetChild(2)->AddChild("Graphics",true);
+			menu.GetChild(2)->GetChild(0)->AddChild("FPS Setting");
+			menu.GetChild(2)->GetChild(0)->AddChild("Resolution");
+		menu.GetChild(2)->AddChild("Sounds",true);
+			menu.GetChild(2)->GetChild(1)->AddChild("Master Volume");
+			menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,155,155,155);
+			menu.GetChild(2)->GetChild(1)->AddChild("SFX-Music");
+			menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30);
 		menu.GetChild(2)->AddChild("Keys");
 	menu.AddButtonChild("Exit", &Settings::OnClickExitGame);
 
@@ -134,98 +141,107 @@ int main( int argc, char* args[] )
 			if (sEvent.type==SDL_QUIT || setting.exitGame){gameRunning=false;}
 			if (sEvent.type == SDL_VIDEORESIZE ) {screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
 
-			switch(gameStates.CurrentState()){
-				case GSMenuMain:
-					if(sEvent.type == SDL_KEYDOWN) 
-						if(sEvent.key.keysym.sym == SDLK_ESCAPE) 
-						{gameStates.BackState();menu.Reset();}
+			switch(gameStates.CurrentState())
+			{
+			case GSIntro:
+				if (sEvent.type == SDL_KEYDOWN||sEvent.type == SDL_MOUSEBUTTONDOWN)
+				{
+					logoPositionY=20;
+					introCount=256;
+					gameLogo.SetTransparency(256);
+				}
+			case GSMenuMain:
+				if(sEvent.type == SDL_KEYDOWN) 
+					if(sEvent.key.keysym.sym == SDLK_ESCAPE) 
+					{gameStates.BackState();menu.Reset();}
 					menu.HandleEvent(sEvent);
 					break;
-				case GSGame:
-					if(sEvent.type == SDL_KEYDOWN) if(sEvent.key.keysym.sym == SDLK_ESCAPE) gameStates.PushState(GSMenuMain);
-					player.HandleEvent(sEvent);
-					map.HandleEvent(sEvent,player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y));
-					break;
-				case GSMenuNewLevel:
-					newLevelMenu.HandleEvent(sEvent);
-					break;
+			case GSGame:
+				if(sEvent.type == SDL_KEYDOWN) if(sEvent.key.keysym.sym == SDLK_ESCAPE) gameStates.PushState(GSMenuMain);
+				player.HandleEvent(sEvent);
+				map.HandleEvent(sEvent,player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y));
+				break;
+			case GSMenuNewLevel:
+				newLevelMenu.HandleEvent(sEvent);
+				break;
 			}
 		}
 		if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
 		screen.ClearWindow();
-		switch(gameStates.CurrentState()){
-			case GSIntro:
-				if(introCount > 255){
-					logoPositionY -= 5;
-					if(logoPositionY <= 20){ logoPositionY = 20; gameStates.NewState(GSMenuMain); }
-					gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+		switch(gameStates.CurrentState())
+		{
+		case GSIntro:
+			if(introCount > 255){
+				logoPositionY -= 5;
+				if(logoPositionY <= 20){ logoPositionY = 20; gameStates.NewState(GSMenuMain); }
+				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+			}
+			else {
+				gameLogo.SetTransparency(introCount);
+				logoPositionY = screen.GetHeight()/2 - gameLogo.GetHeight()/2;
+				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+			}
+			introCount+=2;
+			break;
+		case GSMenuMain:
+			if(setting.newGame){
+				musicHandler.SetNewMusic(&sounds._forest);
+				setting.newGame = false;
+				levels.count = 1;
+				map.NewMap(levels.levels[0]);
+				enemies.PopulateEnemies(&map);
+				player.SetPosition(map.GetSpawnLocation());
+				gameStates.NewState(GSGame);
+			}
+			musicHandler.Update();
+			gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
+			menu.Open(screen, Point2D(50, logoPositionY + gameLogo.GetHeight()));
+			break;
+
+		case GSGame:
+			if(gameStates.CurrentState() != GSMenuNewLevel){
+				if(map.NewMapEnabled(player.GetBoundR())) 
+					gameStates.PushState(GSMenuNewLevel);
+			}
+			player.Update(map, screen.GetWidth(), screen.GetHeight(), Timer);
+			enemies.Update(&map, &player, Timer);
+
+			map.Draw(screen);
+			enemies.Draw(screen, map.GetMapPosition());
+			player.Draw(screen, map.GetMapPosition());
+
+			break;
+
+		case GSMenuNewLevel:
+			if(setting.betweenLevelOptions == 0){
+				newLevelMenu.Open(screen, Point2D(100, 100));
+				if(levels.count == levels.maxCount)
+					((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = false;
+				else
+					((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = true;
+			}
+			else {
+				if(setting.betweenLevelOptions == 1) //MainMenu
+				{
+					gameStates.NewState(GSMenuMain);
+					musicHandler.SetNewMusic(&sounds._titleScreen);
 				}
-				else {
-					gameLogo.SetTransparency(introCount);
-					logoPositionY = screen.GetHeight()/2 - gameLogo.GetHeight()/2;
-					gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
-				}
-				introCount+=2;
-				break;
-			case GSMenuMain:
-				if(setting.newGame){
-					musicHandler.SetGlobalVolume(0);
-					setting.newGame = false;
-					levels.count = 1;
-					map.NewMap(levels.levels[0]);
+				else if(setting.betweenLevelOptions == 2){ //Restart 
+					map.NewMap(levels.levels[levels.count-1]);
 					enemies.PopulateEnemies(&map);
 					player.SetPosition(map.GetSpawnLocation());
-					gameStates.NewState(GSGame);
+					gameStates.BackState();
 				}
-				musicHandler.Update();
-				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
-				menu.Open(screen, Point2D(50, logoPositionY + gameLogo.GetHeight()));
-				break;
-
-			case GSGame:
-				if(gameStates.CurrentState() != GSMenuNewLevel){
-					if(map.NewMapEnabled(player.GetBoundR())) 
-						gameStates.PushState(GSMenuNewLevel);
+				else {//next level
+					map.NewMap(levels.levels[levels.count]);
+					enemies.PopulateEnemies(&map);
+					levels.count++;
+					player.SetPosition(map.GetSpawnLocation());
+					gameStates.BackState();
 				}
-				player.Update(map, screen.GetWidth(), screen.GetHeight(), Timer);
-				enemies.Update(&map, &player, Timer);
-			
-				map.Draw(screen);
-				enemies.Draw(screen, map.GetMapPosition());
-				player.Draw(screen, map.GetMapPosition());
-			
-				break;
-
-			case GSMenuNewLevel:
-				if(setting.betweenLevelOptions == 0){
-					newLevelMenu.Open(screen, Point2D(100, 100));
-					if(levels.count == levels.maxCount)
-						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = false;
-					else
-						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = true;
-				}
-				else {
-					if(setting.betweenLevelOptions == 1) //MainMenu
-					{
-						gameStates.NewState(GSMenuMain);
-						musicHandler.SetGlobalVolume(128);
-					}
-					else if(setting.betweenLevelOptions == 2){ //Restart 
-						map.NewMap(levels.levels[levels.count-1]);
-						enemies.PopulateEnemies(&map);
-						player.SetPosition(map.GetSpawnLocation());
-						gameStates.BackState();
-					}
-					else {//next level
-						map.NewMap(levels.levels[levels.count]);
-						enemies.PopulateEnemies(&map);
-						levels.count++;
-						player.SetPosition(map.GetSpawnLocation());
-						gameStates.BackState();
-					}
-					setting.betweenLevelOptions = 0;
-				}
-				break;
+				setting.betweenLevelOptions = 0;
+			}
+			break;
 		}
 
 		Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
