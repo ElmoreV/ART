@@ -254,27 +254,50 @@ void Player::HandleCollision(Map& map, int screenWidth, int screenHeight, float 
 			}
 		}
 		if(_buttonLeft || _buttonRight){
-			int X;
+			int X, XO;
 			if(_buttonLeft){
 				//The new x position after walking if to left
 				X = (int)((_position.X - _velocity.X*timeDiff) / map.GetTileDimension().X);
+				XO = (int)((_position.X + _spriteDimension.X - _velocity.X*timeDiff) / map.GetTileDimension().X);
 			}
 			else {
 				//The new x position after walking if to right
 				X = (int)((_position.X + _velocity.X*timeDiff + _spriteDimension.X) / map.GetTileDimension().X);
+				XO = (int)((_position.X + _velocity.X*timeDiff) / map.GetTileDimension().X);
 			}
 			int Y1 = (int)(_position.Y / map.GetTileDimension().Y); // Top edge of sprite
 			int Y2 = (int)((_position.Y + _spriteDimension.Y - 1) / map.GetTileDimension().Y); //bottom edge of sprite
 			
 			Point2D top((float)X, (float)Y1);
 			Point2D bot((float)X, (float)Y2);
-			int charTypeTop = map.GetCharType(top);
-			int charTypeBot = map.GetCharType(bot);
+			TileType charTypeTop = map.GetCharType(top);
+			TileType charTypeBot = map.GetCharType(bot);
+			TileType charTypeBotO = map.GetCharType(Point2D((float)XO, (float)Y2));
+
 			//std::stringstream ss; ss <<charTypeTop << "   " <<charTypeBot; Error r; r.HandleError(CaptionOnly, ss.str());
 			//IF both edge don't hit anything, the player can freely move to left or right
 			if(charTypeTop ==  TileTypeNone && charTypeBot ==  TileTypeNone){
 				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
 				else {_position.X += _velocity.X*timeDiff;}
+			}
+			else if(charTypeBot != TileTypeSlope && charTypeTop == TileTypeSlope && charTypeBotO == TileTypeSlope){
+				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+				else {_position.X += _velocity.X*timeDiff;}
+				float h = 0;
+				if(_buttonLeft)
+					h = map.GetSlopeHeight(Point2D(_position.X - _velocity.X*timeDiff, _position.Y));
+				else h = map.GetSlopeHeight(Point2D(_position.X + _spriteDimension.X + _velocity.X*timeDiff, _position.Y));
+				_position.Y = Y1*map.GetTileDimension().Y + h - _spriteDimension.Y + 3; 
+
+			}
+			else if(charTypeBot == TileTypeNormal && charTypeBotO == TileTypeSlope){
+				TileData td = map.GetTileData(XO, Y2);
+				int y1, y2; td.GetSlope(y1, y2);
+				int yv = (_buttonLeft)?y1:y2;
+				_position.Y =(Y2+1)*map.GetTileDimension().Y -yv - _spriteDimension.Y;
+				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+				else {_position.X += _velocity.X*timeDiff;}
+
 			}
 			//If it is a slope
 			else if(charTypeBot == TileTypeSlope){
