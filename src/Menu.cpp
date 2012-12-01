@@ -35,20 +35,15 @@ void Options::SetColor(int r, int g, int b){
 }
 bool Options::IsBoundingBox(){return _boundSet;}
 
-ButtonMenuItem::ButtonMenuItem(std::string title, bool center, int r, int g, int b):MenuItem(title, center, r, g, b){
-	_type = ButtonItem;
-	_clickEventAssigned = false;
-	_selected =false;
-	HoverEnabled = true;
-	_headerShown = true;
-}
-ButtonMenuItem::ButtonMenuItem(std::string title, bool(Settings::*clickEvent)(), bool center, int r, int g, int b):MenuItem(title, center, r, g, b){
-	OnClick = clickEvent;
+ButtonMenuItem::ButtonMenuItem(std::string title , bool center, int r, int g, int b,bool(Settings::*clickEvent)()):MenuItem(title, center, r, g, b){
+	
 	_type = ButtonItem; 
-	_clickEventAssigned = true;
 	_selected =false;
 	HoverEnabled = true;
 	_headerShown = true;
+	OnClick = clickEvent;
+	if (clickEvent)
+	{_clickEventAssigned = true;}
 }
 
 OptionMenuItem::OptionMenuItem(std::vector<Options> options, bool center, int r, int g, int b){
@@ -69,7 +64,7 @@ OptionMenuItem::OptionMenuItem(std::vector<Options> options, bool center, int r,
 	_verticalSpace = 1;
 	_center = center;
 }
-OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool center, int r, int g, int b):MenuItem(){
+OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool center, int r, int g, int b, bool(Settings::*optionclicks)(int id)){
 	_type=OptionItem;
 	Text = Header = "UNDEFINED";
 	_optionText = "";
@@ -77,25 +72,7 @@ OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool center, in
 		_optionText += options.at(i) + " ";
 		_options.push_back(Options(options.at(i)));
 	}
-	_clickEventAssigned = false;
-	_r=r;_g=g;_b=b;
-	_selected =false;
-	HoverEnabled = true;
-	_headerShown = true;
-	_optionSpace = " ";
-	_hover = false;
-	_center = center;
-}
-OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), bool center, int r, int g, int b){
-	_type=OptionItem;
-	Text = Header = "UNDEFINED";
-	_optionText = "";
-	for(unsigned int i = 0; i < options.size(); i++){
-		_optionText += options.at(i) + " ";
-		_options.push_back(Options(options.at(i)));
-	}
-	OnOptionClick = optionclicks;
-	_clickEventAssigned = true;
+	
 	_r=r;_g=g;_b=b;
 	_selected =false;
 	HoverEnabled = true;
@@ -104,6 +81,9 @@ OptionMenuItem::OptionMenuItem(std::vector<std::string> options, bool(Settings::
 	_hover = false;
 	_verticalSpace = 1;
 	_center = center;
+	OnOptionClick = optionclicks;
+	if (optionclicks)
+	{_clickEventAssigned = true;}
 }
 
 unsigned int OptionMenuItem::OptionCount(){return _options.size(); }
@@ -114,16 +94,7 @@ void OptionMenuItem::SetOptionHover(int index, bool value){ _options.at(index).S
 void OptionMenuItem::SetOptionBound(int index, float x, float y, float w, float h){_options.at(index).SetBound(x, y, w, h); }
 Options* OptionMenuItem::GetOption(int index){return &_options.at(index); }
 
-TextMenuItem::TextMenuItem(std::string text, bool center, int r, int g, int b):MenuItem(text, center,r,g,b){
-	_type=TextItem;
-	_maxLength = 10;
-	_digitOnly = false;
-	SDL_EnableUNICODE(SDL_ENABLE);
-	_selected =false;
-	HoverEnabled = true;
-	_headerShown = true;
-}
-TextMenuItem::TextMenuItem(std::string text, int maxLength, bool digit, bool center, int r, int g, int b):MenuItem(text, center,r,g,b){
+TextMenuItem::TextMenuItem(std::string text, int maxLength, bool digit, bool center, int r, int g, int b,bool (Settings::*ontextchange)(std::string text)):MenuItem(text,center,r,g,b){
 	_type=TextItem;
 	_maxLength = maxLength;
 	_digitOnly = digit;
@@ -131,42 +102,19 @@ TextMenuItem::TextMenuItem(std::string text, int maxLength, bool digit, bool cen
 	_selected =false;
 	HoverEnabled = true;
 	_headerShown = true;
-}
-TextMenuItem::TextMenuItem(bool (Settings::*ontextchange)(std::string text), std::string text, int maxLength, bool digit, bool center, int r, int g, int b):MenuItem(text,center,r,g,b){
-	_type=TextItem;
-	_maxLength = maxLength;
-	_digitOnly = digit;
-	SDL_EnableUNICODE(SDL_ENABLE);
+	_hover = false;
 	onTextChange = ontextchange;
-	_clickEventAssigned = true;
-	_selected =false;
-	HoverEnabled = true;
-	_headerShown = true;
-	_hover = false;
+	if (onTextChange!=0)
+	{_clickEventAssigned = true;}
 }
-/*
-SliderMenuItem::SliderMenuItem(int width, int height, bool center, int r, int g, int b){
-	_bounds.W = (float)width;
-	_bounds.H = (float)height;
-	_type = SliderItem;
-	_maxLength = width;
-	_r=r;_g=g;_b=b;
-	_status = width;
-	_selected =false;
-	HoverEnabled = false;
-	_headerShown = true;
-	_hover = false;
-	_verticalSpace = 1;
-	_center = center;
-}*/
+
 SliderMenuItem::SliderMenuItem(int width, int height, bool center, int r, int g, int b,bool (*onvaluechange)(float value,void* pRev),void* pRev){
 	_bounds.W = (float)width;
 	_bounds.H = (float)height;
 	_type = SliderItem;
 	_maxLength = width;
 	_r=r;_g=g;_b=b;	
-	_status = width;
-	
+	_status = width;	
 	_selected =false;
 	HoverEnabled = false;
 	_headerShown = true;
@@ -230,45 +178,23 @@ void MenuItem::AddChild(MenuItem* item){
 	_childs.push_back(*item);
 	HoverEnabled = true;
 }
-void MenuItem::AddButtonChild(std::string title, bool center, int r, int g, int b){
+void MenuItem::AddButtonChild(std::string title, bool center, int r, int g, int b, bool(Settings::*onclick)()){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(ButtonMenuItem(title, center, r, g, b));
+	_childs.push_back(ButtonMenuItem(title, center, r, g, b, onclick));
 	HoverEnabled = true;
 }
-void MenuItem::AddButtonChild(std::string title, bool(Settings::*onclick)(), bool center, int r, int g, int b){
+void MenuItem::AddOptionChild(std::vector<std::string> options, std::string optionSpace, bool center, int r, int g, int b, bool(Settings::*optionclicks)(int id)){
 	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(ButtonMenuItem(title, onclick, center, r, g, b));
-	HoverEnabled = true;
-}
-void MenuItem::AddOptionChild(std::vector<std::string> options, std::string optionSpace, bool center, int r, int g, int b){
-	if(_type == NormalItem)IsClickable=true;
-	OptionMenuItem item(options, center, r, g, b);
+	OptionMenuItem item(options, center, r, g, b, optionclicks);
 	item.SetOptionSpace(optionSpace);
 	_childs.push_back(item);
 	HoverEnabled = true;
 }
-void MenuItem::AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), std::string optionSpace, bool center, int r, int g, int b){
+void MenuItem::AddTextChild(std::string title, int maxLength, bool digit, bool center, int r, int g, int b, bool (Settings::*onTextChange)(std::string text)){
 	if(_type == NormalItem)IsClickable=true;
-	OptionMenuItem item(options, optionclicks, center, r, g, b);
-	item.SetOptionSpace(optionSpace);
-	_childs.push_back(item);
+	_childs.push_back(TextMenuItem(title, maxLength, digit, center, r, g, b,onTextChange));
 	HoverEnabled = true;
 }
-void MenuItem::AddTextChild(std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
-	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(TextMenuItem(title, maxLength, digit, center, r, g, b));
-	HoverEnabled = true;
-}
-void MenuItem::AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
-	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(TextMenuItem(onTextChange, title, maxLength, digit, center, r, g, b));
-	HoverEnabled = true;
-}/*
-void MenuItem::AddSliderChild(int width, int height, bool center, int r, int g, int b){
-	if(_type == NormalItem)IsClickable=true;
-	_childs.push_back(SliderMenuItem(width, height, center, r, g, b));
-	HoverEnabled = true;
-}*/
 void MenuItem::AddSliderChild(int width, int height, bool center, int r, int g, int b,bool (*onValueChange)(float value,void* pRev),void* pRev){
 	if(_type == NormalItem)IsClickable=true;
 	_childs.push_back(SliderMenuItem(width, height, center, r, g, b,onValueChange,pRev));
@@ -564,27 +490,17 @@ void Menu::AddChild(std::string text, bool center, int r, int g, int b){
 void Menu::AddChild(MenuItem* item){
 	_mainItem.AddChild(item);
 }
-void Menu::AddButtonChild(std::string title, bool center, int r, int g, int b){
-	_mainItem.AddButtonChild(title, center, r, g, b);
+
+void Menu::AddButtonChild(std::string title, bool center, int r, int g, int b,bool(Settings::*onclick)()){
+	_mainItem.AddButtonChild(title , center, r, g, b,onclick);
 }
-void Menu::AddButtonChild(std::string title, bool(Settings::*onclick)(), bool center, int r, int g, int b){
-	_mainItem.AddButtonChild(title, onclick, center, r, g, b);
+void Menu::AddOptionChild(std::vector<std::string> options, std::string optionSpace, bool center, int r, int g, int b, bool(Settings::*optionclicks)(int id)){
+	_mainItem.AddOptionChild(options, optionSpace, center, r, g, b, optionclicks);
 }
-void Menu::AddOptionChild(std::vector<std::string> options, std::string optionSpace, bool center, int r, int g, int b){
-	_mainItem.AddOptionChild(options, optionSpace, center, r, g, b);
+
+void Menu::AddTextChild(std::string title, int maxLength, bool digit, bool center, int r, int g, int b,bool (Settings::*onTextChange)(std::string text)){
+	_mainItem.AddTextChild(title, maxLength, digit, center, r, g, b,onTextChange);
 }
-void Menu::AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), std::string optionSpace, bool center, int r, int g, int b){
-	_mainItem.AddOptionChild(options, optionclicks, optionSpace, center, r, g, b);
-}
-void Menu::AddTextChild(std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
-	_mainItem.AddTextChild(title, maxLength, digit, center, r, g, b);
-}
-void Menu::AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title, int maxLength, bool digit, bool center, int r, int g, int b){
-	_mainItem.AddTextChild(onTextChange, title, maxLength, digit, center, r, g, b);
-}
-//void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b){
-//	_mainItem.AddSliderChild(width, height, center, r, g, b);
-//}
 void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b,bool (*onValueChange)(float value,void* pRev),void* pRev){
 	_mainItem.AddSliderChild(width, height, center, r, g, b,onValueChange,pRev);
 }

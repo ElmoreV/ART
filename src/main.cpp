@@ -158,7 +158,7 @@ int main( int argc, char* args[] )
 	newLevelMenu.AddChild("");
 	newLevelMenu.AddChild("What do you want to do?");
 	std::vector<std::string> opt; opt.push_back("Main menu"); opt.push_back("Restart"); opt.push_back("Next level");
-	newLevelMenu.AddOptionChild(opt, &Settings::NewLevelOptions, "       ");
+	newLevelMenu.AddOptionChild(opt, "       ",false,255,255,255,&Settings::NewLevelOptions);
 	//((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(1)->Enabled = false;
 
 	while (gameRunning)
