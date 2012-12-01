@@ -7,6 +7,7 @@
 #include "Menu.h"
 #include "Enemy.h" 
 #include "GameState.h" 
+#include "Assets.h"
 
 class FPS
 {
@@ -36,7 +37,11 @@ int main( int argc, char* args[] )
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-
+	MusicHandler musicHandler;
+	Sounds sounds;
+	sounds._titleScreen.InitIfNeccessary("Music/ratIntro.ogg",128);
+	sounds._titleScreen.SetLoopPosition(48300);
+	musicHandler.SetNewMusic(&sounds._titleScreen);
 	Settings setting;
 	Maps levels;
 	GameStateManager gameStates(&setting);
@@ -120,10 +125,11 @@ int main( int argc, char* args[] )
 					logoPositionY = screen.GetHeight()/2 - gameLogo.GetHeight()/2;
 					gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
 				}
-				introCount+=4;
+				introCount+=2;
 				break;
 			case GSMenuMain:
 				if(setting.newGame){
+					musicHandler.SetGlobalVolume(0);
 					setting.newGame = false;
 					levels.count = 1;
 					map.NewMap(levels.levels[0]);
@@ -131,6 +137,7 @@ int main( int argc, char* args[] )
 					player.SetPosition(map.GetSpawnLocation());
 					gameStates.NewState(GSGame);
 				}
+				musicHandler.Update();
 				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, logoPositionY);
 				menu.Open(screen, Point2D(50, logoPositionY + gameLogo.GetHeight()));
 				break;

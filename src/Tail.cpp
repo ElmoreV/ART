@@ -43,14 +43,14 @@ void Tail::Draw(WindowSurface screen)
 	{
 		if (i>50)
 		{
-			screen.DrawLine(_bezierCurve[i-1].X+1,_bezierCurve[i-1].Y+1,_bezierCurve[i].X+1,_bezierCurve[i].Y+1,200,100,100);
+			screen.DrawLine((int)_bezierCurve[i-1].X+1,(int)_bezierCurve[i-1].Y+1,(int)_bezierCurve[i].X+1,(int)_bezierCurve[i].Y+1,200,100,100);
 		}
 		if (i>75)
 		{
-			screen.DrawLine(_bezierCurve[i-1].X+1,_bezierCurve[i-1].Y-1,_bezierCurve[i].X+1,_bezierCurve[i].Y-1,155,75,75);
-			screen.DrawLine(_bezierCurve[i-1].X+1,_bezierCurve[i-1].Y+2,_bezierCurve[i].X+1,_bezierCurve[i].Y+2,155,75,75);
+			screen.DrawLine((int)_bezierCurve[i-1].X+1,(int)_bezierCurve[i-1].Y-1,(int)_bezierCurve[i].X+1,(int)_bezierCurve[i].Y-1,155,75,75);
+			screen.DrawLine((int)_bezierCurve[i-1].X+1,(int)_bezierCurve[i-1].Y+2,(int)_bezierCurve[i].X+1,(int)_bezierCurve[i].Y+2,155,75,75);
 		}
-		screen.DrawLine(_bezierCurve[i-1].X,_bezierCurve[i-1].Y,_bezierCurve[i].X,_bezierCurve[i].Y,255,155,155);
+		screen.DrawLine((int)_bezierCurve[i-1].X,(int)_bezierCurve[i-1].Y,(int)_bezierCurve[i].X,(int)_bezierCurve[i].Y,255,155,155);
 	}
 }
 void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
@@ -59,7 +59,7 @@ void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
 	_base.Y=playerRect.Y+24;
 	_base.X=playerDirection==HDirLeft?playerRect.X+playerRect.W:playerRect.X;
 	//2. Determine the tip of the tail (using the cursor input, and the maximum range)
-	Point2D playerCenter(playerRect.X+playerRect.W*0.5,playerRect.Y+playerRect.H*0.5);
+	Point2D playerCenter(playerRect.X+playerRect.W*0.5f,playerRect.Y+playerRect.H*0.5f);
 	Point2D cursorRelPlayer=playerCenter-_lastCursor;
 	float outsideRadius=100;
 	bool cursorOutOfRange=false;
@@ -73,7 +73,7 @@ void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
 		_tip=_lastCursor;
 	}
 	//Calculate a Bezier curve, translating 70 pixels away from the mouse
-	Point2D middlePoint(0.5*(_base.X+_tip.X),0.5*(_base.Y+_tip.Y));//();
+	Point2D middlePoint(0.5f*(_base.X+_tip.X),0.5f*(_base.Y+_tip.Y));//();
 	if (playerDirection==HDirLeft)
 	{middlePoint.X=_base.X+70;}
 	else if (playerDirection==HDirRight)

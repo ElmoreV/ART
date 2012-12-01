@@ -5,11 +5,11 @@
 #define SDLFRAMEWORK_H
 #include <ctime>
 #define IMAGE
-//#define FONT
-//#define AUDIO
+#define FONT
+#define AUDIO
 #define DRAWING
 #define ERROR
-#define FONT
+
 //General declarations
 #include <string>
 

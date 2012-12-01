@@ -20,8 +20,9 @@ public:
 class Sounds
 {
 public:
-	~Sounds();
+	~Sounds(){_titleScreen.Free();};
 	//Music
+	Music _titleScreen;
 	//Sound effects
 };
 class Maps
