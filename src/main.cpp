@@ -206,7 +206,10 @@ int main( int argc, char* args[] )
 				}
 				else {
 					if(setting.betweenLevelOptions == 1) //MainMenu
+					{
 						gameStates.NewState(GSMenuMain);
+						musicHandler.SetGlobalVolume(128);
+					}
 					else if(setting.betweenLevelOptions == 2){ //Restart 
 						map.NewMap(levels.levels[levels.count-1]);
 						enemies.PopulateEnemies(&map);
