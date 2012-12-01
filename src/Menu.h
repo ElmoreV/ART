@@ -46,7 +46,7 @@ protected:
 	bool (Settings::*OnClick)(); //ButtonItem
 	bool (Settings::*OnOptionClick)(int id); //OptionItem
 	bool (Settings::*onTextChange)(std::string text); //TextItem
-	bool (*onValueChange)(float percentage,void* ref); //SliderItem
+	bool (*onValueChange)(float ratio,void* ref); //SliderItem
 	void* onValueChangeRef;
 	std::vector<Options> _options;
 	bool _optionBoundSet, _clickEventAssigned, _hover, _customSet, _digitOnly, _selected, _headerShown, _center;
@@ -142,7 +142,7 @@ class SliderMenuItem : public MenuItem
 {
 public:
 	SliderMenuItem(int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
-	float GetPercentage();
+	float GetRatio();
 	void SetStatus(int status);
 };
 

@@ -126,10 +126,10 @@ SliderMenuItem::SliderMenuItem(int width, int height, bool center, int r, int g,
 	if (onValueChange)
 	{_clickEventAssigned = true;}
 }
-float SliderMenuItem::GetPercentage(){
-	float status = (((float)_status)/((float)_maxLength))*100;
+float SliderMenuItem::GetRatio(){
+	float status = (((float)_status)/((float)_maxLength));
 	if(status<0)status=0;
-	else if(status>100)status=100;
+	else if(status>1.0f)status=1.0f;
 	return status;
 }
 void SliderMenuItem::SetStatus(int status){
@@ -267,7 +267,7 @@ int MenuItem::HandleEvent(SDL_Event sEvent, Settings* setting){
 						SliderMenuItem* item = (SliderMenuItem*)&_childs.at(i);
 						item->SetStatus(sEvent.button.x - (int)item->GetBoundingBox()->X);
 						if(item->IsEventAssigned())
-							if(item->onValueChange(item->GetPercentage(),item->onValueChangeRef))
+							if(item->onValueChange(item->GetRatio(),item->onValueChangeRef))
 									return -3;
 				}
 				else if(_childs.at(i).GetBoundingBox()->Contains(sEvent.button.x, sEvent.button.y) && _childs.at(i).GetType() != SliderItem){
@@ -387,8 +387,8 @@ void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
 			else
 				sItem->SetBoundingBox(x, y, -1, -1);
 			screen.DrawLine((int)bound->X, (int)(bound->Y + bound->H/2), (int)(bound->X + bound->W), (int)(bound->Y + bound->H/2), sItem->GetColorR(), sItem->GetColorG(), sItem->GetColorB());
-			float w = (sItem->GetPercentage()/100)*sItem->GetMaxLength();
-			float h = (1-sItem->GetPercentage()/100)*(bound->H/4);
+			float w = (sItem->GetRatio())*sItem->GetMaxLength();
+			float h = (1-sItem->GetRatio())*(bound->H/4);
 			screen.DrawFilledRect((int)(bound->X + w - 5), (int)(bound->Y+h), (int)(bound->X + w + 5), (int)(bound->Y + bound->H - h), sItem->GetColorR(), sItem->GetColorG(), sItem->GetColorB());
 			y += bound->H+_verticalSpace;
 		}
