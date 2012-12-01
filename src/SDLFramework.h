@@ -1,4 +1,4 @@
-//SDLFramework Rev 4
+//SDLFramework Rev 5
 
 
 #ifndef SDLFRAMEWORK_H
@@ -52,7 +52,7 @@ public:
 	void HandleError(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false);
 private:
 	void LogError(std::string message, int code);
-	void MessageError(std::string message, int code);
+	void CaptionError(std::string message, int code);
 	//ErrorState _errState;
 };
 

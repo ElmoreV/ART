@@ -1,4 +1,5 @@
 #include "SDLSound.h"
+#include "SDLFramework.h"
 #include <ctime>
 
 Music::Music():_music(0),_position(0),_playing(false),_volume(128),_loopPosition(0)
@@ -17,6 +18,9 @@ bool Music::LoadMusic(std::string filename)
 	if (_music== 0)
 	{
 		//Handle Error
+		std::string str="The following music file could not be found: ";
+		str+=filename;
+		Error error(Caption,str.c_str(),1,true);
 		return false;
 	}
 	return true;
@@ -120,7 +124,7 @@ bool Music::Loop()
 {
 	if (_playing==true&&(::Mix_PlayingMusic()==false||::Mix_FadingMusic()==MIX_FADING_OUT))
 	{
-		Play(_loopPosition);
+		Play(_loopPosition,400);
 		return true;
 	}
 	return false;

@@ -1,4 +1,4 @@
-//SDLFramework Rev 3
+//SDLFramework Rev 4
 
 
 #include "SDLFramework.h"
@@ -28,13 +28,13 @@ void Error::HandleError(ErrorState error,std::string errorMessage, int errorCode
 		exit(errorCode);
 	}else if (error==Caption)//The error should be shown in the caption to warn the user (it also logs it)
 	{
-		MessageError(errorMessage,errorCode);
+		CaptionError(errorMessage,errorCode);
 		LogError(errorMessage,errorCode);
 		if (showSDLError)
 		{LogError(SDL_GetError(),-1);}
 	}else if (error==CaptionOnly)
 	{
-		MessageError(errorMessage,errorCode);
+		CaptionError(errorMessage,errorCode);
 	}else if (error==Log)//The error isn't that severe, and should be just logged
 	{
 		LogError(errorMessage,errorCode);
@@ -75,7 +75,7 @@ void Error::LogError(std::string message, int code)
 	out.close();
 #endif
 };
-void Error::MessageError(std::string message, int code)
+void Error::CaptionError(std::string message, int code)
 {
 #ifdef ERROR
 	std::string str=message;
@@ -311,8 +311,8 @@ bool Surface::SetTransparency(int alpha)
 	}
 	return false;
 };
-int Surface::GetWidth(){return _surface->w;}
-int Surface::GetHeight(){return _surface->h;}
+int Surface::GetWidth(){return _surface!=0?_surface->w:0;}
+int Surface::GetHeight(){return _surface!=0?_surface->h:0;}
 void Surface::Free()//Freeing the surface
 {
 	if (_surface!=0)//When the surface is actually initialized, free the surface
