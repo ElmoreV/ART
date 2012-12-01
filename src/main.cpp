@@ -187,7 +187,7 @@ int main( int argc, char* args[] )
 					if(map.NewMapEnabled(player.GetBoundR())) 
 						gameStates.PushState(GSMenuNewLevel);
 				}
-				player.Update(map, screen.GetWidth(), screen.GetHeight(), Timer);
+				player.Update(&map, screen.GetWidth(), screen.GetHeight(), Timer);
 				enemies.Update(&map, &player, Timer);
 			
 				map.Draw(screen);

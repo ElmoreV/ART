@@ -10,7 +10,7 @@ Enemy::Enemy(EnemyType type, std::string filename, float X, float Y, int interva
 	CanWalkOff=true;
 	CanWalkSlope=true;
 }
-void Enemy::Update(Map& map, long lastTick){
+void Enemy::Update(Map* map, long lastTick){
 	if(_countInterval > _interval){
 		_countInterval = 0;
 		_animationState++;
