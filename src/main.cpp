@@ -137,8 +137,8 @@ int main( int argc, char* args[] )
 	menu.ShowHeader(false);
 	menu.SetCenter(true);
 	menu.SetVerticalSpace(20);
-	menu.AddButtonChild("New game", &Settings::OnClickNewGame);
-	menu.AddButtonChild("Load game", &Settings::OnClickLoadGame);
+	menu.AddButtonChild("New game",false,255,255,255, &Settings::OnClickNewGame);
+	menu.AddButtonChild("Load game",false,255,255,255, &Settings::OnClickLoadGame);
 	menu.AddChild("Options", true);
 		menu.GetChild(2)->SetVerticalSpace(20);
 		menu.GetChild(2)->AddChild("Graphics",true);
@@ -152,7 +152,7 @@ int main( int argc, char* args[] )
 			menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30);
 			((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._SfxMusicProportion*256));
 		menu.GetChild(2)->AddChild("Keys");
-	menu.AddButtonChild("Exit", &Settings::OnClickExitGame);
+	menu.AddButtonChild("Exit",false,255,255,255, &Settings::OnClickExitGame);
 	Menu newLevelMenu("Level completed", &setting);
 	newLevelMenu.AddChild("Congratulations");
 	newLevelMenu.AddChild("");
