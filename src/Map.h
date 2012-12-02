@@ -9,13 +9,15 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include "Assets.h"
 enum TileType {
 	TileTypeNone, TileTypeNormal, TileTypeSlope, TileTypeNewMap, TileTypeDrawing
 };
 class TileData{
 private:
-	bool _isSlope, _isSolid, _isDrawable;
+	bool _isSolid;
 	int _slopeLeft, _slopeRight;
+	TileType _type;
 public:
 	int X, Y, Width, Height;
 	TileData(int x, int y, int width, int height, bool solid=false, bool drawable=false);
@@ -31,20 +33,20 @@ class Map
 {
 protected:
 	Dictionary _tileLibrary;
-	Surface _tileSheet;
+	Surface* _tileSheet;
 	unsigned int _lines;
 	std::vector<std::string> _mapArray;
 	std::vector<DrawingObject> _drawObjects;
 	char _spawnLocation, _newMapChar;
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
+	int _forestBbStart;
 public:
-	Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
+	Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
 	void Draw(WindowSurface screen);
 	void Draw(WindowSurface screen, const char* mapArray[], unsigned int aantalRijen);
 	bool AddTile(char key, int x, int y, bool solid=true, bool drawable=false);
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
 	bool ReadFile(std::string filename);
-	void LoadTileSheet(std::string tileSheet);
 	TileType GetCharType(Point2D collisionPoint);
 	Point2D GetTileDimension();
 	Point2D GetMapPosition();
@@ -59,8 +61,9 @@ public:
 	void SetNewMapPosition(Point2D screenSize, Point2D centerPoint);
 	void SetMaskColor(int r=255, int g=255, int b=255);
 	bool NewMapEnabled(Rectangle playerBoundingBox);
-	bool NewMap(std::string map, unsigned int tileWidth=0, unsigned int tileHeight=0, std::string tileSheet="");
+	bool NewMap(std::string map, unsigned int tileWidth=0, unsigned int tileHeight=0, Surface* tilesheet=0);
 	std::vector<std::string> GetMapArray();
 	void RemoveEnemiesFromArray(std::vector<char> enemies);
+	void DrawBackground(WindowSurface screen, Graphics* assets);
 };
 #endif

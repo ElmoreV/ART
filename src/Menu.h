@@ -68,7 +68,7 @@ public:
 	void AddSliderChild( int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
 	
 	int HandleEvent(SDL_Event sEvent, Settings* setting);
-	void Draw(WindowSurface screen, Font font, Point2D offset=Point2D());
+	void Draw(WindowSurface screen, Font& font, Point2D offset=Point2D());
 
 	bool HoverEnabled, IsClickable;
 	std::string Text, Header;
@@ -153,10 +153,10 @@ private:
 	std::vector<Uint16> _itemTracker;
 	MenuItem _mainItem;
 	MenuItem* _currentItem;
-	Font _font;
+	//Font _font;
 public:
 	Menu(std::string text, Settings* setting, int r=255, int g=255, int b=255);
-	void Open(WindowSurface screen, Point2D offset = Point2D());
+	void Open(WindowSurface screen, Font& font, Point2D offset = Point2D());
 	MenuItem* GetChild(unsigned int index);
 
 	void SetVerticalSpace(int space){
@@ -166,7 +166,7 @@ public:
 		if(r>255)r=255;
 		if(g>255)g=255;
 		if(b>255)b=255;
-		_font.SetColor(r, g, b);
+		_mainItem.SetColor(r, g, b);
 	}
 	void ShowHeader(bool value){ _mainItem.ShowHeader(value); }
 	void SetCenter(bool value){_mainItem.SetCenter(value); }

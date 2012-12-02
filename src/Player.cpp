@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player(std::string filename, float X, float Y, int interval, int spriteX, int spriteY):Object(filename, X, Y, spriteX, spriteY)
+Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, int spriteY):Object(surface, X, Y, spriteX, spriteY)
 {
 	_maxVelocity = 250;
 	_previousPosition = _position;
@@ -13,8 +13,9 @@ Player::Player(std::string filename, float X, float Y, int interval, int spriteX
 	_frame = 0;
 	_buttonUp=_buttonDown=_buttonLeft=_buttonRight=false;
 	_velocity.Y = 50;
-	InkPool = _maxInkPool = 100;
-	Health  = _maxHealth= 100;
+	InkPool = 100; _maxInkPool = 100;
+	Health  = 100; _maxHealth= 100;
+	InvulnerableTime = 0;
 };
 Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 {
@@ -46,7 +47,7 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
 
 	if(InkPool < _maxInkPool) InkPool += timeDiff;
-	else InkPool = _maxInkPool;
+	else InkPool = (float)_maxInkPool;
 	if(InvulnerableTime > 0) InvulnerableTime -= timeDiff;
 	else InvulnerableTime = 0;
 	//if(Health < _maxHealth) Health++;
@@ -144,7 +145,7 @@ void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, uns
 		Surface render;
 		std::stringstream ss; ss << Health << "/" << _maxHealth;
 		render.RenderText(*font, ss.str());
-		render.Draw(screen, ((float)X+border) + ((float)Width)/2 - render.GetWidth()/2, ((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2);
+		render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
 	}
 }
 void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
@@ -155,7 +156,17 @@ void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsign
 		Surface render;
 		std::stringstream ss; ss << InkPool << "/" << _maxInkPool;
 		render.RenderText(*font, ss.str());
-		render.Draw(screen, ((float)X+border) + ((float)Width)/2 - render.GetWidth()/2, ((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2);
+	render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
+	}
+}
+void Player::Reset(Point2D position, bool resetStats){
+	_position = position;
+	_velocity.Y = 50;
+	_jumpEnable = true;
+	if(resetStats){
+		InkPool = _maxInkPool;
+		Health  = _maxHealth;
+		InvulnerableTime = 0;
 	}
 }
 Point2D Player::GetPreviousPosition(){ return _previousPosition; } 
@@ -163,7 +174,7 @@ Rectangle Player::GetPreviousBoundR(){return Rectangle(_previousPosition.X, _pre
 void Player::Draw(WindowSurface screen, Point2D mapPosition)
 {
 	//Draws the player on the screen
-	_surface.Draw(screen, (Sint16)(_position.X - mapPosition.X), (Sint16)(_position.Y - mapPosition.Y), &GetFrame());
+	_surface->Draw(screen, (Sint16)(_position.X - mapPosition.X), (Sint16)(_position.Y - mapPosition.Y), &GetFrame());
 	tail.Draw(screen);
 	Rectangle playerBounds=GetBoundR(-mapPosition.X, -mapPosition.Y);
 	aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);

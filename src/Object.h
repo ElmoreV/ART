@@ -21,10 +21,10 @@ protected:
 	//tileHeight: height of the clip (or surfaceheight if spriteY=1)
 	int _spriteX, _spriteY; 
 	Point2D _position, _velocity, _spriteDimension;
-	Surface _surface;
+	Surface* _surface;
 public:
 	//Normal function
-	Object(std::string filename, float X, float Y, int spriteX=1, int spriteY=1); //Constructor
+	Object(Surface* surface, float X, float Y, int spriteX=1, int spriteY=1); //Constructor
 	Rectangle GetBoundR(float velocityX=0, float velocityY=0);//Get the position and dimentions of the object on the screen
 	SDL_Rect GetBound(float velocityX=0, float velocityY=0);//This is the lower quality SDL_Rect version
 

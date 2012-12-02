@@ -14,7 +14,7 @@ class Enemy : public Object
 	void MoveEnemy(Map& map, long timeDiff);
 	int _interval, _countInterval, _animationState, _frame;
 public:
-	Enemy(EnemyType type, std::string filename, float X, float Y, int interval, int spriteX=1, int spriteY=1);
+	Enemy(EnemyType type, Surface* surface, float X, float Y, int interval, int spriteX=1, int spriteY=1);
 	void Update(Map* map, long lastTick=-1);
 	void Draw(WindowSurface screen, Point2D mapPosition);
 	Point2D GetCenter();
@@ -30,9 +30,9 @@ private:
 	std::vector<char> enemyChars;
 public:
 	EnemyHandler();
-	void AddEnemy(EnemyType type, Point2D position);
+	void AddEnemy(EnemyType type, Graphics* graphics, Point2D position);
 	void Update(Map* map, Player* player, long timediff=-1);
 	void Draw(WindowSurface screen, Point2D mapPosition);
-	void PopulateEnemies(Map* map);
+	void PopulateEnemies(Map* map, Graphics* graphics);
 };
 #endif ENEMY_H

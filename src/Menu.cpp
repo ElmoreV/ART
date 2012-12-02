@@ -324,7 +324,7 @@ int MenuItem::HandleEvent(SDL_Event sEvent, Settings* setting){
 	}
 	return -3;
 }
-void MenuItem::Draw(WindowSurface screen, Font font, Point2D offset){
+void MenuItem::Draw(WindowSurface screen, Font& font, Point2D offset){
 	float y = offset.Y;
 	float x = offset.X;
 
@@ -472,13 +472,12 @@ void MenuItem::SetCustomPosition(float x, float y){ _customSet=true;_custom = Po
 Menu::Menu(std::string text, Settings* setting, int r, int g, int b){
 	_mainItem = MenuItem(text, false, r, g, b);
 	_currentItem = &_mainItem;
-	_font.OpenFont("Another.ttf");
-	_font.SetColor(r, g, b);
+	_mainItem.SetColor(r, g, b);
 	_setting = setting;
 }
-void Menu::Open(WindowSurface screen, Point2D offset){
+void Menu::Open(WindowSurface screen, Font& font, Point2D offset){
 	if(_itemTracker.size() == 0) _currentItem = &_mainItem;
-	_currentItem->Draw(screen, _font,offset);
+	_currentItem->Draw(screen, font,offset);
 }
 MenuItem* Menu::GetChild(unsigned int index){
 	return _mainItem.GetChild(index);
@@ -504,7 +503,6 @@ void Menu::AddTextChild(std::string title, int maxLength, bool digit, bool cente
 void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b,bool (*onValueChange)(float value,void* pRev),void* pRev){
 	_mainItem.AddSliderChild(width, height, center, r, g, b,onValueChange,pRev);
 }
-
 void Menu::HandleEvent(SDL_Event sEvent){
 	int id = _currentItem->HandleEvent(sEvent, _setting);
 	if(id == -3 || id == -2) return;

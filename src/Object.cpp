@@ -1,14 +1,14 @@
 #include "Object.h"
 #include "Rectangle.h"
 //Constructor
-Object::Object(std::string filename, float X, float Y, int spriteX, int spriteY)
+Object::Object(Surface* surface, float X, float Y, int spriteX, int spriteY)
 {
-	_surface.LoadImage(filename.c_str());
+	_surface = surface;
 	_position.X = X; _position.Y = Y;
 	_velocity.X = 0.0f; _velocity.Y = 0.0f;
 	_spriteX = spriteX; _spriteY = spriteY;
-	_spriteDimension.X = _surface->w / (float)_spriteX;
-	_spriteDimension.Y = _surface->h / (float)_spriteY;
+	_spriteDimension.X = ((float)_surface->GetWidth()) / (float)_spriteX;
+	_spriteDimension.Y = ((float)_surface->GetHeight()) / (float)_spriteY;
 }
 //Get a rectangle of the position and the dimentions
 SDL_Rect Object::GetBound(float velocityX, float velocityY)
@@ -166,7 +166,7 @@ bool Object::GetAlphaXY(Object* obj, int x, int y)
 //Changes the sprite to the new sprite with the rgb data for the mask color
 bool Object::ChangeSprite(std::string filename, int r, int g, int b )
 {
-	if(_surface != 0) { return _surface.LoadImage(filename.c_str(), r, g, b); }
+	if(_surface != 0) { return _surface->LoadImage(filename.c_str(), r, g, b); }
 	else return false;
 }
 //Changes the object position
@@ -177,8 +177,8 @@ void Object::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = Y;}
 //Set the colorkey (mask) of the surface
 bool Object::MaskColor(int r, int g, int b)
 {
-	if(_surface!=0){return _surface.MaskColor(r, g, b);}
+	if(_surface!=0){return _surface->MaskColor(r, g, b);}
 	else{return false;}
 }
 //Releases resources of the class
-void Object::Free(){_surface.Free();}
+void Object::Free(){_surface->Free();}

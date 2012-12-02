@@ -1,20 +1,24 @@
 #include "map.h"
 TileData::TileData(int x, int y, int width, int height, bool solid, bool drawable){
-	X=x;Y=y;Width=width;Height=height;_isSlope=false;_isSolid=solid;_isDrawable=drawable;
+	X=x;Y=y;Width=width;Height=height;_isSolid=solid;
+	if(drawable)_type=TileTypeDrawing;
+	else if(_isSolid)_type=TileTypeNormal;
+	else _type=TileTypeNone;
 }
 TileData::TileData(int x, int y, int width, int height, int slopeleft, int sloperight){
-	X=x;Y=y;Width=width;Height=height;_isSlope=true;_slopeLeft=slopeleft;_slopeRight=sloperight;_isSolid=true;_isDrawable=false;
-
+	X=x;Y=y;Width=width;Height=height;
+	_type = TileTypeSlope;
+	_slopeLeft=slopeleft;_slopeRight=sloperight;_isSolid=true;
 }
 SDL_Rect TileData::Rect(){
 	SDL_Rect value =  {X, Y, Width, Height};
 	return value;
 }
-bool TileData::IsSlope(){return _isSlope; }
+bool TileData::IsSlope(){return (_type==TileTypeSlope)?true:false; }
 bool TileData::IsSolid(){return _isSolid; }
-bool TileData::IsDrawable(){return _isDrawable;}
+bool TileData::IsDrawable(){return (_type==TileTypeDrawing)?true:false;}
 void TileData::GetSlope(int& y1, int& y2){ 
-	if(_isSlope){y1=_slopeLeft; y2=_slopeRight;}
+	if(_type==TileTypeSlope){y1=_slopeLeft; y2=_slopeRight;}
 	else if(!_isSolid){y1=0;y2=0;}
 	else { y1=1;y2=1;}
 }
@@ -28,17 +32,15 @@ TileData Map::GetTileData(unsigned int x, unsigned int y){
 }
 
 //Initialize map (leave string map empty if using array)
-Map::Map(std::string tileSheet, unsigned int tileWidth, unsigned int tileHeight, std::string map)
+Map::Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map)
 {
-	LoadTileSheet(tileSheet); //TileSheet
+	_tileSheet = tilesheet;
 	_tileDimension.X = (float)tileWidth; //Width of a tile
 	_tileDimension.Y = (float)tileHeight; //Height of a tile
 	_spawnLocation = '#';
 	_newMapChar = '@';
 	if(map != "") ReadFile(map);
-}
-void Map::LoadTileSheet(std::string tileSheet){
-	_tileSheet.LoadImage(tileSheet.c_str(), 255, 255, 255);
+	_forestBbStart = -1;
 }
 //Read the file and push lines into vector
 bool Map::ReadFile(std::string filename)
@@ -67,7 +69,7 @@ bool Map::ReadFile(std::string filename)
 	return true;
 }
 void Map::SetMaskColor(int r, int g, int b){
-	_tileSheet.MaskColor(r, g, b);
+	_tileSheet->MaskColor(r, g, b);
 }
 //Adds a new normal tile to the dictionary
 bool Map::AddTile(char key, int x, int y, bool solid, bool drawable){
@@ -105,7 +107,7 @@ void Map::Draw(WindowSurface screen)
 				TileData td = _tileLibrary.find(charline[x])->second;
 				SDL_Rect clip = td.Rect();
 				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				_tileSheet->Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
 				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 				if(td.IsDrawable()){
 					if(_drawObjects.size() > drawings){
@@ -136,11 +138,52 @@ void Map::Draw(WindowSurface screen,const char* mapArray[], unsigned int aantalR
 				TileData td = _tileLibrary.find(charline[x])->second;
 				SDL_Rect clip = td.Rect();
 				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-				_tileSheet.Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				_tileSheet->Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
 				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 			}
 		}
 	}
+}
+void Map::DrawBackground(WindowSurface screen, Graphics* assets){
+	Point2D dim = GetMapDimension();
+	Surface surface = assets->_forest[0];
+	int forestStart = (int)dim.Y;
+	if(_forestBbStart>=0) 
+		forestStart = _forestBbStart; 
+
+	int Xstart = 0;
+	int Xcount = 0;
+
+	int Ycount = (int)((forestStart - (_mapPosition.Y+screen.GetHeight())) / surface.GetHeight()) - 1;
+	int Ystart = (int)dim.Y - surface.GetHeight()*Ycount;
+	while(Ystart>_mapPosition.Y){
+		surface.SetTransparency(255);
+		if(Ycount == 0)surface = assets->_forest[0];
+		else if(Ycount == 1)surface = assets->_air[0];
+		else if(Ycount == 2)surface = assets->_space1;
+		else if(Ycount < 0)surface.SetTransparency(0);
+		else surface = assets->_space2;
+		
+		Ystart -= surface.GetHeight();
+		Xstart = (int)(_mapPosition.X - ((Uint32)_mapPosition.X % (Uint32)surface.GetWidth()));
+		Xcount = (int)(_mapPosition.X/surface.GetWidth());
+		while(Xstart < _mapPosition.X + screen.GetWidth()){
+			if(Ycount == 1){
+				if(Xcount>2)Xcount = Xcount%3;
+				surface = assets->_air[Xcount];
+				Xcount++;
+			}
+			else if(Ycount == 0){
+				if(Xcount>3) Xcount = Xcount%4;
+				surface = assets->_forest[Xcount];
+				Xcount++;
+			}
+			surface.Draw(screen, (Uint32)(Xstart-_mapPosition.X), (Uint32)(Ystart-_mapPosition.Y));
+			Xstart += surface.GetWidth();
+		}
+		Ycount++;
+	}
+			
 }
 //Get the type of collision of the inserten point
 TileType Map::GetCharType(Point2D collisionPoint){
@@ -307,9 +350,9 @@ void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 	_mapPosition.Y = newY;
 }
 //Loads a new map
-bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeight, std::string tileSheet){
-	if(tileSheet != ""){
-		_tileSheet.LoadImage(tileSheet, 255, 255, 255);
+bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeight, Surface* tilesheet){
+	if(tilesheet != 0){
+		_tileSheet = tilesheet;
 		_tileDimension.X = (float)tileWidth;
 		_tileDimension.Y = (float)tileHeight;
 	}

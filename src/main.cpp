@@ -32,36 +32,35 @@ int main( int argc, char* args[] )
 	InitSDL();
 	WindowSurface screen(800,600);
 
+	MusicHandler musicHandler;
+	Graphics graphics;
+	Sounds sounds;
+	Settings setting;
+	Maps levels;
+	GlobalSettings gSettings;
+	GameStateManager gameStates(&setting);
+
 	//SDL_ShowCursor(0);
 	long Timer = clock();//For Frame Independent Movement
 	bool gameRunning=true;
 	FPS fps(30);
 	SDL_Event sEvent;
-	MusicHandler musicHandler;
-	Sounds sounds;
+
 	sounds._titleScreen.InitIfNeccessary("Music/ratintro.ogg",128);
 	sounds._titleScreen.SetLoopPosition(48300);
 	sounds._titleScreen.SetVolumeModifier(0.4f);
 	musicHandler.SetNewMusic(&sounds._titleScreen);
-	Settings setting;
-	Maps levels;
-	GameStateManager gameStates(&setting);
+	
 	gameStates.NewState(GSIntro);
-	GlobalSettings gSettings;
+	
 	gSettings.SetVolume(100);
 	gSettings._SfxMusicProportion=0.5;
-	Surface gameLogo;gameLogo.LoadImage("Images/titlescreen.png", 34, 177, 76);
+	
 	int introCount=0; float logoPositionY = 0;
 	
 	EnemyHandler enemies;
-	Map map("Images/tilesheet.png", 50, 50, "Map/map1.txt");
+	Map map(&graphics._tileSheet, 50, 50, "Map/map1.txt");
 	levels.count++;
-	/*
-	map.AddTile('x', 0, 50, 0, 50);
-	map.AddTile('y', 100, 50, 50, 0);
-	map.AddTile('a', 0, 0);
-	map.AddTile('b', 100, 0);
-	*/
 	
 	map.AddTile('A', 0, 0);
 	map.AddTile('B', 50, 0);
@@ -116,22 +115,20 @@ int main( int argc, char* args[] )
 	map.AddTile('x', 500, 100, 50, 0);
 	map.AddTile('y', 500, 150, 0, 50);
 	
-	map.AddTile('m', 0, 200);
+	map.AddTile('m', 0, 200, 0, 50);
 	map.AddTile('n', 50, 200);
-	map.AddTile('o', 100, 200);
+	map.AddTile('o', 100, 200, 50, 0);
 	
 	map.AddTile('p', 350, 200);
 	map.AddTile('q', 400, 200);
 	map.AddTile('r', 450, 200);
 	map.AddTile('s', 500, 200);
 
-	map.AddTile('z', 50, 250, false, true);
+	map.AddTile('z', 100, 250, false, true);
 	map.AddTile('@', 0, 255);
-	map.SetMaskColor(255, 242, 0);
 
-	Player player("Images/Rat.png", map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
-	player.SetVelocity(200, 400); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
-	player.MaskColor(255, 242, 0);
+	Player player(&graphics._player, map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
+	player.SetVelocity(300, 400); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 
 	Menu menu("Main menu", &setting, 255, 255, 255);
 	menu.ShowHeader(false);
@@ -153,14 +150,16 @@ int main( int argc, char* args[] )
 			((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._SfxMusicProportion*256));
 		menu.GetChild(2)->AddChild("Keys");
 	menu.AddButtonChild("Exit",false,255,255,255, &Settings::OnClickExitGame);
+	
 	Menu newLevelMenu("Level completed", &setting);
 	newLevelMenu.AddChild("Congratulations");
 	newLevelMenu.AddChild("");
 	newLevelMenu.AddChild("What do you want to do?");
 	std::vector<std::string> opt; opt.push_back("Main menu"); opt.push_back("Restart"); opt.push_back("Next level");
 	newLevelMenu.AddOptionChild(opt, "       ",false,255,255,255,&Settings::NewLevelOptions);
-	//((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(1)->Enabled = false;
 
+	//((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(1)->Enabled = false;
+	
 	while (gameRunning)
 	{
 		while (SDL_PollEvent(&sEvent))
@@ -175,7 +174,7 @@ int main( int argc, char* args[] )
 				{
 					logoPositionY=20;
 					introCount=256;
-					gameLogo.SetTransparency(256);
+					graphics._gameLogo.SetTransparency(256);
 				}
 			case GSMenuMain:
 				if(sEvent.type == SDL_KEYDOWN) 
@@ -202,12 +201,12 @@ int main( int argc, char* args[] )
 			if(introCount > 255){
 				logoPositionY -= 5;
 				if(logoPositionY <= 20){ logoPositionY = 20; gameStates.NewState(GSMenuMain); }
-				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
+				graphics._gameLogo.Draw(screen, screen.GetWidth()/2 - graphics._gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 			}
 			else {
-				gameLogo.SetTransparency(introCount);
-				logoPositionY = (float)screen.GetHeight()/2 - (float)gameLogo.GetHeight()/2;
-				gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
+				graphics._gameLogo.SetTransparency(introCount);
+				logoPositionY = (float)screen.GetHeight()/2 - (float)graphics._gameLogo.GetHeight()/2;
+				graphics._gameLogo.Draw(screen, screen.GetWidth()/2 - graphics._gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 			}
 			introCount+=2;
 			break;
@@ -217,13 +216,13 @@ int main( int argc, char* args[] )
 				setting.newGame = false;
 				levels.count = 1;
 				map.NewMap(levels.levels[0]);
-				enemies.PopulateEnemies(&map);
+				enemies.PopulateEnemies(&map, &graphics);
 				player.SetPosition(map.GetSpawnLocation());
 				gameStates.NewState(GSGame);
 			}
 			musicHandler.Update();
-			gameLogo.Draw(screen, screen.GetWidth()/2 - gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
-			menu.Open(screen, Point2D(50, logoPositionY + gameLogo.GetHeight()));
+			graphics._gameLogo.Draw(screen, screen.GetWidth()/2 - graphics._gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
+			menu.Open(screen, graphics._menuFont, Point2D(50, logoPositionY + graphics._gameLogo.GetHeight()));
 			break;
 
 		case GSGame:
@@ -233,16 +232,17 @@ int main( int argc, char* args[] )
 			}
 			player.Update(&map, screen.GetWidth(), screen.GetHeight(), Timer);
 			enemies.Update(&map, &player, Timer);
+			map.DrawBackground(screen, &graphics);
 			map.Draw(screen);
 			enemies.Draw(screen, map.GetMapPosition());
 			player.Draw(screen, map.GetMapPosition());
 			player.DrawHealthBar(screen, 1, 5, 5, 100, 20);
-			player.DrawInkBar(screen, 1, 5, 35, 100, 20);
+			player.DrawInkBar(screen, 1, 5, 35, 100, 20, &graphics._statFont);
 			break;
 
 		case GSMenuNewLevel:
 			if(setting.betweenLevelOptions == 0){
-				newLevelMenu.Open(screen, Point2D(100, 100));
+				newLevelMenu.Open(screen, graphics._menuFont);
 				if(levels.count == levels.maxCount)
 					((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = false;
 				else
@@ -256,16 +256,17 @@ int main( int argc, char* args[] )
 				}
 				else if(setting.betweenLevelOptions == 2){ //Restart 
 					map.NewMap(levels.levels[levels.count-1]);
-					enemies.PopulateEnemies(&map);
-					player.SetPosition(map.GetSpawnLocation());
+					enemies.PopulateEnemies(&map, &graphics);
+					player.Reset(map.GetSpawnLocation(), true);
 					gameStates.BackState();
 				}
 				else {//next level
 					map.NewMap(levels.levels[levels.count]);
-					enemies.PopulateEnemies(&map);
+					enemies.PopulateEnemies(&map, &graphics);
 					levels.count++;
 					player.SetPosition(map.GetSpawnLocation());
 					gameStates.BackState();
+					player.Reset(map.GetSpawnLocation(), false);
 				}
 				setting.betweenLevelOptions = 0;
 			}
@@ -276,7 +277,6 @@ int main( int argc, char* args[] )
 		screen.UpdateWindow();
 		fps.Delay();
 	}
-	player.Free();
 	ClearSDL();
 	return 0;
 };

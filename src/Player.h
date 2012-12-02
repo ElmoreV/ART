@@ -31,7 +31,7 @@ protected:
 	bool _buttonUp, _buttonDown, _buttonLeft, _buttonRight;
 public:
 	//To set the default values
-	Player(std::string filename, float X, float Y, int interval, int spriteX=1, int spriteY=1);
+	Player(Surface* surface, float X, float Y, int interval, int spriteX=1, int spriteY=1);
 	//Update the position based on the velocity and draws the clip on screen
 	void SetVelocity(float X, float Y);
 	void Draw(WindowSurface screen, Point2D mapPosition);
@@ -50,5 +50,6 @@ public:
 	Rectangle GetPreviousBoundR();
 	void DrawHealthBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
 	void DrawInkBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
+	void Reset(Point2D position = 0, bool resetStats=false);
 };
 #endif

@@ -1,6 +1,6 @@
 #include "Enemy.h"
 #include <sstream>
-Enemy::Enemy(EnemyType type, std::string filename, float X, float Y, int interval, int spriteX, int spriteY):Object(filename, X, Y, spriteX, spriteY){
+Enemy::Enemy(EnemyType type, Surface* surface, float X, float Y, int interval, int spriteX, int spriteY):Object(surface, X, Y, spriteX, spriteY){
 	_interval = interval;
 	if(_interval <= 0) _interval = 1;
 	_countInterval = 0;
@@ -23,7 +23,7 @@ void Enemy::Update(Map* map, long lastTick){
 	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
 }
 void Enemy::Draw(WindowSurface screen, Point2D mapPosition){
-	_surface.Draw(screen, (Sint32)(_position.X - mapPosition.X), (Sint32)(_position.Y - mapPosition.Y), NULL);
+	_surface->Draw(screen, (Sint32)(_position.X - mapPosition.X), (Sint32)(_position.Y - mapPosition.Y), NULL);
 }
 Point2D Enemy::GetCenter(){
 	return Point2D(_position.X + _spriteDimension.X / 2, _position.Y + _spriteDimension.Y/2);
@@ -49,23 +49,23 @@ void Enemy::SetFrame(int frame){
 EnemyHandler::EnemyHandler(){
 	enemyChars.push_back('!');
 }
-void EnemyHandler::AddEnemy(EnemyType type, Point2D position){
-	std::string file = ""; Point2D velocity; bool canwalkoff = true; bool canwalkslope = true;
+void EnemyHandler::AddEnemy(EnemyType type, Graphics* graphics, Point2D position){
+	Surface* surface = 0; Point2D velocity; bool canwalkoff = true; bool canwalkslope = true;
 	switch(type){
 	case EnemyNormal:
-		file = "Images/enemy1.png";
+		surface = &graphics->_enemy1;
 		velocity = Point2D(100, 100);
 		canwalkoff = false; 
-		canwalkslope = false;
+		canwalkslope = true;
 		break;
 	default:
-		file = "Images/enemy1.png";
+		surface = &graphics->_enemy1;
 		velocity = Point2D(100, 100);
 		canwalkoff = false; 
 		canwalkslope = false;
 		break;
 	}
-	Enemy newE(type, file, position.X, position.Y, 3, 1, 1);
+	Enemy newE(type, surface, position.X, position.Y, 3, 1, 1);
 	newE.SetVelocity(velocity.X, velocity.Y);
 	newE.CanWalkOff=canwalkoff;
 	newE.CanWalkSlope=canwalkslope;
@@ -77,33 +77,32 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 		Enemy* enemy = &_enemyList.at(i);
 		bool update = true;
 		if(enemy->GetBoundR().Intersect(player->GetBoundR())){
-			if(player->InvulnerableTime <= 0){
 				//#PLAYER KILLS ENEMY -> update false, remove enemy
 				//#ELSE PLAYER LOSES LIFE
 				//player hits enemy
-				if(player->GetVelocity().Y > 0){
-					int height = Minimum(player->GetBoundR().Y + player->GetBoundR().H, enemy->GetBoundR().Y + enemy->GetBoundR().H) - Maximum(player->GetBoundR().Y, enemy->GetBoundR().Y);
-					int width = Minimum(player->GetBoundR().X + player->GetBoundR().W, enemy->GetBoundR().X + enemy->GetBoundR().W) - Maximum(player->GetBoundR().X, enemy->GetBoundR().X);
+			if(player->GetVelocity().Y > 0){
+				int height =(int)(Minimum(player->GetBoundR().Y + player->GetBoundR().H, enemy->GetBoundR().Y + enemy->GetBoundR().H) - Maximum(player->GetBoundR().Y, enemy->GetBoundR().Y));
+				int width = (int)(Minimum(player->GetBoundR().X + player->GetBoundR().W, enemy->GetBoundR().X + enemy->GetBoundR().W) - Maximum(player->GetBoundR().X, enemy->GetBoundR().X));
 					
-					if(player->GetPreviousPosition().Y + player->GetBoundR().Y < enemy->GetBoundR().Y || height <= width){
-						_enemyList.erase(_enemyList.begin() + i);
-						player->Jump() ;
-					}
-					else{
-						player->Health -= 10;
-						player->InvulnerableTime = 2;
-					}
+				if(player->GetPreviousPosition().Y + player->GetBoundR().Y < enemy->GetBoundR().Y || height <= width){
+					_enemyList.erase(_enemyList.begin() + i);
+					player->Jump() ;
+					update = false;
 				}
-				else {
+				else if(player->InvulnerableTime <= 0){
 					player->Health -= 10;
 					player->InvulnerableTime = 2;
 				}
+			}
+			else {
+				player->Health -= 10;
+				player->InvulnerableTime = 2;
 			}
 		}
 		if(update){ //enemy can walk
 			Point2D velocity = enemy->GetVelocity();
 			Point2D position = enemy->GetPosition();
-			int Y1 = (int)(position.Y / map->GetTileDimension().Y);
+			int Y1 = (int)((position.Y+1) / map->GetTileDimension().Y);
 			int Y2 = (int)((position.Y + enemy->GetBound().h-1) / map->GetTileDimension().Y);
 			int X1 = (int)(position.X / map->GetTileDimension().X);
 			int X2 = (int)((position.X + enemy->GetBound().w) / map->GetTileDimension().X);
@@ -117,13 +116,9 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 						position.Y = map->GetMapDimension().Y -enemy->GetBound().h+1;
 					}
 					else {
-					if(map->GetMapDimension().X < position.Y) velocity.Y = 0;
-					else if((bl == TileTypeNormal && br == TileTypeSlope) || (br == TileTypeSlope && br == TileTypeNormal)){
+					if((bl == TileTypeNormal && br == TileTypeSlope) || (bl == TileTypeSlope && br == TileTypeNormal)){
 						position.Y = (Y2)*map->GetTileDimension().Y-enemy->GetBound().h+1;
 
-					}
-					else if(tl != TileTypeNormal && tr != TileTypeNormal && (bl == TileTypeNormal || br == TileTypeNormal)){
-						position.Y = (Y2)*map->GetTileDimension().Y-enemy->GetBound().h+1;
 					}
 					else if(bl == TileTypeSlope || br == TileTypeSlope){
 						TileData blData = map->GetTileData(X1, Y2); TileData brData = map->GetTileData(X2, Y2);
@@ -137,17 +132,13 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 							}
 							else if(bl == TileTypeSlope && yl1 > yl2){
 								float h1 = map->GetSlopeHeight(position + Point2D(0, enemy->GetBound().h));
-								float h2 = 0;
-								float high = h1>h2?h1:h2;
-								float newpos = (Y2*map->GetTileDimension().Y)+high-enemy->GetBound().h;
+								float newpos = (Y2*map->GetTileDimension().Y)+h1-enemy->GetBound().h;
 								if(position.Y > newpos) position.Y = newpos;
 								else position.Y += velocity.Y*timeDiff;
 							}
 							else if(br == TileTypeSlope && yr1 < yr2){
-								float h1 = 0;
 								float h2 = map->GetSlopeHeight(position + Point2D(enemy->GetBound().w, enemy->GetBound().h));
-								float high = h1>h2?h1:h2;
-								float newpos = (Y2*map->GetTileDimension().Y)+high-enemy->GetBound().h;
+								float newpos = (Y2*map->GetTileDimension().Y)+h2-enemy->GetBound().h;
 								if(position.Y > newpos) position.Y = newpos;
 								else position.Y += velocity.Y*timeDiff;
 							}
@@ -164,38 +155,28 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 							position.Y = (Y2)*map->GetTileDimension().Y-enemy->GetBound().h-1;
 						}
 						else if(bl == TileTypeSlope && yl1 > yl2){
-							float newpos;
-							if(yl1 < yl2){
-								newpos = (Y2+1)*map->GetTileDimension().Y - yl2 - enemy->GetBound().h;
-							}
-							else
-							{
-								float h = map->GetSlopeHeight(position + Point2D(0, enemy->GetBound().h));
-								newpos = (Y2*map->GetTileDimension().Y)+h-enemy->GetBound().h;
-							}
+							float h = map->GetSlopeHeight(position + Point2D(0, enemy->GetBound().h));
+							float newpos = (Y2*map->GetTileDimension().Y)+h-enemy->GetBound().h;
 							if(position.Y > newpos) position.Y = newpos;
 							else position.Y += velocity.Y*timeDiff;
 						}
 						else if(br == TileTypeSlope&& yr1 < yr2){
-							float newpos;
-							if(yr1 > yr2){
-								newpos = (Y2+1)*map->GetTileDimension().Y - yr1 - enemy->GetBound().h;
-							}
-							else
-							{
-								float h = map->GetSlopeHeight(position + Point2D(enemy->GetBound().w, enemy->GetBound().h));
-								newpos = (Y2*map->GetTileDimension().Y)+h-enemy->GetBound().h;
-							}
+							float h = map->GetSlopeHeight(position + Point2D(enemy->GetBound().w, enemy->GetBound().h));
+							float newpos = (Y2*map->GetTileDimension().Y)+h-enemy->GetBound().h;
 							if(position.Y > newpos) position.Y = newpos;
-								else position.Y += velocity.Y*timeDiff;
-
+							else position.Y += velocity.Y*timeDiff;
 						}
 					}
-					else if(bl == TileTypeNormal || br == TileTypeNormal) position.Y = (Y2)*map->GetTileDimension().Y-enemy->GetBound().h+1;
-					else position.Y += velocity.Y*timeDiff;
+					
+					else if(tl != TileTypeNormal && tr != TileTypeNormal && (bl == TileTypeNormal || br == TileTypeNormal)){
+						position.Y = (Y2)*map->GetTileDimension().Y-enemy->GetBound().h + 1;
+					}
+					else if(bl == TileTypeNormal || br == TileTypeNormal) 
+						position.Y = (Y2)*map->GetTileDimension().Y-enemy->GetBound().h+1;
+					else 
+						position.Y += velocity.Y*timeDiff;
+					}
 				}
-				}
-
 			}
 			if(enemy->GetVelocity().X != 0){
 				if(bl == TileTypeDrawing)bl=TileTypeNone;
@@ -216,10 +197,7 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 					else if(br == TileTypeSlope && (bTile==TileTypeNone||bTile==TileTypeDrawing) && (bl != TileTypeNone ||bl!=TileTypeDrawing)&& !enemy->CanWalkSlope)velocity.X*=-1;
 					else if((tr == TileTypeSlope || br == TileTypeSlope) && yl1<yl2){
 						if(map->GetHeightAtPosition(Point2D(position.X+enemy->GetBound().w, position.Y)) > enemy->GetBound().h){
-							int xd = (br!=TileTypeSlope)?Y2-1:Y2;
-							float h = map->GetSlopeHeight(position + Point2D(enemy->GetBound().w, enemy->GetBound().h));
-							float newpos = (xd*map->GetTileDimension().Y)+h-enemy->GetBound().h;
-							if(position.Y > newpos) position.Y = newpos;
+							position.Y -= 1;
 						}
 						else velocity.X *= -1;
 					}
@@ -241,10 +219,7 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 					else if(bl == TileTypeSlope && (bTile==TileTypeNone||bTile==TileTypeDrawing) && (br != TileTypeNone ||br!=TileTypeDrawing) && !enemy->CanWalkSlope)velocity.X*=-1;
 					else if((tl == TileTypeSlope || bl == TileTypeSlope) && yl1>yl2){
 						if(map->GetHeightAtPosition(Point2D(position.X, position.Y)) > enemy->GetBound().h){
-							int xd =  (bl!=TileTypeSlope)?Y2-1:Y2;
-							float h = map->GetSlopeHeight(position + Point2D(0, enemy->GetBound().h));
-							float newpos = (xd*map->GetTileDimension().Y)+h-enemy->GetBound().h;
-							if(position.Y > newpos) position.Y = newpos;
+							position.Y -= 1;
 						}
 						else velocity.X *= -1;
 					}
@@ -265,7 +240,7 @@ void EnemyHandler::Draw(WindowSurface screen, Point2D mapPosition){
 		_enemyList.at(i).Draw(screen, mapPosition);
 	}
 }
-void EnemyHandler::PopulateEnemies(Map* map){
+void EnemyHandler::PopulateEnemies(Map* map, Graphics* graphics){
 	_enemyList.clear();
 	std::vector<std::string> mapArray = map->GetMapArray();
 	std::string str;
@@ -276,7 +251,7 @@ void EnemyHandler::PopulateEnemies(Map* map){
 			chararcter = str[x];
 			for(unsigned int i = 0; i < enemyChars.size(); i++){
 				if(enemyChars[i]==chararcter){
-					AddEnemy((EnemyType)i, Point2D((float)x, (float)y)*map->GetTileDimension());
+					AddEnemy((EnemyType)i, graphics, Point2D((float)x, (float)y)*map->GetTileDimension());
 				}
 			}
 		}
