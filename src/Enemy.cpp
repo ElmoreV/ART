@@ -77,9 +77,28 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 		Enemy* enemy = &_enemyList.at(i);
 		bool update = true;
 		if(enemy->GetBoundR().Intersect(player->GetBoundR())){
-			//#PLAYER KILLS ENEMY -> update false, remove enemy
-			//#ELSE PLAYER LOSES LIFE
-			//player hits enemy
+			if(player->InvulnerableTime <= 0){
+				//#PLAYER KILLS ENEMY -> update false, remove enemy
+				//#ELSE PLAYER LOSES LIFE
+				//player hits enemy
+				if(player->GetVelocity().Y > 0){
+					int height = Minimum(player->GetBoundR().Y + player->GetBoundR().H, enemy->GetBoundR().Y + enemy->GetBoundR().H) - Maximum(player->GetBoundR().Y, enemy->GetBoundR().Y);
+					int width = Minimum(player->GetBoundR().X + player->GetBoundR().W, enemy->GetBoundR().X + enemy->GetBoundR().W) - Maximum(player->GetBoundR().X, enemy->GetBoundR().X);
+					
+					if(player->GetPreviousPosition().Y + player->GetBoundR().Y < enemy->GetBoundR().Y || height <= width){
+						_enemyList.erase(_enemyList.begin() + i);
+						player->Jump() ;
+					}
+					else{
+						player->Health -= 10;
+						player->InvulnerableTime = 2;
+					}
+				}
+				else {
+					player->Health -= 10;
+					player->InvulnerableTime = 2;
+				}
+			}
 		}
 		if(update){ //enemy can walk
 			Point2D velocity = enemy->GetVelocity();

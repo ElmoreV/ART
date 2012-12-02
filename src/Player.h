@@ -24,7 +24,7 @@ protected:
 	HorizontalDirection _hDir;
 	//For the animations
 	int _interval, _countInterval, _animationState, _frame;
-	int _maxVelocity;
+	int _maxVelocity, _maxHealth, _maxInkPool;
 	bool _jumpEnable;
 	void HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff);
 	Rectangle GetPreviousBoundR(float velocityX, float velocityY);
@@ -43,5 +43,12 @@ public:
 	SDL_Rect GetFrame();//Get the part of the image that is showed
 	Rectangle GetFrameR();//The function with floats
 	void SetFrame(int frame);//Set the animation (if it has more then 1)
+	float Health, InkPool, InvulnerableTime;
+	float HealthRatio(), InkPoolRatio();
+	void Jump();
+	Point2D GetPreviousPosition();
+	Rectangle GetPreviousBoundR();
+	void DrawHealthBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
+	void DrawInkBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
 };
 #endif

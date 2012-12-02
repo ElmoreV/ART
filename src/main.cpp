@@ -236,6 +236,8 @@ int main( int argc, char* args[] )
 			map.Draw(screen);
 			enemies.Draw(screen, map.GetMapPosition());
 			player.Draw(screen, map.GetMapPosition());
+			player.DrawHealthBar(screen, 1, 5, 5, 100, 20);
+			player.DrawInkBar(screen, 1, 5, 35, 100, 20);
 			break;
 
 		case GSMenuNewLevel:
