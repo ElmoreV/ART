@@ -46,7 +46,7 @@ protected:
 	bool (Settings::*OnClick)(); //ButtonItem
 	bool (Settings::*OnOptionClick)(int id); //OptionItem
 	bool (Settings::*onTextChange)(std::string text); //TextItem
-	bool (*onValueChange)(float percentage,void* ref); //SliderItem
+	bool (*onValueChange)(float ratio,void* ref); //SliderItem
 	void* onValueChangeRef;
 	std::vector<Options> _options;
 	bool _optionBoundSet, _clickEventAssigned, _hover, _customSet, _digitOnly, _selected, _headerShown, _center;
@@ -59,14 +59,11 @@ public:
 	void AddChild(MenuItem* item);
 	void AddChild(std::string title, bool center=false, int r=255, int g=255, int b=255);
 	
-	void AddButtonChild(std::string title, bool center=false, int r=255, int g=255, int b=255);
-	void AddButtonChild(std::string title, bool(Settings::*onclick)(), bool center=false, int r=255, int g=255, int b=255);
+	void AddButtonChild(std::string title, bool center=false, int r=255, int g=255, int b=255,bool(Settings::*onclick)()=0);
 	
-	void AddOptionChild(std::vector<std::string> options, std::string optionSpace="", bool center=false, int r=255, int g=255, int b=255);
-	void AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), std::string optionSpace="", bool center=false, int r=255, int g=255, int b=255);
+	void AddOptionChild(std::vector<std::string> options , std::string optionSpace="", bool center=false, int r=255, int g=255, int b=255,bool(Settings::*optionclicks)(int id)=0);
 	
-	void AddTextChild(std::string title="", int maxLength=0, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
-	void AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=0, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
+	void AddTextChild(std::string title="", int maxLength=0, bool digit=false, bool center=false, int r=255, int g=255, int b=255,bool (Settings::*onTextChange)(std::string text)=0);
 	
 	void AddSliderChild( int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
 	
@@ -106,15 +103,13 @@ public:
 class ButtonMenuItem : public MenuItem
 {
 public:
-	ButtonMenuItem(std::string title = "", bool center=false, int r=255, int g=255, int b=255);
-	ButtonMenuItem(std::string title, bool(Settings::*clickEvent)(), bool center=false, int r=255, int g=255, int b=255);
+	ButtonMenuItem(std::string title = "", bool center=false, int r=255, int g=255, int b=255, bool(Settings::*clickEvent)()=0);
 };
 class OptionMenuItem : public MenuItem
 {
 public:
 	OptionMenuItem(std::vector<Options> options, bool center=false, int r=255, int g=255, int b=255);
-	OptionMenuItem(std::vector<std::string> options, bool center=false, int r=255, int g=255, int b=255);
-	OptionMenuItem(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), bool center=false, int r=255, int g=255, int b=255);
+	OptionMenuItem(std::vector<std::string> options, bool center=false, int r=255, int g=255, int b=255,bool(Settings::*optionclicks)(int id)=0);
 	void SetOptionBound(int index, float x, float y, float w, float h);
 	void SetOptionHover(int index, bool value);
 	
@@ -141,15 +136,13 @@ public:
 class TextMenuItem : public MenuItem
 {
 public:
-	TextMenuItem(std::string title = "", bool center=false, int r=255, int g=255, int b=255);
-	TextMenuItem(std::string title, int maxLength=0, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
-	TextMenuItem(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=0, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
+	TextMenuItem(std::string title="", int maxLength=10, bool digit=false, bool center=false, int r=255, int g=255, int b=255,bool (Settings::*onTextChange)(std::string text)=0);
 };
 class SliderMenuItem : public MenuItem
 {
 public:
 	SliderMenuItem(int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
-	float GetPercentage();
+	float GetRatio();
 	void SetStatus(int status);
 };
 
@@ -180,14 +173,11 @@ public:
 	void AddChild(MenuItem* item);
 	void AddChild(std::string text,bool center=false, int r=255, int g=255, int b=255);
 	
-	void AddButtonChild(std::string title, bool center=false, int r=255, int g=255, int b=255);
-	void AddButtonChild(std::string title, bool(Settings::*onclick)(), bool center=false, int r=255, int g=255, int b=255);
+	void AddButtonChild(std::string title, bool center=false, int r=255, int g=255, int b=255, bool(Settings::*onclick)()=0);
 	
-	void AddOptionChild(std::vector<std::string> options, std::string optionSpace="", bool center=false, int r=255, int g=255, int b=255);
-	void AddOptionChild(std::vector<std::string> options, bool(Settings::*optionclicks)(int id), std::string optionSpace="", bool center=false, int r=255, int g=255, int b=255);
+	void AddOptionChild(std::vector<std::string> options, std::string optionSpace="", bool center=false, int r=255, int g=255, int b=255, bool(Settings::*optionclicks)(int id)=0);
 	
-	void AddTextChild(std::string title="", int maxLength=10, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
-	void AddTextChild(bool (Settings::*onTextChange)(std::string text), std::string title="", int maxLength=10, bool digit=false, bool center=false, int r=255, int g=255, int b=255);
+	void AddTextChild(std::string title="", int maxLength=10, bool digit=false, bool center=false, int r=255, int g=255, int b=255,bool (Settings::*onTextChange)(std::string text)=0);
 	
 	void AddSliderChild(int width, int height, bool center=false, int r=255, int g=255, int b=255,bool (*onValueChange)(float value,void* pRev)=0,void* pRev=0);
 

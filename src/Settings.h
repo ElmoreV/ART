@@ -7,9 +7,9 @@ class GlobalSettings
 public:
 	bool SetVolume(float percentage)
 	{
-		if (percentage>100.0f){percentage=100.0f;}
+		if (percentage>1.0f){percentage=1.0f;}
 		if (percentage<0.0f){percentage=0.0f;}
-		_volume=percentage*0.01f;
+		_volume=percentage;
 		return true;
 	};
 	float _volume;
