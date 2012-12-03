@@ -200,6 +200,7 @@ int main( int argc, char* args[] )
 					break;
 				}
 			}
+			if(clock() > Timer + 500) Timer = clock();
 			if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
 			screen.ClearWindow();
 			musicHandler.SetGlobalVolume((int)(gSettings._volume*128));
@@ -250,11 +251,11 @@ int main( int argc, char* args[] )
 
 			case GSMenuNewLevel:
 				if(setting.betweenLevelOptions == 0){
-					newLevelMenu.Open(screen, graphics.another);
 					if(levels.count == levels.maxCount)
 						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = false;
 					else
 						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = true;
+					newLevelMenu.Open(screen, graphics.another, Point2D(0, 100));
 				}
 				else {
 					if(setting.betweenLevelOptions == 1) //MainMenu
