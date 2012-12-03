@@ -6,7 +6,7 @@
 #include <vector>
 
 enum EnemyType{
-	EnemyNormal, 
+	EnemyBlob, EnemySpider, EnemyFire
 };
 class Enemy : public Object
 {
@@ -15,7 +15,7 @@ class Enemy : public Object
 	int _interval, _countInterval, _animationState, _frame;
 public:
 	Enemy(EnemyType type, Surface* surface, float X, float Y, int interval, int spriteX=1, int spriteY=1);
-	void Update(Map* map, long lastTick=-1);
+	void Update();
 	void Draw(WindowSurface screen, Point2D mapPosition);
 	Point2D GetCenter();
 	SDL_Rect GetFrame();//Get the part of the image that is showed

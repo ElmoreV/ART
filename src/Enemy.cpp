@@ -1,5 +1,4 @@
 #include "Enemy.h"
-#include <sstream>
 Enemy::Enemy(EnemyType type, Surface* surface, float X, float Y, int interval, int spriteX, int spriteY):Object(surface, X, Y, spriteX, spriteY){
 	_interval = interval;
 	if(_interval <= 0) _interval = 1;
@@ -10,7 +9,7 @@ Enemy::Enemy(EnemyType type, Surface* surface, float X, float Y, int interval, i
 	CanWalkOff=true;
 	CanWalkSlope=true;
 }
-void Enemy::Update(Map* map, long lastTick){
+void Enemy::Update(){
 	if(_countInterval > _interval){
 		_countInterval = 0;
 		_animationState++;
@@ -20,10 +19,9 @@ void Enemy::Update(Map* map, long lastTick){
 	if(_velocity.X <= 0) _frame=0+_animationState;
 	else _frame=3+_animationState;
 	_countInterval++;
-	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
 }
 void Enemy::Draw(WindowSurface screen, Point2D mapPosition){
-	_surface->Draw(screen, (Sint32)(_position.X - mapPosition.X), (Sint32)(_position.Y - mapPosition.Y), NULL);
+	_surface->Draw(screen, (Sint32)(_position.X - mapPosition.X), (Sint32)(_position.Y - mapPosition.Y), &GetFrame());
 }
 Point2D Enemy::GetCenter(){
 	return Point2D(_position.X + _spriteDimension.X / 2, _position.Y + _spriteDimension.Y/2);
@@ -34,6 +32,7 @@ SDL_Rect Enemy::GetFrame(){
 	rect.y = (Sint16)((_frame / (_spriteY+1)) * _spriteDimension.Y);
 	rect.w = (Sint16)_spriteDimension.X;
 	rect.h = (Sint16)_spriteDimension.Y;
+	return rect;
 }
 Rectangle Enemy::GetFrameR(){
 	Rectangle frames(((_frame % _spriteX) * _spriteDimension.X),((_frame / _spriteY+1) * _spriteDimension.Y),_spriteDimension.X,_spriteDimension.Y);
@@ -47,25 +46,39 @@ void Enemy::SetFrame(int frame){
 }
 
 EnemyHandler::EnemyHandler(){
-	enemyChars.push_back('!');
+	enemyChars.push_back('1');
+	enemyChars.push_back('2');
+	enemyChars.push_back('3');
 }
 void EnemyHandler::AddEnemy(EnemyType type, Graphics* graphics, Point2D position){
 	Surface* surface = 0; Point2D velocity; bool canwalkoff = true; bool canwalkslope = true;
 	switch(type){
-	case EnemyNormal:
-		surface = &graphics->_enemy1;
+	case EnemyBlob:
+		surface = &graphics->_enemy[1];
+		velocity = Point2D(100, 100);
+		canwalkoff = false; 
+		canwalkslope = true;
+		break;
+	case EnemyFire:
+		surface = &graphics->_enemy[2];
+		velocity = Point2D(0, 100);
+		canwalkoff = false; 
+		canwalkslope = false;
+		break;
+	case EnemySpider:
+		surface = &graphics->_enemy[3];
 		velocity = Point2D(100, 100);
 		canwalkoff = false; 
 		canwalkslope = true;
 		break;
 	default:
-		surface = &graphics->_enemy1;
+		surface = &graphics->_enemy[1];
 		velocity = Point2D(100, 100);
 		canwalkoff = false; 
 		canwalkslope = false;
 		break;
 	}
-	Enemy newE(type, surface, position.X, position.Y, 3, 1, 1);
+	Enemy newE(type, surface, position.X, position.Y, 3, 3, 2);
 	newE.SetVelocity(velocity.X, velocity.Y);
 	newE.CanWalkOff=canwalkoff;
 	newE.CanWalkSlope=canwalkslope;
@@ -75,6 +88,7 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 	float timeDiff=timer<0?1:(clock()-timer)/1000.0f;
 	for(unsigned int i = 0; i <_enemyList.size(); i++){
 		Enemy* enemy = &_enemyList.at(i);
+		enemy->Update();
 		bool update = true;
 		if(enemy->GetBoundR().Intersect(player->GetBoundR())){
 				//#PLAYER KILLS ENEMY -> update false, remove enemy

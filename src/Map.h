@@ -11,8 +11,9 @@
 #include <string>
 #include "Assets.h"
 enum TileType {
-	TileTypeNone, TileTypeNormal, TileTypeSlope, TileTypeNewMap, TileTypeDrawing
+	TileTypeNone, TileTypeNormal, TileTypeSlope, TileTypeNewMap, TileTypeDrawing, TileTypeSpike
 };
+enum TileSides{ TSnone, TStop, TSbottom, TSleft, TSright};
 class TileData{
 private:
 	bool _isSolid;
@@ -21,12 +22,15 @@ private:
 public:
 	int X, Y, Width, Height;
 	TileData(int x, int y, int width, int height, bool solid=false, bool drawable=false);
+	TileData(int x, int y, int width, int height, TileSides side);
 	TileData(int x, int y, int width, int height, int slopeleft, int sloperight);
 	SDL_Rect Rect();
 	bool IsSlope();
 	bool IsSolid();
 	bool IsDrawable();
+	TileType GetType();
 	void GetSlope(int& y1, int& y2);
+	TileSides Side;
 };
 typedef std::map<char, TileData> Dictionary;
 class Map
@@ -43,8 +47,8 @@ protected:
 public:
 	Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
 	void Draw(WindowSurface screen);
-	void Draw(WindowSurface screen, const char* mapArray[], unsigned int aantalRijen);
 	bool AddTile(char key, int x, int y, bool solid=true, bool drawable=false);
+	bool AddTile(char key, int x, int y, TileSides side);
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
 	bool ReadFile(std::string filename);
 	TileType GetCharType(Point2D collisionPoint);

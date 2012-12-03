@@ -4,11 +4,18 @@ TileData::TileData(int x, int y, int width, int height, bool solid, bool drawabl
 	if(drawable)_type=TileTypeDrawing;
 	else if(_isSolid)_type=TileTypeNormal;
 	else _type=TileTypeNone;
+	Side = TSnone;
 }
+TileData::TileData(int x, int y, int width, int height, TileSides side){
+	X=x;Y=y;Width=width;Height=height;_isSolid=true;
+	_type=TileTypeSpike;
+	Side = side;
+};
 TileData::TileData(int x, int y, int width, int height, int slopeleft, int sloperight){
 	X=x;Y=y;Width=width;Height=height;
 	_type = TileTypeSlope;
 	_slopeLeft=slopeleft;_slopeRight=sloperight;_isSolid=true;
+	Side = TSnone;
 }
 SDL_Rect TileData::Rect(){
 	SDL_Rect value =  {X, Y, Width, Height};
@@ -22,6 +29,7 @@ void TileData::GetSlope(int& y1, int& y2){
 	else if(!_isSolid){y1=0;y2=0;}
 	else { y1=1;y2=1;}
 }
+TileType TileData::GetType(){ return _type; }
 TileData Map::GetTileData(unsigned int x, unsigned int y){	
   TileData td(0, 0, 0, 0);
   if(_mapArray.size()>y){
@@ -71,6 +79,12 @@ bool Map::ReadFile(std::string filename)
 void Map::SetMaskColor(int r, int g, int b){
 	_tileSheet->MaskColor(r, g, b);
 }
+bool Map::AddTile(char key, int x, int y, TileSides side){
+	TileData value(x, y, (int)_tileDimension.X, (int)_tileDimension.Y, side);
+	Dictionary::iterator it = _tileLibrary.lower_bound(key);
+	if(it != _tileLibrary.end() && !(_tileLibrary.key_comp()(key, it->first))) { return false; } //Key already exist
+	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
+}
 //Adds a new normal tile to the dictionary
 bool Map::AddTile(char key, int x, int y, bool solid, bool drawable){
 	TileData value(x, y, (int)_tileDimension.X, (int)_tileDimension.Y,solid, drawable);
@@ -97,6 +111,14 @@ void Map::Draw(WindowSurface screen)
 {
 	unsigned int drawings = 0;
 	const char* charline;
+
+	//For optimization, only draws the tiles that you can see on the screen
+	unsigned int Y1, Y2, X1, X2;
+	Y1 = (int)(_mapPosition.Y/_tileDimension.Y);
+	Y2 = (int)((_mapPosition.Y+screen.GetHeight())/_tileDimension.Y)+1;
+	X1 = (int)(_mapPosition.X/_tileDimension.X);
+	X2 = (int)((_mapPosition.X+screen.GetWidth())/_tileDimension.X)+1;
+
 	for(unsigned int y = 0; y < _mapArray.size(); y++)
 	{
 		charline = _mapArray.at(y).c_str();
@@ -105,41 +127,29 @@ void Map::Draw(WindowSurface screen)
 			if(_tileLibrary.count(charline[x]) != 0 && charline[x] != _spawnLocation)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
-				SDL_Rect clip = td.Rect();
-				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-				_tileSheet->Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
-				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				if(y >= Y1 && y <= Y2 && x >= X1 && x <= X2){
+					if(td.IsDrawable())
+						_tileSheet->SetTransparency(100);
+					else 
+						_tileSheet->SetTransparency(255);
+					SDL_Rect clip = td.Rect();
+					//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
+					//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+					_tileSheet->Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+				}
 				if(td.IsDrawable()){
 					if(_drawObjects.size() > drawings){
-						_drawObjects.at(drawings).Draw(screen);
+						if(y >= Y1 && y <= Y2 && x >= X1 && x <= X2)
+							_drawObjects.at(drawings).Draw(screen);
 					}
 					else {
-						_drawObjects.push_back(DrawingObject(_tileDimension.X, _tileDimension.Y, x*_tileDimension.X, y*_tileDimension.Y));
-						_drawObjects.at(drawings).Draw(screen);
+						_drawObjects.push_back(DrawingObject(_tileDimension.X, _tileDimension.Y, x*_tileDimension.X-_mapPosition.X, y*_tileDimension.Y-_mapPosition.Y));
+						if(y >= Y1 && y <= Y2 && x >= X1 && x <= X2)
+							_drawObjects.at(drawings).Draw(screen);
 					}
 					drawings++;
 				}
-			}
-		}
-	}
-}
-//Draws a new map
-void Map::Draw(WindowSurface screen,const char* mapArray[], unsigned int aantalRijen)
-{
-	const char* charline;
-	unsigned int y = 0;
-	for(unsigned int y = 0; y < aantalRijen; y++)
-	{
-		charline = mapArray[y];
-		for(unsigned int x = 0; x < strlen(charline); x++)
-		{
-			if(_tileLibrary.count(charline[x]) != 0)
-			{
-				TileData td = _tileLibrary.find(charline[x])->second;
-				SDL_Rect clip = td.Rect();
-				//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
-				_tileSheet->Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
-				//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
+				
 			}
 		}
 	}
@@ -195,9 +205,9 @@ TileType Map::GetCharType(Point2D collisionPoint){
 			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return TileTypeNone;
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
-				if(td.IsSlope()) return TileTypeSlope;
-				else if(td.IsDrawable()) return TileTypeDrawing;
-				else if(td.IsSolid()) return TileTypeNormal;
+				TileType t = td.GetType();
+				if(t == TileTypeSpike) return TileTypeNormal;
+				else return t;
 			}
 		}
 	}
@@ -215,15 +225,15 @@ float Map::CheckDrawCollision(Rectangle playerBound){
 bool Map::NewMapEnabled(Rectangle playerBoundingBox){
 	//Ik wed dat deze functie beter kan, dan van float->int->float->int te gaan.
 	//Als ik nu eens snapte waar deze functie voor was
-	int X1 = (int)(playerBoundingBox.X/_tileDimension.X);
-	int Y1 = (int)(playerBoundingBox.Y/_tileDimension.Y);
-	int X2 = (int)((playerBoundingBox.X + playerBoundingBox.W)/_tileDimension.X);
-	int Y2 = (int)((playerBoundingBox.Y + playerBoundingBox.H)/_tileDimension.Y);
+	float X1 = std::floor(playerBoundingBox.X/_tileDimension.X);
+	float Y1 = std::floor(playerBoundingBox.Y/_tileDimension.Y);
+	float X2 = std::floor((playerBoundingBox.X + playerBoundingBox.W)/_tileDimension.X);
+	float Y2 = std::floor((playerBoundingBox.Y + playerBoundingBox.H)/_tileDimension.Y);
 	Point2D collisionPoint[4];
-	collisionPoint[0] = Point2D((float)X1, (float)Y1);
-	collisionPoint[1] = Point2D((float)X1, (float)Y2);
-	collisionPoint[2] = Point2D((float)X2, (float)Y1);
-	collisionPoint[3] = Point2D((float)X2, (float)Y2);
+	collisionPoint[0] = Point2D(X1, Y1);
+	collisionPoint[1] = Point2D(X1, Y2);
+	collisionPoint[2] = Point2D(X2, Y1);
+	collisionPoint[3] = Point2D(X2, Y2);
 	for(int i = 0; i < 4; i++){
 		const char* charline;
 		if(_mapArray.size() > collisionPoint[i].Y){
@@ -257,14 +267,15 @@ float Map::GetHeightAtPosition(Point2D position){
 	int x = (int)(position.X / _tileDimension.X);
 
 	float height = 0;
-	int charType = GetCharType(Point2D((float)x, (float)y));
+	TileType charType = GetCharType(Point2D((float)x, (float)y));
 	
 	if(charType == TileTypeNormal) //NormalBlock
 		return 0; 
 	y--;
 	
 	while(y >= 0){
-		if(GetCharType(Point2D((float)x, (float)y)) != TileTypeNone)
+		TileType t = GetCharType(Point2D((float)x, (float)y));
+		if(t != TileTypeNone && t != TileTypeDrawing)
 			break;
 		else {
 			y--; 

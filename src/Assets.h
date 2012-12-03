@@ -30,7 +30,10 @@ public:
 		_forest[3].LoadImage("Images/background/forest4.png");
 		_space1.LoadImage("Images/background/space1.png");
 		_space2.LoadImage("Images/background/space2.png");
-		_enemy1.LoadImage("Images/enemy1.png");
+		_enemy[0].LoadImage("Images/enemy1.png", 0, 0, 0);
+		_enemy[1].LoadImage("Images/enemy2.png", 255, 242, 0);
+		_enemy[2].LoadImage("Images/enemy3.png", 0, 0, 0);
+		_enemy[3].LoadImage("Images/enemy4.png", 181, 230, 29);
 		_statFont.OpenFont("Another.ttf");
 		_menuFont = _statFont;
 
@@ -43,7 +46,7 @@ public:
 	Surface _forest[4];
 	Surface _space1;
 	Surface _space2;
-	Surface _enemy1;
+	Surface _enemy[4];
 	//Fonts
 	Font _menuFont;
 	Font _statFont;

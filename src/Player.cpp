@@ -53,9 +53,7 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	//if(Health < _maxHealth) Health++;
 
 	//For the jump
-	if(_velocity.Y == 0) 
-		_velocity.Y++;
-	else if(_velocity.Y < _maxVelocity) 
+	if(_velocity.Y < _maxVelocity) 
 		_velocity.Y+=_maxVelocity*timeDiff;
 	//Initiate jump if button up is pressed
 	if(_buttonUp && _jumpEnable) {
@@ -124,6 +122,15 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	else if(_velocity.Y>0)_vDir=VDirDown;
 	else _vDir = VDirNone;
 	tail.Update(GetBoundR(-map->GetMapPosition().X, -map->GetMapPosition().Y),_hDir);
+
+	
+	//Ik wed dat deze functie beter kan, dan van float->int->float->int te gaan.
+	//Als ik nu eens snapte waar deze functie voor was
+	int X1 = (int)(_position.X/map->GetTileDimension().X);
+	int Y1 = (int)(_position.Y/map->GetTileDimension().Y);
+	int X2 = (int)((_position.X + _spriteDimension.X)/map->GetTileDimension().X);
+	int Y2 = (int)((_position.Y + _spriteDimension.Y)/map->GetTileDimension().Y);
+
 }
 void Player::Jump(){
 	_velocity.Y = (float)-_maxVelocity; 
@@ -203,6 +210,18 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 			TileType charTypeTop = map->GetCharType(top);
 			TileType charTypeBot = map->GetCharType(bot);
 			TileType charTypeBotO = map->GetCharType(Point2D((float)XO, (float)Y2));
+
+			if(InvulnerableTime <= 0){
+				TileData t1 = map->GetTileData(X, Y1);
+				TileData t2 = map->GetTileData(X, Y2);
+				if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+					TileSides must = (_buttonLeft)?TSright:TSleft;
+					if(t1.Side == must || t2.Side == must){
+						InvulnerableTime = 2;	
+						Health -= 10;
+					}
+				}
+			}
 
 			//std::stringstream ss; ss <<charTypeTop << "   " <<charTypeBot; Error r; r.HandleError(CaptionOnly, ss.str());
 			//IF both edge don't hit anything, the player can freely move to left or right
@@ -377,6 +396,16 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 					_velocity.Y = 0;
 				}
 				else */
+				if(InvulnerableTime <= 0){
+					TileData t1 = map->GetTileData(X1, Y1);
+					TileData t2 = map->GetTileData(X2, Y1);
+					if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+						if(t1.Side == TSbottom || t2.Side == TSbottom){
+							InvulnerableTime = 2;	
+							Health -= 10;
+						}
+					}
+				}
 				if(charTypeLeft == TileTypeNormal || charTypeRight == TileTypeNormal || ((charTypeLeft == TileTypeSlope || charTypeRight == TileTypeSlope) && (Yt>Y1)) ){
 					_velocity.Y = 0;
 					_position.Y = (Y+1)*map->GetTileDimension().Y;
@@ -390,6 +419,16 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 				else _position.Y += _velocity.Y*timeDiff;
 			}
 			else {
+				if(InvulnerableTime <= 0){
+					TileData t1 = map->GetTileData(X1, Y2);
+					TileData t2 = map->GetTileData(X2, Y2);
+					if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+						if(t1.Side == TStop || t2.Side == TStop){
+							InvulnerableTime = 2;	
+							Health -= 10;
+						}
+					}
+				}
 				if(charTypeLeft == TileTypeNormal || charTypeRight == TileTypeNormal){
 					_velocity.Y = 50;
 					_jumpEnable = true;

@@ -6,12 +6,14 @@ Options::Options(){
 	_r=_g=_b=255;
 	_hover=false;
 	_bound = Rectangle(0,0,0,0);
+	Enabled = true;
 }
 Options::Options(std::string text,int r, int g, int b){
 	_text = text;
 	_r=r;_g=g;_b=b;
 	_hover=false;
 	_bound = Rectangle(0,0,0,0);
+	Enabled = true;
 }
 int Options::GetColorR(){return (Enabled)?_r:127;}
 int Options::GetColorG(){return (Enabled)?_g:127;}

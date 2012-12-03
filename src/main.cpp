@@ -40,6 +40,10 @@ int main( int argc, char* args[] )
 	GlobalSettings gSettings;
 	GameStateManager gameStates(&setting);
 
+	Surface surface; surface.LoadImage("Images/icon.png", 255, 255, 0);
+	SDL_WM_SetIcon(surface, NULL);
+	screen.SetCaption("A Rat's Tail");
+
 	//SDL_ShowCursor(0);
 	long Timer = clock();//For Frame Independent Movement
 	bool gameRunning=true;
@@ -119,12 +123,12 @@ int main( int argc, char* args[] )
 	map.AddTile('n', 50, 200);
 	map.AddTile('o', 100, 200, 50, 0);
 	
-	map.AddTile('p', 350, 200);
-	map.AddTile('q', 400, 200);
-	map.AddTile('r', 450, 200);
-	map.AddTile('s', 500, 200);
+	map.AddTile('p', 350, 200, TStop);
+	map.AddTile('q', 400, 200, TSleft);
+	map.AddTile('r', 450, 200, TSright);
+	map.AddTile('s', 500, 200, TSbottom);
 
-	map.AddTile('z', 100, 250, false, true);
+	map.AddTile('z', 50, 250, false, true);
 	map.AddTile('@', 0, 255);
 
 	Player player(&graphics._player, map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
@@ -152,6 +156,8 @@ int main( int argc, char* args[] )
 	menu.AddButtonChild("Exit",false,255,255,255, &Settings::OnClickExitGame);
 	
 	Menu newLevelMenu("Level completed", &setting);
+	newLevelMenu.SetCenter(true);
+	newLevelMenu.SetVerticalSpace(20);
 	newLevelMenu.AddChild("Congratulations");
 	newLevelMenu.AddChild("");
 	newLevelMenu.AddChild("What do you want to do?");
@@ -192,6 +198,7 @@ int main( int argc, char* args[] )
 				break;
 			}
 		}
+		if(clock() > Timer + 500) Timer = clock();
 		if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
 		screen.ClearWindow();
 		musicHandler.SetGlobalVolume((int)(gSettings._volume*128));
@@ -242,11 +249,11 @@ int main( int argc, char* args[] )
 
 		case GSMenuNewLevel:
 			if(setting.betweenLevelOptions == 0){
-				newLevelMenu.Open(screen, graphics._menuFont);
 				if(levels.count == levels.maxCount)
 					((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = false;
 				else
 					((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = true;
+				newLevelMenu.Open(screen, graphics._menuFont, Point2D(0, 100));
 			}
 			else {
 				if(setting.betweenLevelOptions == 1) //MainMenu
