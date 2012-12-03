@@ -18,6 +18,7 @@ public:
 	Point2D GetOffset(){return _offset;};
 	float GetWidth(){return _width;}
 	float GetHeight(){return _height;}
+	float GetDrawingDistance();
 	void Clear(){_points.clear();}
 private:
 	unsigned int _recurseChecker;

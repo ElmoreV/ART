@@ -1,5 +1,6 @@
 #include "Drawing.h"
-
+#include <sstream>
+#include <cmath>
 inline bool FloatEq(float a,float b){return (a-b>-0.0001&&a-b<0.0001);}
 
 inline float GetXForYBetweenPoints(float Y, float x1, float y1, float x2, float y2)
@@ -53,6 +54,8 @@ void VectorDraw::SetNewPoint(float x, float y)
 
 	if (_recurseChecker++>3)
 	{_recurseChecker=0;
+	std::stringstream ost; ost<<"The drawing code exceeded the recursion check with point("<<x<<","<<y<<").";
+	Error error(Log,ost.str().c_str(),1);
 	return;}
 
 	//if you draw at screenX=300, and the surface is turned 100px to the left (-100)
@@ -242,3 +245,21 @@ void VectorDraw::Optimize(float precision)
 
 	};
 }
+
+float VectorDraw::GetDrawingDistance()
+{
+	unsigned int vectorSize=_points.size();
+	float distance=0.0f;
+	for (unsigned int i=1; i<vectorSize;i++)
+	{
+		Point2D point1=_points[i-1];
+		Point2D point2=_points[i];
+		if (point1.X!=-0xffff&&point2.X!=-0xFFFF&&
+			!(FloatEq(point1.X,point2.X)&&FloatEq(point1.Y,point2.Y))
+			)
+		{
+			distance+=sqrt((point1.X-point2.X)*(point1.X-point2.X)+(point1.Y-point2.Y)*(point1.Y-point2.Y));
+		}
+	}
+	return distance;
+};

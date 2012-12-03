@@ -169,7 +169,6 @@ void Font::Free()
 		TTF_CloseFont(_ttf);
 		_ttf=0;
 	}
-	
 }
 Font::operator TTF_Font* (){return _ttf;};
 bool Font::IsInit(){return (_ttf!=0);}

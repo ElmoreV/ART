@@ -92,155 +92,24 @@ void DrawingObject::Reset()
 	_prevCursor.X=0;
 	_prevCursor.Y=0;
 }
-void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
+void DrawingObject::HandleEvent(SDL_Event sEvent)
 {
-	Point2D playerMiddle(playerBound.X+0.5f*playerBound.W, playerBound.Y+0.5f*playerBound.H);
-	float outsideDrawRadius=100;
-	Point2D cursor(sEvent.button.x,sEvent.button.y);
-	Point2D cursorRelPlayer=playerMiddle-cursor;
-
-	Point2D relativePlayer=Point2D(playerBound.X,playerBound.Y)-_canvas.GetOffset();
-	Point2D relativePlayerMax=Point2D(relativePlayer.X+playerBound.W,relativePlayer.Y+playerBound.H);
-
-	Point2D lastPoint(-0xFFFF,-0xFFFF);
-	if (_canvas.GetSize())
-	{lastPoint=_canvas.GetPoint(_canvas.GetSize()-1);}
-	//cursor button down
 	if (sEvent.type==SDL_MOUSEBUTTONDOWN)
 	{
-		//Check if the cursor is outside the draw range
-		if ((cursorRelPlayer.X)*(cursorRelPlayer.X)+(cursorRelPlayer.Y)*(cursorRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
-		{
-			_cursorOutOfRange=true;
-
-		}else
-		{
-			_cursorOutOfRange=false;
-		}
-		//Or if it's inside the minimal draw range
-		if (cursor.X>playerBound.X-2&&cursor.Y>playerBound.Y-2&&cursor.X<playerBound.X+playerBound.W+2&&cursor.Y<playerBound.Y+playerBound.H)
-		{_cursorOnPlayer=true;}
-
-		if (lastPoint.X!=-0xFFFF)
-		{
-			Point2D relativeCursor=cursor;
-			relativeCursor-=_canvas.GetOffset();
-			if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeCursor,
-				relativePlayer,relativePlayerMax),relativePlayerMax.Y))
-			{_cursorOnPlayer=true;}
-		}
-
-		if (!_cursorOnPlayer&&!_cursorOutOfRange)
-		{
-			_canvas.SetDrawMode(true);
-		}
-		_canvas.SetNewPoint(cursor.X,cursor.Y);
+		_prevCursor=Point2D(-0xffff,-0xffff);
+		_newCursor=Point2D(sEvent.button.x,sEvent.button.y);
 		_cursorPressed=true;
-		_prevCursor=cursor;
 	}else if (sEvent.type==SDL_MOUSEMOTION)
 	{
-		Point2D newPoint(sEvent.button.x,sEvent.button.y);
-		bool cursorIsOnPlayer=false;
-		bool cursorIsOutOfRange=false;
-		//Check if it's outside of the draw range. Stop drawing if so. Restart drawing if it WAS true, but not anymore
-		if ((cursorRelPlayer.X)*(cursorRelPlayer.X)+(cursorRelPlayer.Y)*(cursorRelPlayer.Y)>outsideDrawRadius*outsideDrawRadius)
-		{cursorIsOutOfRange=true;}
-
-		//Check if it's inside of the minimal draw range
-		if (cursor.X>playerBound.X-2&&cursor.Y>playerBound.Y-2&&cursor.X<playerBound.X+playerBound.W+2&&cursor.Y<playerBound.Y+playerBound.H)
-		{cursorIsOnPlayer=true;}
-
-		//Check if you're not drawing through the character
-		Point2D relativeCursor=cursor;
-		relativeCursor-=_canvas.GetOffset();
-		if (!cursorIsOnPlayer)
-		{
-			if(!FloatEq(lastPoint.X,-0xFFFF))
-			{
-
-				if (!FloatEq(CheckCollisionForTwoPoints(lastPoint,relativeCursor,
-					relativePlayer,relativePlayerMax),relativePlayerMax.Y))
-				{cursorIsOnPlayer=true;}
-			}else
-			{
-				Point2D referenceOutside=_canvas.GetOutsideReferencePoint();
-				if (referenceOutside.X!=-0xFFFF)
-				{
-					if (!FloatEq(CheckCollisionForTwoPoints(referenceOutside,relativeCursor,relativePlayer,relativePlayerMax),relativePlayerMax.Y))
-					{cursorIsOnPlayer=true;}
-				}
-			}
-		}
-		if (cursorIsOutOfRange)
-		{
-			if (_cursorPressed)
-			{
-				_cursorOutOfRange=true;
-				if (!cursorIsOnPlayer)
-				{
-					if (lastPoint.X!=-0xFFFF)
-					{
-						newPoint=GetIntersectionRayCircle(lastPoint+_canvas.GetOffset(),newPoint,playerMiddle,outsideDrawRadius);
-						_canvas.SetNewPoint(newPoint.X,newPoint.Y);
-					}else
-					{
-						Point2D lastReferencePoint=_canvas.GetOutsideReferencePoint();
-						if (lastReferencePoint.X!=-0xFFFF)
-						{
-							newPoint=GetIntersectionRayCircle(lastReferencePoint+_canvas.GetOffset(),newPoint,playerMiddle,outsideDrawRadius);
-							_canvas.SetNewPoint(newPoint.X,newPoint.Y);
-						}
-					}
-				}
-				_canvas.SetDrawMode(false);
-			}
-		}
-		else
-		{
-			if (_cursorOutOfRange)
-			{
-				_cursorOutOfRange=false;
-				if (!cursorIsOnPlayer)
-				{_canvas.SetDrawMode(true);
-				
-				 newPoint=GetIntersectionRayCircle(_prevCursor,newPoint,playerMiddle,outsideDrawRadius);
-				 _canvas.SetNewPoint(newPoint.X,newPoint.Y);
-				}
-			}
-		}
-		//If the line to be drawn goes on/through the player
-		//Stop drawing
-		//If it was true, but not anymore
-		//Restart drawing
-		if (cursorIsOnPlayer)
-		{
-			if (_cursorPressed)
-			{
-				_cursorOnPlayer=true;
-				_canvas.SetDrawMode(false);
-			}
-		}else
-		{
-			if (_cursorOnPlayer)
-			{
-				if (!cursorIsOutOfRange)
-				{_canvas.SetDrawMode(true);}
-				_cursorOnPlayer=false;
-			}
-		}
-		//Only add new points when the cursor is pressed
-		if (_cursorPressed)
-		{
-			_canvas.SetNewPoint(newPoint.X,newPoint.Y);
-		}
-		_prevCursor=cursor;
-	}else if (sEvent.type==SDL_MOUSEBUTTONUP)
+		_prevCursor=_newCursor;
+		_newCursor=Point2D(sEvent.button.x,sEvent.button.y);
+	}else if(sEvent.type==SDL_MOUSEBUTTONUP)
 	{
-		_cursorOnPlayer=false;
-		_cursorOutOfRange=false;
+		_prevCursor=Point2D(-0xffff,-0xffff);
+		_newCursor=Point2D(-0xffff,-0xffff);
 		_cursorPressed=false;
-		_canvas.SetDrawMode(false);
-
+		_cursorOutOfRange=false;
+		_cursorOnPlayer=false;
 	}else if (sEvent.type==SDL_KEYDOWN)
 	{
 
@@ -257,6 +126,128 @@ void DrawingObject::HandleEvent(SDL_Event sEvent,Rectangle playerBound)
 		}
 	}
 }
+void DrawingObject::Update(Rectangle playerBound)
+{
+	Point2D playerMiddle(playerBound.X+0.5f*playerBound.W, playerBound.Y+0.5f*playerBound.H);
+	float outsideDrawRadius=100;
+	bool newCursorIsOutOfRange=false;
+	bool newCursorIsOnPlayer=false;
+	
+	if (_cursorPressed)
+	{
+		//Check if it's outside the maximum range
+		if ((_newCursor.X-playerMiddle.X)*(_newCursor.X-playerMiddle.X)+(_newCursor.Y-playerMiddle.Y)*(_newCursor.Y-playerMiddle.Y)>outsideDrawRadius*outsideDrawRadius)
+		{newCursorIsOutOfRange=true;}
+		//Or if it's inside the minimal draw range
+		if (_newCursor.X>playerBound.X-2&&_newCursor.Y>playerBound.Y-2&&_newCursor.X<playerBound.X+playerBound.W+2&&_newCursor.Y<playerBound.Y+playerBound.H)
+		{newCursorIsOnPlayer=true;}
+		//Check if the line is drawn through the player
+		if (!newCursorIsOnPlayer&&_prevCursor.X!=-0xFFFF)
+		{
+			if (!FloatEq(CheckCollisionForTwoPoints(_prevCursor,_newCursor,
+				Point2D(playerBound.X,playerBound.Y),
+				Point2D(playerBound.X+playerBound.W,playerBound.Y+playerBound.H)),playerBound.Y+playerBound.H))
+			{newCursorIsOnPlayer=true;}
+		}
+
+		if (_cursorOutOfRange)
+		{
+			if(!newCursorIsOutOfRange)
+			{
+				//The cursor went from outside to inside
+				_cursorOutOfRange=false;
+				if (!newCursorIsOnPlayer)
+				{
+					_canvas.SetDrawMode(true);
+					if (_prevCursor.X!=-0xFFFF)
+					{
+						Point2D intersect=GetIntersectionRayCircle(_prevCursor,_newCursor,playerMiddle,outsideDrawRadius);
+						_canvas.SetNewPoint(intersect.X, intersect.Y);
+					}				
+				}
+			}else
+			{
+				//From outside to outside
+				if (_prevCursor.X!=-0xFFFF)
+				{
+					Point2D intersect1=GetIntersectionRayCircle(_prevCursor,_newCursor,playerMiddle,outsideDrawRadius);
+					if (!FloatEq(intersect1.X,_prevCursor.X)&&!FloatEq(intersect1.Y,_prevCursor.Y))
+					{
+						//It actually goes through the circle and goes outside again
+						intersect1.X*=0.99f;
+						intersect1.X+=0.01f*_newCursor.X;
+						intersect1.Y*=0.99f;
+						intersect1.Y+=0.01f*_newCursor.X;
+						Point2D intersect2=GetIntersectionRayCircle(intersect1,_newCursor,playerMiddle,outsideDrawRadius);
+						if (!newCursorIsOnPlayer)
+						{
+							_canvas.SetDrawMode(true);
+							_canvas.SetNewPoint(intersect1.X,intersect1.Y);
+							_canvas.SetNewPoint(intersect2.X,intersect2.Y);
+						}
+					}
+				}
+				_canvas.SetDrawMode(false);
+			}
+		}else
+		{
+			if (newCursorIsOutOfRange)
+			{
+				//The cursor went from inside to outside
+				_cursorOutOfRange=true;
+				
+				if (!newCursorIsOnPlayer)
+				{
+					if (_prevCursor.X!=-0xFFFF)
+					{
+						Point2D intersect=GetIntersectionRayCircle(_prevCursor,_newCursor,playerMiddle,outsideDrawRadius);
+						_canvas.SetNewPoint(intersect.X, intersect.Y);
+					}
+				}
+				_canvas.SetDrawMode(false);	
+			}else
+			{
+				//Still inside
+			}
+		}
+		
+
+		if (newCursorIsOnPlayer)
+		{
+			if (_cursorOnPlayer)
+			{
+				//Still on player
+			}else
+			{
+				//Went outside the player on the player
+				_cursorOnPlayer=true;
+				_canvas.SetDrawMode(false);
+			}
+		}else
+		{
+			if (_cursorOnPlayer)
+			{
+				//Was on player, not anymore
+				_cursorOnPlayer=false;
+				if (!newCursorIsOutOfRange)
+				{_canvas.SetDrawMode(true);}
+			}else
+			{
+				// Not on player or through
+			}
+		}
+		if (!_cursorOnPlayer&&!_cursorOutOfRange)
+		{
+			_canvas.SetDrawMode(true);
+		}
+		_canvas.SetNewPoint(_newCursor.X,_newCursor.Y);
+	}else
+	{
+		//The cursor isn't pressed
+		_canvas.SetDrawMode(false);
+	}
+
+};
 void DrawingObject::Draw(WindowSurface sfScreen)
 {
 	int vectorSize=_canvas.GetSize();
@@ -264,7 +255,9 @@ void DrawingObject::Draw(WindowSurface sfScreen)
 	{
 		Point2D point=_canvas.GetPoint(i);
 		Point2D point2=_canvas.GetPoint(i-1);
-		if (point.X==-0xffff||point2.X==-0xffff)
+		if (point.X==-0xffff||point2.X==-0xffff||
+			(FloatEq(point.X,point2.X)&&FloatEq(point.Y,point2.Y))
+			)
 		{
 		}else
 		{
