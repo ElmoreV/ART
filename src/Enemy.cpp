@@ -53,13 +53,13 @@ void EnemyHandler::AddEnemy(EnemyType type, Graphics* graphics, Point2D position
 	Surface* surface = 0; Point2D velocity; bool canwalkoff = true; bool canwalkslope = true;
 	switch(type){
 	case EnemyNormal:
-		surface = &graphics->_enemy1;
+		surface = &graphics->enemy1;
 		velocity = Point2D(100, 100);
 		canwalkoff = false; 
 		canwalkslope = true;
 		break;
 	default:
-		surface = &graphics->_enemy1;
+		surface = &graphics->enemy1;
 		velocity = Point2D(100, 100);
 		canwalkoff = false; 
 		canwalkslope = false;

@@ -146,7 +146,7 @@ void Map::Draw(WindowSurface screen,const char* mapArray[], unsigned int aantalR
 }
 void Map::DrawBackground(WindowSurface screen, Graphics* assets){
 	Point2D dim = GetMapDimension();
-	Surface surface = assets->_forest[0];
+	Surface surface = assets->forest[0];
 	int forestStart = (int)dim.Y;
 	if(_forestBbStart>=0) 
 		forestStart = _forestBbStart; 
@@ -158,11 +158,11 @@ void Map::DrawBackground(WindowSurface screen, Graphics* assets){
 	int Ystart = (int)dim.Y - surface.GetHeight()*Ycount;
 	while(Ystart>_mapPosition.Y){
 		surface.SetTransparency(255);
-		if(Ycount == 0)surface = assets->_forest[0];
-		else if(Ycount == 1)surface = assets->_air[0];
-		else if(Ycount == 2)surface = assets->_space1;
+		if(Ycount == 0)surface = assets->forest[0];
+		else if(Ycount == 1)surface = assets->air[0];
+		else if(Ycount == 2)surface = assets->space1;
 		else if(Ycount < 0)surface.SetTransparency(0);
-		else surface = assets->_space2;
+		else surface = assets->space2;
 		
 		Ystart -= surface.GetHeight();
 		Xstart = (int)(_mapPosition.X - ((Uint32)_mapPosition.X % (Uint32)surface.GetWidth()));
@@ -170,12 +170,12 @@ void Map::DrawBackground(WindowSurface screen, Graphics* assets){
 		while(Xstart < _mapPosition.X + screen.GetWidth()){
 			if(Ycount == 1){
 				if(Xcount>2)Xcount = Xcount%3;
-				surface = assets->_air[Xcount];
+				surface = assets->air[Xcount];
 				Xcount++;
 			}
 			else if(Ycount == 0){
 				if(Xcount>3) Xcount = Xcount%4;
-				surface = assets->_forest[Xcount];
+				surface = assets->forest[Xcount];
 				Xcount++;
 			}
 			surface.Draw(screen, (Uint32)(Xstart-_mapPosition.X), (Uint32)(Ystart-_mapPosition.Y));
