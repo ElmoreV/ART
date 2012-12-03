@@ -86,9 +86,18 @@ bool Map::AddTile(char key, int x, int y, int slopeLeft, int slopeRight){
 	if(it != _tileLibrary.end() && !(_tileLibrary.key_comp()(key, it->first))) { return false; } //Key already exist
 	else {_tileLibrary.insert(std::pair<char, TileData>(key, value));return true;} //Key dont exists
 }
-bool Map::HandleEvent(SDL_Event sEvent, Rectangle playerBound){
+bool Map::HandleEvent(SDL_Event sEvent){
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
-		_drawObjects.at(i).HandleEvent(sEvent,playerBound);
+		_drawObjects.at(i).HandleEvent(sEvent);
+	}
+	return true;
+}
+bool Map::Update(Rectangle playerBound)
+{
+	_totalDistance=0;
+	for(unsigned int i = 0; i < _drawObjects.size(); i++){
+		_drawObjects.at(i).Update(playerBound);
+		_totalDistance+=_drawObjects[i].GetDrawing().GetDrawingDistance();
 	}
 	return true;
 }

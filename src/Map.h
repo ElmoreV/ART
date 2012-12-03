@@ -40,6 +40,7 @@ protected:
 	char _spawnLocation, _newMapChar;
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
 	int _forestBbStart;
+	unsigned long _totalDistance;
 public:
 	Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
 	void Draw(WindowSurface screen);
@@ -52,7 +53,8 @@ public:
 	Point2D GetMapPosition();
 	Point2D GetSpawnLocation();
 	Point2D GetMapDimension();
-	bool HandleEvent(SDL_Event sEvent, Rectangle playerBound);
+	bool HandleEvent(SDL_Event sEvent);
+	bool Update(Rectangle playerBound);
 	float CheckDrawCollision(Rectangle playerBound);
 	void SetMapPosition(float x, float y);
 	TileData GetTileData(unsigned int x, unsigned int y);

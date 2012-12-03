@@ -187,7 +187,7 @@ int main( int argc, char* args[] )
 				case GSGame:
 					if(sEvent.type == SDL_KEYDOWN) if(sEvent.key.keysym.sym == SDLK_ESCAPE) gameStates.PushState(GSMenuMain);
 					player.HandleEvent(sEvent);
-					map.HandleEvent(sEvent,player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y));
+					map.HandleEvent(sEvent);
 					break;
 				case GSMenuNewLevel:
 					newLevelMenu.HandleEvent(sEvent);
@@ -234,6 +234,7 @@ int main( int argc, char* args[] )
 				}
 				player.Update(&map, screen.GetWidth(), screen.GetHeight(), Timer);
 				enemies.Update(&map, &player, Timer);
+				map.Update(player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y));
 				map.DrawBackground(screen, &graphics);
 				map.Draw(screen);
 				enemies.Draw(screen, map.GetMapPosition());
