@@ -2,16 +2,12 @@
 #define SETTINGS_H
 #include "SDLFramework.h"
 
+class SettingSaverLoader;
+
 class GlobalSettings
 {
 public:
-	bool SetVolume(float percentage)
-	{
-		if (percentage>1.0f){percentage=1.0f;}
-		if (percentage<0.0f){percentage=0.0f;}
-		_volume=percentage;
-		return true;
-	};
+	bool SetVolume(float percentage);
 	float _volume;
 	float _SfxMusicProportion;
 };

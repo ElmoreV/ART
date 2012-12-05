@@ -57,8 +57,9 @@ public:
 	Point2D GetMapPosition();
 	Point2D GetSpawnLocation();
 	Point2D GetMapDimension();
+	unsigned int GetDrawDistance();
 	bool HandleEvent(SDL_Event sEvent);
-	bool Update(Rectangle playerBound);
+	bool Update(Rectangle playerBound,float inkPool);
 	float CheckDrawCollision(Rectangle playerBound);
 	void SetMapPosition(float x, float y);
 	TileData GetTileData(unsigned int x, unsigned int y);

@@ -8,6 +8,7 @@
 #include "Enemy.h" 
 #include "GameState.h" 
 #include "Assets.h"
+#include "Serialize.h"
 
 class FPS
 {
@@ -33,7 +34,6 @@ int main( int argc, char* args[] )
 	if (true)
 	{
 		WindowSurface screen(800,600);
-
 		MusicHandler musicHandler;
 		Graphics graphics;
 		Sounds sounds;
@@ -41,7 +41,8 @@ int main( int argc, char* args[] )
 		Maps levels;
 		GlobalSettings gSettings;
 		GameStateManager gameStates(&setting);
-
+		SettingSaverLoader ssl;
+		ssl.LoadSettings(gSettings);
 		//SDL_ShowCursor(0);
 		long Timer = clock();//For Frame Independent Movement
 		bool gameRunning=true;
@@ -55,8 +56,6 @@ int main( int argc, char* args[] )
 
 		gameStates.NewState(GSIntro);
 
-		gSettings.SetVolume(100);
-		gSettings._SfxMusicProportion=0.5;
 
 		int introCount=0; float logoPositionY = 0;
 
@@ -135,7 +134,6 @@ int main( int argc, char* args[] )
 
 		Player player(&graphics.player, map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
 		player.SetVelocity(300, 400); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
-
 		Menu menu("Main menu", &setting, 255, 255, 255);
 		menu.ShowHeader(false);
 		menu.SetCenter(true);
@@ -210,11 +208,13 @@ int main( int argc, char* args[] )
 				if(introCount > 255){
 					logoPositionY -= 5;
 					if(logoPositionY <= 20){ logoPositionY = 20; gameStates.NewState(GSMenuMain); }
+					Timer = clock();
 					graphics.gameLogo.Draw(screen, screen.GetWidth()/2 - graphics.gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 				}
 				else {
 					graphics.gameLogo.SetTransparency(introCount);
 					logoPositionY = (float)screen.GetHeight()/2 - (float)graphics.gameLogo.GetHeight()/2;
+					Timer = clock();
 					graphics.gameLogo.Draw(screen, screen.GetWidth()/2 - graphics.gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 				}
 				introCount+=2;
@@ -230,6 +230,7 @@ int main( int argc, char* args[] )
 					gameStates.NewState(GSGame);
 				}
 				musicHandler.Update();
+				Timer = clock();
 				graphics.gameLogo.Draw(screen, screen.GetWidth()/2 - graphics.gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 				menu.Open(screen, graphics.another, Point2D(50, logoPositionY + graphics.gameLogo.GetHeight()));
 				break;
@@ -240,7 +241,8 @@ int main( int argc, char* args[] )
 				}
 				player.Update(&map, screen.GetWidth(), screen.GetHeight(), Timer);
 				enemies.Update(&map, &player, Timer);
-				map.Update(player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y));
+				map.Update(player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y),player.InkPool);
+				Timer = clock();
 				map.DrawBackground(screen, &graphics);
 				map.Draw(screen);
 				enemies.Draw(screen, map.GetMapPosition());
@@ -282,7 +284,6 @@ int main( int argc, char* args[] )
 				break;
 			}
 
-			Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 			screen.UpdateWindow();
 			fps.Delay();
 		}

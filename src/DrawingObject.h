@@ -15,10 +15,12 @@ public:
 	float CheckCollision(Rectangle ObjectRect);
 	void Draw(WindowSurface sfScreen);
 	inline VectorDraw& GetDrawing(){return _canvas;}
+	void SetDrawMode(bool drawing);
 private:
 	bool _cursorPressed;
 	bool _cursorOnPlayer;
 	bool _cursorOutOfRange;
+	bool _drawing;
 	Point2D _prevCursor;
 	Point2D _newCursor;
 	VectorDraw _canvas;

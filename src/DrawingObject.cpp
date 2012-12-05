@@ -126,6 +126,10 @@ void DrawingObject::HandleEvent(SDL_Event sEvent)
 		}
 	}
 }
+void DrawingObject::SetDrawMode(bool drawing)
+{
+	_drawing=drawing;
+};
 void DrawingObject::Update(Rectangle playerBound)
 {
 	Point2D playerMiddle(playerBound.X+0.5f*playerBound.W, playerBound.Y+0.5f*playerBound.H);
@@ -156,7 +160,7 @@ void DrawingObject::Update(Rectangle playerBound)
 			{
 				//The cursor went from outside to inside
 				_cursorOutOfRange=false;
-				if (!newCursorIsOnPlayer)
+				if (!newCursorIsOnPlayer&&_drawing)
 				{
 					_canvas.SetDrawMode(true);
 					if (_prevCursor.X!=-0xFFFF)
@@ -168,7 +172,7 @@ void DrawingObject::Update(Rectangle playerBound)
 			}else
 			{
 				//From outside to outside
-				if (_prevCursor.X!=-0xFFFF)
+				if (_prevCursor.X!=-0xFFFF&&!newCursorIsOnPlayer&&_drawing)
 				{
 					Point2D intersect1=GetIntersectionRayCircle(_prevCursor,_newCursor,playerMiddle,outsideDrawRadius);
 					if (!FloatEq(intersect1.X,_prevCursor.X)&&!FloatEq(intersect1.Y,_prevCursor.Y))
@@ -179,12 +183,10 @@ void DrawingObject::Update(Rectangle playerBound)
 						intersect1.Y*=0.99f;
 						intersect1.Y+=0.01f*_newCursor.X;
 						Point2D intersect2=GetIntersectionRayCircle(intersect1,_newCursor,playerMiddle,outsideDrawRadius);
-						if (!newCursorIsOnPlayer)
-						{
-							_canvas.SetDrawMode(true);
-							_canvas.SetNewPoint(intersect1.X,intersect1.Y);
-							_canvas.SetNewPoint(intersect2.X,intersect2.Y);
-						}
+						
+						_canvas.SetDrawMode(true);
+						_canvas.SetNewPoint(intersect1.X,intersect1.Y);
+						_canvas.SetNewPoint(intersect2.X,intersect2.Y);
 					}
 				}
 				_canvas.SetDrawMode(false);
@@ -229,16 +231,20 @@ void DrawingObject::Update(Rectangle playerBound)
 			{
 				//Was on player, not anymore
 				_cursorOnPlayer=false;
-				if (!newCursorIsOutOfRange)
+				if (!newCursorIsOutOfRange&&_drawing)
 				{_canvas.SetDrawMode(true);}
 			}else
 			{
 				// Not on player or through
 			}
 		}
-		if (!_cursorOnPlayer&&!_cursorOutOfRange)
+		if (!_cursorOnPlayer&&!_cursorOutOfRange&&_drawing)
 		{
 			_canvas.SetDrawMode(true);
+		}
+		if (!_drawing)
+		{
+			_canvas.SetDrawMode(false);
 		}
 		_canvas.SetNewPoint(_newCursor.X,_newCursor.Y);
 	}else

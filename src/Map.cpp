@@ -106,10 +106,12 @@ bool Map::HandleEvent(SDL_Event sEvent){
 	}
 	return true;
 }
-bool Map::Update(Rectangle playerBound)
+bool Map::Update(Rectangle playerBound,float inkPool)
 {
 	_totalDistance=0;
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
+		if (inkPool<1.0f)
+		{_drawObjects[i].SetDrawMode(false);}else{_drawObjects[i].SetDrawMode(true);}
 		_drawObjects.at(i).Update(playerBound);
 		_totalDistance+=_drawObjects[i].GetDrawing().GetDrawingDistance();
 	}
@@ -340,6 +342,8 @@ float Map::GetSlopeHeight(Point2D position){
 	if(h > 1000) return 0;
 	return h;
 }
+unsigned int Map::GetDrawDistance()
+{return _totalDistance;};
 //Center the map
 void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 	float maxX = _tileDimension.X * _mapArray[0].size();
