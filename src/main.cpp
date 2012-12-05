@@ -301,12 +301,6 @@ int main( int argc, char* args[] )
 					setting.Finish();
 				}
 				break;
-
-<<<<<<< HEAD
-			}
-			Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
-=======
->>>>>>> b03f6dff11094073d4e6ae24d2bcdb6c93743d71
 			screen.UpdateWindow();
 			fps.Delay();
 		}
