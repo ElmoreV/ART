@@ -218,7 +218,7 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 					TileSides must = (_buttonLeft)?TSright:TSleft;
 					if(t1.Side == must || t2.Side == must){
 						InvulnerableTime = 2;	
-						Health -= 10;
+						Health -= _maxHealth/2;
 					}
 				}
 			}
@@ -402,7 +402,7 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 					if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
 						if(t1.Side == TSbottom || t2.Side == TSbottom){
 							InvulnerableTime = 2;	
-							Health -= 10;
+							Health -= _maxHealth/2;
 						}
 					}
 				}
@@ -425,7 +425,7 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 					if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
 						if(t1.Side == TStop || t2.Side == TStop){
 							InvulnerableTime = 2;	
-							Health -= 10;
+							Health -= _maxHealth/2;
 						}
 					}
 				}

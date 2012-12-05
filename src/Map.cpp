@@ -50,12 +50,14 @@ Map::Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, st
 	if(map != "") ReadFile(map);
 	_forestBbStart = -1;
 }
+#include <sstream>
 //Read the file and push lines into vector
 bool Map::ReadFile(std::string filename)
 {
 	_mapArray.clear();
 	_drawObjects.clear();
 	_lines=0;
+	_newMapId.clear();
 	std::ifstream streamer;
 	streamer.open(filename.c_str());
 	if(!streamer) return false;
@@ -70,9 +72,24 @@ bool Map::ReadFile(std::string filename)
 			_spawnPosition.X = int(dx)*_tileDimension.X;
 			_spawnPosition.Y = _lines*_tileDimension.Y;
 		}
-
-		_mapArray.push_back(line);
-		_lines++;
+		dx = line.find('=');
+		if(dx != std::string::npos){
+			std::string word;
+			std::stringstream stream(line);
+			while(getline(stream, word, ';')){
+				std::remove(word.begin(), word.end(), ' ');
+				dx = word.find('=');
+				std::stringstream ss; ss << _newMapChar;
+				if(word.substr(0, (int)dx) == ss.str()){
+					int mapId = std::atoi(word.substr((int)dx+1).c_str());
+					_newMapId.push_back(mapId);
+				}
+			}
+		}
+		else{
+			_mapArray.push_back(line);
+			_lines++;
+		}
 	}
 	return true;
 }
@@ -231,7 +248,7 @@ float Map::CheckDrawCollision(Rectangle playerBound){
 	}
 	return maxH;
 }
-bool Map::NewMapEnabled(Rectangle playerBoundingBox){
+bool Map::NewMapEnabled(Rectangle playerBoundingBox, int& levelId){
 	//Ik wed dat deze functie beter kan, dan van float->int->float->int te gaan.
 	//Als ik nu eens snapte waar deze functie voor was
 	float X1 = std::floor(playerBoundingBox.X/_tileDimension.X);
@@ -247,12 +264,29 @@ bool Map::NewMapEnabled(Rectangle playerBoundingBox){
 		const char* charline;
 		if(_mapArray.size() > collisionPoint[i].Y){
 			charline = _mapArray.at((int)collisionPoint[i].Y).c_str();
-			if(strlen(charline) > collisionPoint[i].X)
-				if(charline[(int)collisionPoint[i].X] == _newMapChar) 
+			if(strlen(charline) > collisionPoint[i].X){
+				if(charline[(int)collisionPoint[i].X] == _newMapChar){
+					levelId = GetNewMapId(collisionPoint[i].X, collisionPoint[i].Y);
 					return true;
+				}
+			}
 		}
 	}
 	return false;
+}
+int Map::GetNewMapId(int x, int y){
+	int it = 0;
+	int count = 0;
+	while(it < y){
+		count += std::count(_mapArray[it].begin(), _mapArray[it].end(), _newMapChar);
+		it++;
+	}
+	count += std::count(_mapArray[it].begin(), _mapArray[it].begin()+x+1, _newMapChar);
+	count--;
+	if(count >= 0 && _newMapId.size() > count){
+		return _newMapId[count];
+	}
+	return -1;
 }
 //Returns the dimensions of a single tile
 Point2D Map::GetTileDimension() { return _tileDimension; }

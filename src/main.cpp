@@ -129,7 +129,8 @@ int main( int argc, char* args[] )
 		map.AddTile('q', 400, 200, TSleft);
 		map.AddTile('r', 450, 200, TSright);
 		map.AddTile('s', 500, 200, TSbottom);
-
+		
+		map.AddTile('u', 100, 250, false, true);
 		map.AddTile('z', 50, 250, false, true);
 		map.AddTile('@', 0, 255);
 
@@ -166,15 +167,26 @@ int main( int argc, char* args[] )
 		std::vector<std::string> opt; opt.push_back("Main menu"); opt.push_back("Restart"); opt.push_back("Next level");
 		newLevelMenu.AddOptionChild(opt, "       ",false,255,255,255,&Settings::NewLevelOptions);
 
+		Menu gameOverMenu("Game Over!", &setting);
+		gameOverMenu.SetCenter(true);
+		gameOverMenu.SetVerticalSpace(20);
+		gameOverMenu.AddChild("Your journey has ended. You want to restart?");
+		std::vector<std::string> opts; opts.push_back("Yes"); opts.push_back("No"); opts.push_back("Quit");
+		gameOverMenu.AddOptionChild(opts, "    ", false, 255, 255, 255, &Settings::GameOverOptions);
+
+		int NewLevelID = 0;
+		bool spacePressed = false;
 		//((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(1)->Enabled = false;
 
 		while (gameRunning)
 		{
 			while (SDL_PollEvent(&sEvent))
 			{
-				if (sEvent.type==SDL_QUIT || setting.exitGame){gameRunning=false;}
+				if (sEvent.type==SDL_QUIT || setting.GetResult() == MRExitGame){
+					gameRunning=false;
+					setting.Finish();
+				}
 				if (sEvent.type == SDL_VIDEORESIZE ) {screen.CreateWindowSurface( sEvent.resize.w,sEvent.resize.h);}
-
 				switch(gameStates.CurrentState())
 				{
 				case GSIntro:
@@ -185,23 +197,36 @@ int main( int argc, char* args[] )
 						graphics.gameLogo.SetTransparency(256);
 					}
 				case GSMenuMain:
-					if(sEvent.type == SDL_KEYDOWN) 
+					if(sEvent.type == SDL_KEYDOWN){
 						if(sEvent.key.keysym.sym == SDLK_ESCAPE) 
 						{gameStates.BackState();menu.Reset();}
+					}
 						menu.HandleEvent(sEvent);
 						break;
 				case GSGame:
-					if(sEvent.type == SDL_KEYDOWN) if(sEvent.key.keysym.sym == SDLK_ESCAPE) gameStates.PushState(GSMenuMain);
+					if(sEvent.type == SDL_KEYDOWN) {
+						if(sEvent.key.keysym.sym == SDLK_ESCAPE) {gameStates.PushState(GSMenuMain);}
+						else if(sEvent.key.keysym.sym == SDLK_SPACE) {spacePressed=true;}
+					}
+					if(sEvent.type == SDL_KEYUP){
+						if(sEvent.key.keysym.sym == SDLK_SPACE)
+						{spacePressed=false;}
+					}
 					player.HandleEvent(sEvent);
 					map.HandleEvent(sEvent);
 					break;
 				case GSMenuNewLevel:
 					newLevelMenu.HandleEvent(sEvent);
 					break;
+				case GSGame_Over:
+					gameOverMenu.HandleEvent(sEvent);
+					break;
 				}
 			}
+
 			if(clock() > Timer + 500) Timer = clock();
 			if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
+			if(gameStates.CurrentState() == GSGame && player.Health <= 0) gameStates.PushState(GSGame_Over);
 			screen.ClearWindow();
 			musicHandler.SetGlobalVolume((int)(gSettings._volume*128));
 			switch(gameStates.CurrentState())
@@ -220,22 +245,22 @@ int main( int argc, char* args[] )
 				introCount+=2;
 				break;
 			case GSMenuMain:
-				if(setting.newGame){
+				if(setting.GetResult() == MRNewGame){
 					musicHandler.SetNewMusic(&sounds._forest);
-					setting.newGame = false;
 					levels.count = 1;
 					map.NewMap(levels.levels[0]);
 					enemies.PopulateEnemies(&map, &graphics);
-					player.SetPosition(map.GetSpawnLocation());
+					player.Reset(map.GetSpawnLocation(), true);
 					gameStates.NewState(GSGame);
+					setting.Finish();
 				}
 				musicHandler.Update();
 				graphics.gameLogo.Draw(screen, screen.GetWidth()/2 - graphics.gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 				menu.Open(screen, graphics.another, Point2D(50, logoPositionY + graphics.gameLogo.GetHeight()));
 				break;
 			case GSGame:
-				if(gameStates.CurrentState() != GSMenuNewLevel){
-					if(map.NewMapEnabled(player.GetBoundR())) 
+				if(gameStates.CurrentState() != GSMenuNewLevel && spacePressed){
+					if(map.NewMapEnabled(player.GetBoundR(), NewLevelID))
 						gameStates.PushState(GSMenuNewLevel);
 				}
 				player.Update(&map, screen.GetWidth(), screen.GetHeight(), Timer);
@@ -250,38 +275,32 @@ int main( int argc, char* args[] )
 				break;
 
 			case GSMenuNewLevel:
-				if(setting.betweenLevelOptions == 0){
-					if(levels.count == levels.maxCount)
-						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = false;
-					else
-						((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(2)->Enabled = true;
-					newLevelMenu.Open(screen, graphics.another, Point2D(0, 100));
-				}
-				else {
-					if(setting.betweenLevelOptions == 1) //MainMenu
-					{
+				if(levels.count + 1 < levels.maxCount) levels.count++;
+				if(levels.maxCount <= NewLevelID || NewLevelID < 0)	NewLevelID = levels.count;
+				map.NewMap(levels.levels[NewLevelID]);
+				enemies.PopulateEnemies(&map, &graphics);
+				gameStates.BackState();
+				player.Reset(map.GetSpawnLocation(), false);
+				break;
+			case GSGame_Over:
+				if(setting.GetResult() == MRNone)
+					gameOverMenu.Open(screen, graphics.another, Point2D(0, 50));
+				else if(setting.GetResult() != MRExitGame) {
+					if(setting.GetResult() == MRMainMenu)
 						gameStates.NewState(GSMenuMain);
-						musicHandler.SetNewMusic(&sounds._titleScreen);
-					}
-					else if(setting.betweenLevelOptions == 2){ //Restart 
-						map.NewMap(levels.levels[levels.count-1]);
+					else if(setting.GetResult() == MRNewGame){
+						musicHandler.SetNewMusic(&sounds._forest);
+						levels.count = 1;
+						map.NewMap(levels.levels[0]);
 						enemies.PopulateEnemies(&map, &graphics);
 						player.Reset(map.GetSpawnLocation(), true);
-						gameStates.BackState();
+						gameStates.NewState(GSGame);
 					}
-					else {//next level
-						map.NewMap(levels.levels[levels.count]);
-						enemies.PopulateEnemies(&map, &graphics);
-						levels.count++;
-						player.SetPosition(map.GetSpawnLocation());
-						gameStates.BackState();
-						player.Reset(map.GetSpawnLocation(), false);
-					}
-					setting.betweenLevelOptions = 0;
+					setting.Finish();
 				}
 				break;
-			}
 
+			}
 			Timer = clock(); //Set timer to last Update (For Frame Independent Movement)
 			screen.UpdateWindow();
 			fps.Delay();

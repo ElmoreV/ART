@@ -33,6 +33,7 @@ public:
 	TileSides Side;
 };
 typedef std::map<char, TileData> Dictionary;
+
 class Map
 {
 protected:
@@ -45,6 +46,9 @@ protected:
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
 	int _forestBbStart;
 	unsigned long _totalDistance;
+	std::vector<int> _newMapId;
+	int GetNewMapId(int x, int y);
+
 public:
 	Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
 	void Draw(WindowSurface screen);
@@ -66,7 +70,7 @@ public:
 	float GetSlopeHeight(Point2D position);
 	void SetNewMapPosition(Point2D screenSize, Point2D centerPoint);
 	void SetMaskColor(int r=255, int g=255, int b=255);
-	bool NewMapEnabled(Rectangle playerBoundingBox);
+	bool NewMapEnabled(Rectangle playerBoundingBox, int& levelId);
 	bool NewMap(std::string map, unsigned int tileWidth=0, unsigned int tileHeight=0, Surface* tilesheet=0);
 	std::vector<std::string> GetMapArray();
 	void RemoveEnemiesFromArray(std::vector<char> enemies);

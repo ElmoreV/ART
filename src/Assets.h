@@ -64,16 +64,18 @@ public:
 class Maps
 {
 public:
-	std::string levels[4];
+	std::string levels[6];
 	int count;
 	int maxCount;
 	Maps(){
 		count = 0;
-		maxCount = 4;
-		levels[0] = "Map/map1.txt";
-		levels[1] = "Map/map2.txt";
-		levels[2] = "Map/map3.txt";
-		levels[3] = "Map/map4.txt";
+		maxCount = 6;
+		levels[0] = "Map/map0.txt";
+		levels[1] = "Map/map1.txt";
+		levels[2] = "Map/map2.txt";
+		levels[3] = "Map/map3.txt";
+		levels[4] = "Map/map4.txt";
+		levels[5] = "Map/map5.txt";
 	};
 
 };
