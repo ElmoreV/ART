@@ -16,7 +16,8 @@ Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, in
 	InkPool = 100; _maxInkPool = 100;
 	Health  = 100; _maxHealth= 100;
 	InvulnerableTime = 0;
-};
+	_totalInkReceived=_maxInkPool;
+}
 Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 {
 	Rectangle bound(_previousPosition.X+velocityX, _previousPosition.Y+velocityY, _spriteDimension.X, _spriteDimension.Y);
@@ -45,9 +46,16 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	
 	//Timedifference, important for time-based movement
 	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
+	
+	unsigned int drawDistance=map->GetDrawDistance()/20;
+	//_totalInkReceived+=timeDiff;
+	InkPool=_totalInkReceived-drawDistance;
+	
+	if (InkPool > _maxInkPool)
+	{InkPool=_maxInkPool; _totalInkReceived=drawDistance+_maxInkPool;}
+	else if(InkPool<0)
+	{InkPool=0;}
 
-	if(InkPool < _maxInkPool) InkPool += timeDiff;
-	else InkPool = (float)_maxInkPool;
 	if(InvulnerableTime > 0) InvulnerableTime -= timeDiff;
 	else InvulnerableTime = 0;
 	//if(Health < _maxHealth) Health++;
@@ -161,7 +169,7 @@ void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsign
 	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 0, 0, 255);
 	if(font != 0){
 		Surface render;
-		std::stringstream ss; ss << InkPool << "/" << _maxInkPool;
+		std::stringstream ss; ss << (unsigned int)InkPool << "/" << _maxInkPool;
 		render.RenderText(*font, ss.str());
 	render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
 	}
@@ -172,6 +180,7 @@ void Player::Reset(Point2D position, bool resetStats){
 	_jumpEnable = true;
 	if(resetStats){
 		InkPool = _maxInkPool;
+		_totalInkReceived=_maxInkPool;
 		Health  = _maxHealth;
 		InvulnerableTime = 0;
 	}
@@ -187,18 +196,19 @@ void Player::Draw(WindowSurface screen, Point2D mapPosition)
 	aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
 }
 void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff){
+	//The velocities (X and Y) must be smaller than the tile dimensions and the sprite dimensions
 	if(timeDiff*_velocity.Y <= map->GetTileDimension().Y && timeDiff*_velocity.X<=map->GetTileDimension().X &&
-		timeDiff*_velocity.Y<=_spriteDimension.Y&&timeDiff*_velocity.X<=map->GetTileDimension().X){
+		timeDiff*_velocity.Y<=_spriteDimension.Y&&timeDiff*_velocity.X<=_spriteDimension.X){
 		
 		if(_buttonLeft || _buttonRight){
 			int X, XO;
 			if(_buttonLeft){
-				//The new x position after walking if to left
+				//The new edge columns the player is in. (X=left edge. X0=right edge)
 				X = (int)((_position.X - _velocity.X*timeDiff) / map->GetTileDimension().X);
 				XO = (int)((_position.X + _spriteDimension.X - _velocity.X*timeDiff) / map->GetTileDimension().X);
 			}
 			else {
-				//The new x position after walking if to right
+				//The new edge columns the player is in. (X=right edge. X0=left edge)
 				X = (int)((_position.X + _velocity.X*timeDiff + _spriteDimension.X) / map->GetTileDimension().X);
 				XO = (int)((_position.X + _velocity.X*timeDiff) / map->GetTileDimension().X);
 			}
@@ -210,7 +220,7 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 			TileType charTypeTop = map->GetCharType(top);
 			TileType charTypeBot = map->GetCharType(bot);
 			TileType charTypeBotO = map->GetCharType(Point2D((float)XO, (float)Y2));
-
+			//Check if you hit enemies by the side (enemies facing towards player)
 			if(InvulnerableTime <= 0){
 				TileData t1 = map->GetTileData(X, Y1);
 				TileData t2 = map->GetTileData(X, Y2);
@@ -223,15 +233,17 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 				}
 			}
 
-			//std::stringstream ss; ss <<charTypeTop << "   " <<charTypeBot; Error r; r.HandleError(CaptionOnly, ss.str());
-			//IF both edge don't hit anything, the player can freely move to left or right
+			//If top and bot of the new X don't hit anything, the player can freely move to left or right
 			if(charTypeTop ==  TileTypeNone && charTypeBot ==  TileTypeNone){
 				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
 				else {_position.X += _velocity.X*timeDiff;}
 			}
+			//If the player new bot isn't on a slope, but was, and the top still is
 			else if(charTypeBot != TileTypeSlope && charTypeTop == TileTypeSlope && charTypeBotO == TileTypeSlope){
+				//Get the previous slope
 				TileData td = map->GetTileData(XO, Y2);
 				int y1, y2; td.GetSlope(y1, y2);
+				//If the slope is going up from the player (so:  \<-@ || @->/)
 				if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
 					if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
 					else {_position.X += _velocity.X*timeDiff;}

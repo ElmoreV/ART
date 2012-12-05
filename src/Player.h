@@ -29,6 +29,7 @@ protected:
 	void HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff);
 	Rectangle GetPreviousBoundR(float velocityX, float velocityY);
 	bool _buttonUp, _buttonDown, _buttonLeft, _buttonRight;
+	float _totalInkReceived;
 public:
 	//To set the default values
 	Player(Surface* surface, float X, float Y, int interval, int spriteX=1, int spriteY=1);
