@@ -46,6 +46,7 @@ public:
 	void SetFrame(int frame);//Set the animation (if it has more then 1)
 	float Health, InkPool, InvulnerableTime;
 	float HealthRatio(), InkPoolRatio();
+	void AddInk(int value);
 	void Jump();
 	Point2D GetPreviousPosition();
 	Rectangle GetPreviousBoundR();

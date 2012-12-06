@@ -285,9 +285,8 @@ int main( int argc, char* args[] )
 				player.Reset(map.GetSpawnLocation(), false);
 				break;
 			case GSGame_Over:
-				if(setting.GetResult() == MRNone)
-					gameOverMenu.Open(screen, graphics.another, Point2D(0, 50));
-				else if(setting.GetResult() != MRExitGame) {
+				gameOverMenu.Open(screen, graphics.another, Point2D(0, 50));
+				if(setting.GetResult() != MRExitGame && setting.GetResult() != MRNone) {
 					if(setting.GetResult() == MRMainMenu)
 						gameStates.NewState(GSMenuMain);
 					else if(setting.GetResult() == MRNewGame){
@@ -301,6 +300,7 @@ int main( int argc, char* args[] )
 					setting.Finish();
 				}
 				break;
+			}
 			screen.UpdateWindow();
 			fps.Delay();
 		}
