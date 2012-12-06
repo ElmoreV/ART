@@ -129,9 +129,10 @@ int main( int argc, char* args[] )
 		map.AddTile('r', 450, 200, TSright);
 		map.AddTile('s', 500, 200, TSbottom);
 		
-		map.AddTile('u', 100, 250, false, true);
+		map.AddTile('u', 200, 250, false, true);
 		map.AddTile('z', 50, 250, false, true);
-		map.AddTile('@', 0, 255);
+		map.AddTile('@', 150, 250);
+		map.AddTile('!', 100, 250);
 
 		Player player(&graphics.player, map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
 		player.SetVelocity(300, 400); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
@@ -173,6 +174,7 @@ int main( int argc, char* args[] )
 		gameOverMenu.AddOptionChild(opts, "    ", false, 255, 255, 255, &Settings::GameOverOptions);
 
 		int NewLevelID = 0;
+		int LevelCounter = 0;
 		bool spacePressed = false;
 		//((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(1)->Enabled = false;
 
@@ -247,7 +249,7 @@ int main( int argc, char* args[] )
 			case GSMenuMain:
 				if(setting.GetResult() == MRNewGame){
 					musicHandler.SetNewMusic(&sounds._forest);
-					levels.count = 1;
+					levels.count = 0;
 					map.NewMap(levels.levels[0]);
 					enemies.PopulateEnemies(&map, &graphics);
 					player.Reset(map.GetSpawnLocation(), true);
@@ -269,7 +271,7 @@ int main( int argc, char* args[] )
 				map.Update(player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y),player.InkPool);
 				Timer = clock();
 				map.DrawBackground(screen, &graphics);
-				map.Draw(screen);
+				map.Draw(screen, LevelCounter);
 				enemies.Draw(screen, map.GetMapPosition());
 				player.Draw(screen, map.GetMapPosition());
 				player.DrawHealthBar(screen, 1, 5, 5, 100, 20, &graphics.another);
@@ -277,12 +279,16 @@ int main( int argc, char* args[] )
 				break;
 
 			case GSMenuNewLevel:
-				if(levels.count + 1 < levels.maxCount) levels.count++;
-				if(levels.maxCount <= NewLevelID || NewLevelID < 0)	NewLevelID = levels.count;
-				map.NewMap(levels.levels[NewLevelID]);
+ 				if(levels.count > LevelCounter) LevelCounter++;
+
+				if(NewLevelID < 0) levels.count++;
+				else if(NewLevelID >= levels.maxCount) levels.count = levels.maxCount-1;
+				else levels.count = NewLevelID;
+
+				map.NewMap(levels.levels[levels.count]);
 				enemies.PopulateEnemies(&map, &graphics);
-				gameStates.BackState();
 				player.Reset(map.GetSpawnLocation(), false);
+				gameStates.BackState();
 				break;
 			case GSGame_Over:
 				gameOverMenu.Open(screen, graphics.another, Point2D(0, 50));

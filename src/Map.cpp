@@ -47,6 +47,7 @@ Map::Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, st
 	_tileDimension.Y = (float)tileHeight; //Height of a tile
 	_spawnLocation = '#';
 	_newMapChar = '@';
+	_newMapCharClosed = '!';
 	if(map != "") ReadFile(map);
 	_forestBbStart = -1;
 }
@@ -135,7 +136,7 @@ bool Map::Update(Rectangle playerBound,float inkPool)
 	return true;
 }
 //Draws the excisting map on the screen
-void Map::Draw(WindowSurface screen)
+void Map::Draw(WindowSurface screen, int completedLvl)
 {
 	unsigned int drawings = 0;
 	const char* charline;
@@ -146,7 +147,7 @@ void Map::Draw(WindowSurface screen)
 	Y2 = (int)((_mapPosition.Y+screen.GetHeight())/_tileDimension.Y)+1;
 	X1 = (int)(_mapPosition.X/_tileDimension.X);
 	X2 = (int)((_mapPosition.X+screen.GetWidth())/_tileDimension.X)+1;
-
+	int newCharCounter = 0;
 	for(unsigned int y = 0; y < _mapArray.size(); y++)
 	{
 		charline = _mapArray.at(y).c_str();
@@ -155,6 +156,15 @@ void Map::Draw(WindowSurface screen)
 			if(_tileLibrary.count(charline[x]) != 0 && charline[x] != _spawnLocation)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
+				if(charline[x] == _newMapChar && completedLvl >= 0){
+					if(newCharCounter >= 0 && newCharCounter < _newMapId.size() ){
+						if(_newMapId[newCharCounter] > completedLvl+1){
+							std::stringstream ss;ss<<_newMapCharClosed;
+							_mapArray[y].replace(x, 1, ss.str());
+							td = _tileLibrary.find(_newMapCharClosed)->second;
+						}
+					}
+				}
 				if(y >= Y1 && y <= Y2 && x >= X1 && x <= X2){
 					if(td.IsDrawable())
 						_tileSheet->SetTransparency(100);
@@ -164,6 +174,7 @@ void Map::Draw(WindowSurface screen)
 					//SDL_Rect offset = {(Uint16)(x * _tileDimension.X - _mapPosition.X), (Uint16)(y * _tileDimension.Y - _mapPosition.Y), clip.w, clip.h};
 					//SDL_BlitSurface(_tileSheet, &clip, screen, &offset);
 					_tileSheet->Draw(screen, (Uint32)(x * _tileDimension.X - _mapPosition.X), (Uint32)(y * _tileDimension.Y - _mapPosition.Y), &clip);
+					
 				}
 				if(td.IsDrawable()){
 					if(_drawObjects.size() > drawings){
@@ -177,7 +188,8 @@ void Map::Draw(WindowSurface screen)
 					}
 					drawings++;
 				}
-				
+				if(charline[x] == _newMapChar || charline[x] == _newMapCharClosed)
+					newCharCounter++;
 			}
 		}
 	}
@@ -229,7 +241,7 @@ TileType Map::GetCharType(Point2D collisionPoint){
 	if(_mapArray.size() > collisionPoint.Y){
 		charline = _mapArray.at((int)collisionPoint.Y).c_str();
 		if(strlen(charline) > collisionPoint.X){
-			if(charline[(int)collisionPoint.X] == _newMapChar) return TileTypeNone;
+			if(charline[(int)collisionPoint.X] == _newMapChar || charline[(int)collisionPoint.X] == _newMapCharClosed) return TileTypeNone;
 			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return TileTypeNone;
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
@@ -281,9 +293,11 @@ int Map::GetNewMapId(int x, int y){
 	int count = 0;
 	while(it < y){
 		count += std::count(_mapArray[it].begin(), _mapArray[it].end(), _newMapChar);
+		count += std::count(_mapArray[it].begin(), _mapArray[it].end(), _newMapCharClosed);
 		it++;
 	}
 	count += std::count(_mapArray[it].begin(), _mapArray[it].begin()+x+1, _newMapChar);
+	count += std::count(_mapArray[it].begin(), _mapArray[it].begin()+x, _newMapCharClosed);
 	count--;
 	if(count >= 0 && _newMapId.size() > count){
 		return _newMapId[count];

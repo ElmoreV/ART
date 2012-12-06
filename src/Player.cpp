@@ -231,7 +231,10 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 		if(InvulnerableTime <= 0){
 			TileData t1 = map->GetTileData(X, Y1);
 			TileData t2 = map->GetTileData(X, Y2);
-			if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+			if((t1.GetType() == TileTypeSpike && t2.GetType() == TileTypeSpike) || 
+				(t1.GetType() == TileTypeSpike && t2.GetType() == TileTypeNone) || 
+				(t1.GetType() == TileTypeNone && t2.GetType() == TileTypeSpike))
+			{
 				TileSides must = (_buttonLeft)?TSright:TSleft;
 				if(t1.Side == must || t2.Side == must){
 					InvulnerableTime = 2;	
@@ -418,7 +421,9 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 			if(InvulnerableTime <= 0){
 				TileData t1 = map->GetTileData(X1, Y1);
 				TileData t2 = map->GetTileData(X2, Y1);
-				if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+			if((t1.GetType() == TileTypeSpike && t2.GetType() == TileTypeSpike) || 
+				(t1.GetType() == TileTypeSpike && t2.GetType() == TileTypeNone) || 
+				(t1.GetType() == TileTypeNone && t2.GetType() == TileTypeSpike)) {
 					if(t1.Side == TSbottom || t2.Side == TSbottom){
 						InvulnerableTime = 2;	
 						Health -= _maxHealth/2;
@@ -441,7 +446,9 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 			if(InvulnerableTime <= 0){
 				TileData t1 = map->GetTileData(X1, Y2);
 				TileData t2 = map->GetTileData(X2, Y2);
-				if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+			if((t1.GetType() == TileTypeSpike && t2.GetType() == TileTypeSpike) || 
+				(t1.GetType() == TileTypeSpike && t2.GetType() == TileTypeNone) || 
+				(t1.GetType() == TileTypeNone && t2.GetType() == TileTypeSpike)){
 					if(t1.Side == TStop || t2.Side == TStop){
 						InvulnerableTime = 2;	
 						Health -= _maxHealth/2;

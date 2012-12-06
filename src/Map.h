@@ -42,7 +42,7 @@ protected:
 	unsigned int _lines;
 	std::vector<std::string> _mapArray;
 	std::vector<DrawingObject> _drawObjects;
-	char _spawnLocation, _newMapChar;
+	char _spawnLocation, _newMapChar, _newMapCharClosed;
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
 	int _forestBbStart;
 	unsigned long _totalDistance;
@@ -51,7 +51,7 @@ protected:
 
 public:
 	Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
-	void Draw(WindowSurface screen);
+	void Draw(WindowSurface screen, int completedLvl = -1);
 	bool AddTile(char key, int x, int y, bool solid=true, bool drawable=false);
 	bool AddTile(char key, int x, int y, TileSides side);
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
