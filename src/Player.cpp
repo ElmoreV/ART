@@ -50,15 +50,15 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	//Timedifference, important for time-based movement
 	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
 	
-	unsigned int drawDistance=map->GetDrawDistance()/20;
+	float drawDistance=map->GetDrawDistance()/20;
 	//_totalInkReceived+=timeDiff;
-	
-	if (InkPool > _maxInkPool)
+	float tempInkPool=_totalInkReceived-drawDistance;
+	if (tempInkPool > _maxInkPool)
 	{InkPool=_maxInkPool; _totalInkReceived=drawDistance+_maxInkPool;}
 	else if(InkPool<0)
-	{InkPool=0;}
-	else 
-	{InkPool=_totalInkReceived-drawDistance;}
+	{InkPool=0;_totalInkReceived=drawDistance;}
+	else
+	{InkPool=tempInkPool;}
 	if(Health < 0)Health=0;
 	else if(Health > _maxHealth) Health = _maxHealth;
 

@@ -60,7 +60,11 @@ bool Map::ReadFile(std::string filename)
 	_newMapId.clear();
 	std::ifstream streamer;
 	streamer.open(filename.c_str());
-	if(!streamer) return false;
+	if(!streamer) 
+	{
+		Error error(Caption,"Could not find the following map file:" + filename,1);
+		return false;
+	}
 	std::string line;
 	size_t dx;
 	while(!streamer.eof())

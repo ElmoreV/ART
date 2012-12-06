@@ -7,6 +7,8 @@ class SettingSaverLoader;
 class GlobalSettings
 {
 public:
+	GlobalSettings()
+	{_volume=1.0f;_sfxMusicProportion=0.5f;}
 	bool SetVolume(float ratio);
 	bool SetVolumeProportion(float proportion);
 	float _volume;
