@@ -257,6 +257,7 @@ int main( int argc, char* args[] )
 				if(setting.GetResult() == MRNewGame){
 					musicHandler.SetNewMusic(&sounds._forest);
 					levels.count = 0;
+					LevelCounter = 0;
 					map.NewMap(levels.levels[0]);
 					enemies.PopulateEnemies(&map, &graphics);
 					player.Reset(map.GetSpawnLocation(), true);
@@ -267,9 +268,10 @@ int main( int argc, char* args[] )
 				{
 					Loader load;
 					load.StartAndCheck("Save1.sav");
-					int prevMapId,newMapId;
-					load.LoadCheckpoint(prevMapId,newMapId);
-					if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = levels.count;
+					int newMapId;
+					load.LoadCheckpoint(LevelCounter,newMapId);
+					if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = 0;
+					levels.count = newMapId;
 					load.LoadPlayer(player);
 					load.Close();
 					map.NewMap(levels.levels[newMapId]);
@@ -302,12 +304,11 @@ int main( int argc, char* args[] )
 
 			case GSMenuNewLevel:{
  				if(levels.count > LevelCounter) LevelCounter++;
-
+				///if(NewLevelID == -2) levels.count = levels.maxCount-1; //Wat te doen als niet wordt gezegt wat het volgende mapid is
 				if(NewLevelID < 0) levels.count++;
 				else if(NewLevelID >= levels.maxCount) levels.count = levels.maxCount-1;
 				else levels.count = NewLevelID;
 
-				int prevLevel=levels.count;
 				map.NewMap(levels.levels[levels.count]);
 				enemies.PopulateEnemies(&map, &graphics);
 				player.Reset(map.GetSpawnLocation(), false);
@@ -315,7 +316,7 @@ int main( int argc, char* args[] )
 
 				Saver saver;
 				saver.StartAndOpen();
-				saver.SaveCheckpoint(prevLevel,NewLevelID);
+				saver.SaveCheckpoint(LevelCounter,levels.count);
 				saver.SavePlayer(player);
 				saver.EndAndClose("Save1.sav");
 				break;

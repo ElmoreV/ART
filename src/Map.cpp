@@ -306,6 +306,7 @@ int Map::GetNewMapId(int x, int y){
 	if(count >= 0 && _newMapId.size() > count){
 		return _newMapId[count];
 	}
+	else if(count >= _newMapId.size()) return -2;
 	return -1;
 }
 //Returns the dimensions of a single tile
