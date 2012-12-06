@@ -261,6 +261,20 @@ int main( int argc, char* args[] )
 					gameStates.NewState(GSGame);
 					setting.Finish();
 					sounds._brupap.Play(false);
+				}else if (setting.GetResult()==MRLoadGame)
+				{
+					Loader load;
+					load.StartAndCheck("Save1.sav");
+					int prevMapId,newMapId;
+					load.LoadCheckpoint(prevMapId,newMapId);
+					if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = levels.count;
+					load.LoadPlayer(player);
+					load.Close();
+					map.NewMap(levels.levels[newMapId]);
+					enemies.PopulateEnemies(&map, &graphics);
+					gameStates.NewState(GSGame);
+					player.Reset(map.GetSpawnLocation(), false);
+					setting.Finish();
 				}
 				musicHandler.Update();
 				Timer = clock();
@@ -285,13 +299,22 @@ int main( int argc, char* args[] )
 				break;
 
 			case GSMenuNewLevel:
+			{
+				
+				int prevLevel=levels.count;
 				if(levels.count + 1 < levels.maxCount) levels.count++;
 				if(levels.maxCount <= NewLevelID || NewLevelID < 0)	NewLevelID = levels.count;
 				map.NewMap(levels.levels[NewLevelID]);
 				enemies.PopulateEnemies(&map, &graphics);
 				gameStates.BackState();
 				player.Reset(map.GetSpawnLocation(), false);
+				Saver saver;
+				saver.StartAndOpen();
+				saver.SaveCheckpoint(prevLevel,NewLevelID);
+				saver.SavePlayer(player);
+				saver.EndAndClose("Save1.sav");
 				break;
+			}
 			case GSGame_Over:
 				gameOverMenu.Open(screen, graphics.another, Point2D(0, 50));
 				if(setting.GetResult() != MRExitGame && setting.GetResult() != MRNone) {

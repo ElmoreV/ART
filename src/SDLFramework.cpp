@@ -260,9 +260,7 @@ bool Surface::RenderText(Font font,std::string text)
 	_surface=TTF_RenderText_Solid( font, text.c_str(), font.GetColor() );//Render the Text
 	if (_surface==0)
 	{		
-		std::string errorMessage="The following text could not be rendered: ";
-		errorMessage+=text;
-		Error error(Caption,errorMessage);
+		Error error(Caption,"The following text could not be rendered: "+text);
 		return false;
 	}
 	return true;
@@ -281,7 +279,7 @@ bool Surface::MaskColor(int r,int g,int b)
 			if (r<0x00){r=0x00;};if (g<0x00){g=0x00;};if (b<0x00){b=0x00;};//If it's below zero, change it to 0
 			if (::SDL_SetColorKey(_surface,flags,SDL_MapRGB(_surface->format,r,g,b))==-1)
 			{		
-				Error error(Log,"Failed to set Colorkey with code :");
+				Error error(Log,"Failed to set Colorkey with code :",0,true);
 				return false;
 			}
 		}
@@ -303,7 +301,7 @@ bool Surface::SetTransparency(int alpha)
 		if (alpha<SDL_ALPHA_TRANSPARENT){alpha=SDL_ALPHA_TRANSPARENT;}
 		if (SDL_SetAlpha(_surface,SDL_SRCALPHA,alpha)==-1)
 		{		
-			Error error(Log,"Failed to set transparency");
+			Error error(Log,"Failed to set transparency",0,true);
 			return false;
 		};
 		return true;
@@ -339,7 +337,7 @@ bool WindowSurface::CreateWindowSurface(int width,int height, int bpp, bool doub
 	_width=width;_height=height;
 	if (_surface==0)
 	{		
-		Error error(Exit,"Failed to create window surface");
+		Error error(Exit,"Failed to create window surface",0,true);
 		return false;
 	};
 	return true;
@@ -356,7 +354,7 @@ bool WindowSurface::UpdateWindow()
 	{
 		if (SDL_Flip(_surface)==-1)
 		{		
-			Error error(Caption,"Failed to update screen with code: ");
+			Error error(Caption,"Failed to update screen with code: ",0,true);
 			return false;
 		}
 		return true;
@@ -370,7 +368,7 @@ bool WindowSurface::ClearWindow(int r, int g, int b)
 	{
 		if (::SDL_FillRect(_surface,0,SDL_MapRGB(_surface->format,r,g,b)))
 		{	
-			Error error(Caption,"Failed to clear the window");
+			Error error(Caption,"Failed to clear the window",0,true);
 			return false;
 		};
 		return true;
@@ -386,7 +384,7 @@ bool WindowSurface::DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g,
 	int retVal=SDL_FillRect(_surface,&rectangle,SDL_MapRGB(_surface->format,r,g,b));
 	if (retVal==-1)
 	{		
-		Error error(Log,"Failed to draw filled rectangle");
+		Error error(Log,"Failed to draw filled rectangle",0,true);
 		return false;
 	}
 	return true;
@@ -396,7 +394,7 @@ bool WindowSurface::DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b
 {
 	if (::lineRGBA(_surface,x1,y1,x2,y2,r,g,b,255)==-1)
 	{
-		Error error(Log,"Failed to draw line");
+		Error error(Log,"Failed to draw line",0,true);
 		return false;
 	};
 	return true;

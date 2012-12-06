@@ -26,9 +26,7 @@ bool SoundEffect::LoadSoundEffect(std::string filename)
 	if (_sfx== 0)
 	{
 		//Handle Error
-		std::string str="The following sound effect file could not be found: ";
-		str+=filename;
-		Error error(Caption,str.c_str(),1,true);
+		Error error(Caption,"The following sound effect file could not be found: "+filename,1,true);
 		return false;
 	}
 	return true;
@@ -89,9 +87,7 @@ bool Music::LoadMusic(std::string filename)
 	if (_music== 0)
 	{
 		//Handle Error
-		std::string str="The following music file could not be found: ";
-		str+=filename;
-		Error error(Caption,str.c_str(),1,true);
+		Error error(Caption,"The following music file could not be found: "+filename,1,true);
 		return false;
 	}
 	return true;
