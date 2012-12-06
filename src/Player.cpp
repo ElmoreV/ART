@@ -24,6 +24,9 @@ Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 	return bound;
 }
 void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
+void Player::AddInk(int value){
+	_totalInkReceived += value;
+}
 void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	//Update animation image for the player
 	if(_buttonLeft || _buttonRight){
@@ -49,12 +52,15 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	
 	unsigned int drawDistance=map->GetDrawDistance()/20;
 	//_totalInkReceived+=timeDiff;
-	InkPool=_totalInkReceived-drawDistance;
 	
 	if (InkPool > _maxInkPool)
 	{InkPool=_maxInkPool; _totalInkReceived=drawDistance+_maxInkPool;}
 	else if(InkPool<0)
 	{InkPool=0;}
+	else 
+	{InkPool=_totalInkReceived-drawDistance;}
+	if(Health < 0)Health=0;
+	else if(Health > _maxHealth) Health = _maxHealth;
 
 	if(InvulnerableTime > 0) InvulnerableTime -= timeDiff;
 	else InvulnerableTime = 0;
@@ -151,6 +157,8 @@ float Player::InkPoolRatio(){
 	return ((float)InkPool)/((float)_maxInkPool);
 }
 void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
+	if(Health < 0)Health=0;
+	else if(Health > _maxHealth) Health = _maxHealth;
 	if(border <= 0)border = 0;
 	
 	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y + Height+2*border, 50, 50, 50);
@@ -164,6 +172,8 @@ void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, uns
 	}
 }
 void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
+	if(InkPool < 0)InkPool=0;
+	else if(InkPool > _maxInkPool) InkPool = _maxInkPool;
 	if(border <= 0)border = 0;
 	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y+ Height+2*border, 50, 50, 50);
 	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 0, 0, 255);
@@ -197,340 +207,339 @@ void Player::Draw(WindowSurface screen, Point2D mapPosition)
 }
 void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff){
 	//The velocities (X and Y) must be smaller than the tile dimensions and the sprite dimensions
-	if(timeDiff*_velocity.Y <= map->GetTileDimension().Y && timeDiff*_velocity.X<=map->GetTileDimension().X &&
-		timeDiff*_velocity.Y<=_spriteDimension.Y&&timeDiff*_velocity.X<=_spriteDimension.X){
-		
-		if(_buttonLeft || _buttonRight){
-			int X, XO;
+	if(_buttonLeft || _buttonRight){
+		int X, XO;
+		if(_buttonLeft){
+			//The new edge columns the player is in. (X=left edge. X0=right edge)
+			X = (int)((_position.X - _velocity.X*timeDiff) / map->GetTileDimension().X);
+			XO = (int)((_position.X + _spriteDimension.X - _velocity.X*timeDiff) / map->GetTileDimension().X);
+		}
+		else {
+			//The new edge columns the player is in. (X=right edge. X0=left edge)
+			X = (int)((_position.X + _velocity.X*timeDiff + _spriteDimension.X) / map->GetTileDimension().X);
+			XO = (int)((_position.X + _velocity.X*timeDiff) / map->GetTileDimension().X);
+		}
+		int Y1 = (int)(_position.Y / map->GetTileDimension().Y); // Top edge of sprite
+		int Y2 = (int)((_position.Y + _spriteDimension.Y - 1) / map->GetTileDimension().Y); //bottom edge of sprite
+			
+		Point2D top((float)X, (float)Y1);
+		Point2D bot((float)X, (float)Y2);
+		TileType charTypeTop = map->GetCharType(top);
+		TileType charTypeBot = map->GetCharType(bot);
+		TileType charTypeBotO = map->GetCharType(Point2D((float)XO, (float)Y2));
+		//Check if you hit enemies by the side (enemies facing towards player)
+		if(InvulnerableTime <= 0){
+			TileData t1 = map->GetTileData(X, Y1);
+			TileData t2 = map->GetTileData(X, Y2);
+			if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+				TileSides must = (_buttonLeft)?TSright:TSleft;
+				if(t1.Side == must || t2.Side == must){
+					InvulnerableTime = 2;	
+					Health -= _maxHealth/2;
+				}
+			}
+		}
+
+		//If top and bot of the new X don't hit anything, the player can freely move to left or right
+		if(charTypeTop ==  TileTypeNone && charTypeBot ==  TileTypeNone){
+			if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+			else {_position.X += _velocity.X*timeDiff;}
+		}
+		//If the player new bot isn't on a slope, but was, and the top still is
+		else if(charTypeBot != TileTypeSlope && charTypeTop == TileTypeSlope && charTypeBotO == TileTypeSlope){
+			//Get the previous slope
+			TileData td = map->GetTileData(XO, Y2);
+			int y1, y2; td.GetSlope(y1, y2);
+			//If the slope is going up from the player (so:  \<-@ || @->/)
+			if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
+				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+				else {_position.X += _velocity.X*timeDiff;}
+				float h = 0;
+				if(_buttonLeft) h = map->GetSlopeHeight(Point2D(_position.X, _position.Y));
+				else h = map->GetSlopeHeight(Point2D(_position.X + _spriteDimension.X, _position.Y));
+				_position.Y = Y2*map->GetTileDimension().Y - _spriteDimension.Y;
+			}
+		}
+		else if(charTypeBot == TileTypeNormal && charTypeBotO == TileTypeSlope){
+			TileData td = map->GetTileData(XO, Y2);
+			int y1, y2; td.GetSlope(y1, y2);
+			if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
+				int yv = (_buttonLeft)?y1:y2;
+				_position.Y = Y2*map->GetTileDimension().Y - _spriteDimension.Y;
+				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+				else {_position.X += _velocity.X*timeDiff;}
+			}
+
+		}
+		//If it is a slope
+		else if(charTypeBot == TileTypeSlope){
+			//velocity defference
+			float dx = _buttonLeft?_position.X - _velocity.X * timeDiff:_position.X+_velocity.X*timeDiff;
+			int X1 = (int)(dx/map->GetTileDimension().X);
+			int X2 = (int)((dx + _spriteDimension.X)/map->GetTileDimension().X);
+			//Get tile data
+			TileData slopeLeft = map->GetTileData(X1, Y2);
+			TileData slopeRight = map->GetTileData(X2, Y2);
+			TileData slopeTop = _buttonLeft?map->GetTileData(X1, Y1):map->GetTileData(X2, Y1);
+			if(Y1<Y2 && charTypeTop == TileTypeSlope && (top.X != bot.X || top.Y != bot.Y )){
+				if(_buttonLeft)
+					_position.X -= (X+1) * map->GetTileDimension().X ;
+				else 
+					_position.X = X*map->GetTileDimension().X-_spriteDimension.X;
+			}
+			else if(charTypeTop ==  TileTypeDrawing || map->GetCharType(Point2D((float)X, (float)((int)((_position.Y-2) / map->GetTileDimension().Y))))==  TileTypeDrawing){
+				float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
+				float h = map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X + dx, -map->GetMapPosition().Y));
+				if(h <= 0){
+					_position.X += dx;
+				}
+				else if(_velocity.Y > 0 && h < 4){
+					_position.X += dx;
+					_position.Y -= h;
+				}
+			}
+			else{
+				int ly1, ly2, ry1, ry2;
+				slopeLeft.GetSlope(ly1, ly2);
+				slopeRight.GetSlope(ry1, ry2);
+				if(ly1==ly2==1) {ly1=ly2=0; }
+				if(ry1==ry2==1) {ry1=ry2=0; }
+				float hl = map->GetHeightAtPosition(Point2D(dx, _position.Y));
+				float hr = map->GetHeightAtPosition(Point2D(dx+_spriteDimension.X, _position.Y));
+				//IF player hits the high side of a slope, so he can walk through
+				if(_buttonLeft && (int)(_position.X/map->GetTileDimension().X)>X1 &&
+					Y2*map->GetTileDimension().Y-_position.Y<=ly2 && ly2 > ry1 && abs(ly2 - ry1) > 1){
+					_position.X = (X1+1)*map->GetTileDimension().X;
+				}
+				//IF player hits the high side of a slope, so he can walk through
+				else if(_buttonRight && (int)((_position.X+_spriteDimension.X)/map->GetTileDimension().X)<X2 && 
+					Y2*map->GetTileDimension().Y-_position.Y<=ry1 && ry1 > ly2 && abs(ly2 - ry1) > 1){
+					_position.X = X2*map->GetTileDimension().X-_spriteDimension.X-1;
+				}
+				else {
+					float newpos;
+					bool handled = false;
+					//walking up a downward slope: \ <-direction
+					if(ly1 > ly2 && _buttonLeft && hl > _spriteDimension.Y){ //down
+						float diff=_position.X - (X1 * map->GetTileDimension().X);
+						float ratio = (ly1-ly2)/map->GetTileDimension().X;
+						newpos = Y2 * map->GetTileDimension().Y + diff * ratio - _spriteDimension.Y - ly1 + map->GetTileDimension().Y;
+						handled = true;
+					}
+					//walking up a downward slope: direction-> /
+					else if(ry1 < ry2 && _buttonRight && hr>_spriteDimension.Y){ //Up
+						float diff = _position.X+_spriteDimension.X-(X2*map->GetTileDimension().X);
+						float ratio = (ry2-ry1)/map->GetTileDimension().X;
+							
+						newpos = Y2 * map->GetTileDimension().Y + map->GetTileDimension().Y - diff * ratio - _spriteDimension.Y;
+						handled = true;
+					}
+					//handles player pos
+					if(handled && newpos < _position.Y){
+						_position.Y = newpos;
+					}
+					//checks of the player can walk left or right
+					//(IF there is no ceiling lower then spriteheight)
+					if(_buttonLeft && hl>_spriteDimension.Y)
+						_position.X -= _velocity.X*timeDiff;
+					else if(_buttonRight && hr>_spriteDimension.Y)
+						_position.X += _velocity.X*timeDiff;
+				}
+			}
+		}
+		else if(charTypeBot ==  TileTypeDrawing || charTypeTop ==  TileTypeDrawing){
+			if((charTypeBot ==  TileTypeDrawing && (charTypeTop ==  TileTypeNone || charTypeTop ==  TileTypeDrawing) && charTypeTop != TileTypeNormal) ||
+				(charTypeTop ==  TileTypeDrawing && (charTypeBot ==  TileTypeNone || charTypeBot ==  TileTypeDrawing) && charTypeBot != TileTypeNormal))		{
+				float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
+				float h = map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X + dx, -map->GetMapPosition().Y));
+				if(h <= 0){
+					_position.X += dx;
+				}
+				else if(_velocity.Y > 0 && h < 4 && 
+					map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X + dx, -map->GetMapPosition().Y - h - 1)) <= 0){
+					_position.X += dx;
+					_position.Y -= h;
+				}
+			}
+		}
+		else if(charTypeBot == TileTypeNone && charTypeTop == TileTypeSlope){
+			TileData td = map->GetTileData(XO, Y2);
+			int y1, y2; td.GetSlope(y1, y2);
+			if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
+				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
+				else {_position.X += _velocity.X*timeDiff;}
+				//_position.Y -= 10;
+				_velocity.Y = 0;
+				_jumpEnable=true;
+			}
+		}
+		//Minimal one edge hit a block, so now it can only move the difference between the block and the player
+		else{
 			if(_buttonLeft){
-				//The new edge columns the player is in. (X=left edge. X0=right edge)
-				X = (int)((_position.X - _velocity.X*timeDiff) / map->GetTileDimension().X);
-				XO = (int)((_position.X + _spriteDimension.X - _velocity.X*timeDiff) / map->GetTileDimension().X);
+				double xDiff = abs(_position.X - ((X+1) * map->GetTileDimension().X));
+				_position.X -= (float)(xDiff-1);
 			}
 			else {
-				//The new edge columns the player is in. (X=right edge. X0=left edge)
-				X = (int)((_position.X + _velocity.X*timeDiff + _spriteDimension.X) / map->GetTileDimension().X);
-				XO = (int)((_position.X + _velocity.X*timeDiff) / map->GetTileDimension().X);
+				double xDiff = abs(_position.X + _spriteDimension.X - (X*map->GetTileDimension().X));
+				_position.X += (float)(xDiff-1);
 			}
-			int Y1 = (int)(_position.Y / map->GetTileDimension().Y); // Top edge of sprite
-			int Y2 = (int)((_position.Y + _spriteDimension.Y - 1) / map->GetTileDimension().Y); //bottom edge of sprite
-			
-			Point2D top((float)X, (float)Y1);
-			Point2D bot((float)X, (float)Y2);
-			TileType charTypeTop = map->GetCharType(top);
-			TileType charTypeBot = map->GetCharType(bot);
-			TileType charTypeBotO = map->GetCharType(Point2D((float)XO, (float)Y2));
-			//Check if you hit enemies by the side (enemies facing towards player)
+		}
+	}
+	if(_velocity.Y != 0){
+	int Y1 = (int)((_position.Y + _velocity.Y*timeDiff) / map->GetTileDimension().Y);
+	int Y2 = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y - 1) / map->GetTileDimension().Y);
+	int Y = (_velocity.Y < 0)?Y1:Y2;
+	//The left edge x coord
+	int X1 = (int)(_position.X / map->GetTileDimension().X);
+	//The right edge x coord
+	int X2 = (int)((_position.X + _spriteDimension.X) / map->GetTileDimension().X);
+	Point2D left((float)X1, (float)Y);
+	Point2D right((float)X2, (float)Y);
+	//IF both edges dont hit anything, the player can walk freely upwards or downwards
+	int charTypeLeft = map->GetCharType(left);
+	int charTypeRight = map->GetCharType(right);
+	int charTypeLeft2 = map->GetCharType(Point2D((float)X1, (float)Y2));
+	int charTypeRight2 = map->GetCharType(Point2D((float)X2, (float)Y2));
+	if(charTypeLeft ==  TileTypeNone && charTypeRight ==  TileTypeNone && charTypeLeft2 ==  TileTypeNone && charTypeRight2 ==  TileTypeNone){
+		_position.Y += _velocity.Y*timeDiff;
+	}
+	//The player hit a block, so now it can only walk the difference between player and the block
+	else {
+		if(_velocity.Y < 0){
+			int Yt = (int)((_position.Y) / map->GetTileDimension().Y);
+			int botLeft = map->GetCharType(Point2D((float)X1, (float)Yt));
+			int botRight = map->GetCharType(Point2D((float)X2, (float)Yt));/*
+			if(((charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3) && botLeft ==  TileTypeNone && botRight ==  TileTypeNone) ||
+				(charTypeLeft == 2 && charTypeRight == 2) || (charTypeLeft == 3 && charTypeRight==3)) {
+				//_position.Y = (Y+1)*map->GetTileDimension().Y;
+				_velocity.Y = 0;
+			}
+			else */
 			if(InvulnerableTime <= 0){
-				TileData t1 = map->GetTileData(X, Y1);
-				TileData t2 = map->GetTileData(X, Y2);
+				TileData t1 = map->GetTileData(X1, Y1);
+				TileData t2 = map->GetTileData(X2, Y1);
 				if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
-					TileSides must = (_buttonLeft)?TSright:TSleft;
-					if(t1.Side == must || t2.Side == must){
+					if(t1.Side == TSbottom || t2.Side == TSbottom){
 						InvulnerableTime = 2;	
 						Health -= _maxHealth/2;
 					}
 				}
 			}
-
-			//If top and bot of the new X don't hit anything, the player can freely move to left or right
-			if(charTypeTop ==  TileTypeNone && charTypeBot ==  TileTypeNone){
-				if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
-				else {_position.X += _velocity.X*timeDiff;}
+			if(charTypeLeft == TileTypeNormal || charTypeRight == TileTypeNormal || ((charTypeLeft == TileTypeSlope || charTypeRight == TileTypeSlope) && (Yt>Y1)) ){
+				_velocity.Y = 0;
+				_position.Y = (Y+1)*map->GetTileDimension().Y;
 			}
-			//If the player new bot isn't on a slope, but was, and the top still is
-			else if(charTypeBot != TileTypeSlope && charTypeTop == TileTypeSlope && charTypeBotO == TileTypeSlope){
-				//Get the previous slope
-				TileData td = map->GetTileData(XO, Y2);
-				int y1, y2; td.GetSlope(y1, y2);
-				//If the slope is going up from the player (so:  \<-@ || @->/)
-				if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
-					if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
-					else {_position.X += _velocity.X*timeDiff;}
-					float h = 0;
-					if(_buttonLeft) h = map->GetSlopeHeight(Point2D(_position.X, _position.Y));
-					else h = map->GetSlopeHeight(Point2D(_position.X + _spriteDimension.X, _position.Y));
-					_position.Y = Y2*map->GetTileDimension().Y - _spriteDimension.Y;
-				}
+				//_position.Y += _velocity.Y*timeDiff;
+			else if(charTypeLeft ==  TileTypeDrawing || charTypeLeft2 ==  TileTypeDrawing || charTypeRight ==  TileTypeDrawing || charTypeRight2 ==  TileTypeDrawing){
+				if (!map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X, -map->GetMapPosition().Y+_velocity.Y*timeDiff)))
+					_position.Y += _velocity.Y*timeDiff;
+				else _velocity.Y = 0;
 			}
-			else if(charTypeBot == TileTypeNormal && charTypeBotO == TileTypeSlope){
-				TileData td = map->GetTileData(XO, Y2);
-				int y1, y2; td.GetSlope(y1, y2);
-				if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
-					int yv = (_buttonLeft)?y1:y2;
-					_position.Y = Y2*map->GetTileDimension().Y - _spriteDimension.Y;
-					if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
-					else {_position.X += _velocity.X*timeDiff;}
-				}
-
-			}
-			//If it is a slope
-			else if(charTypeBot == TileTypeSlope){
-				//velocity defference
-				float dx = _buttonLeft?_position.X - _velocity.X * timeDiff:_position.X+_velocity.X*timeDiff;
-				int X1 = (int)(dx/map->GetTileDimension().X);
-				int X2 = (int)((dx + _spriteDimension.X)/map->GetTileDimension().X);
-				//Get tile data
-				TileData slopeLeft = map->GetTileData(X1, Y2);
-				TileData slopeRight = map->GetTileData(X2, Y2);
-				TileData slopeTop = _buttonLeft?map->GetTileData(X1, Y1):map->GetTileData(X2, Y1);
-				if(Y1<Y2 && charTypeTop == TileTypeSlope && (top.X != bot.X || top.Y != bot.Y )){
-					if(_buttonLeft)
-						_position.X -= (X+1) * map->GetTileDimension().X ;
-					else 
-						_position.X = X*map->GetTileDimension().X-_spriteDimension.X;
-				}
-				else if(charTypeTop ==  TileTypeDrawing || map->GetCharType(Point2D((float)X, (float)((int)((_position.Y-2) / map->GetTileDimension().Y))))==  TileTypeDrawing){
-					float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
-					float h = map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X + dx, -map->GetMapPosition().Y));
-					if(h <= 0){
-						_position.X += dx;
-					}
-					else if(_velocity.Y > 0 && h < 4){
-						_position.X += dx;
-						_position.Y -= h;
-					}
-				}
-				else{
-					int ly1, ly2, ry1, ry2;
-					slopeLeft.GetSlope(ly1, ly2);
-					slopeRight.GetSlope(ry1, ry2);
-					if(ly1==ly2==1) {ly1=ly2=0; }
-					if(ry1==ry2==1) {ry1=ry2=0; }
-					float hl = map->GetHeightAtPosition(Point2D(dx, _position.Y));
-					float hr = map->GetHeightAtPosition(Point2D(dx+_spriteDimension.X, _position.Y));
-					//IF player hits the high side of a slope, so he can walk through
-					if(_buttonLeft && (int)(_position.X/map->GetTileDimension().X)>X1 &&
-						Y2*map->GetTileDimension().Y-_position.Y<=ly2 && ly2 > ry1 && abs(ly2 - ry1) > 1){
-						_position.X = (X1+1)*map->GetTileDimension().X;
-					}
-					//IF player hits the high side of a slope, so he can walk through
-					else if(_buttonRight && (int)((_position.X+_spriteDimension.X)/map->GetTileDimension().X)<X2 && 
-						Y2*map->GetTileDimension().Y-_position.Y<=ry1 && ry1 > ly2 && abs(ly2 - ry1) > 1){
-						_position.X = X2*map->GetTileDimension().X-_spriteDimension.X-1;
-					}
-					else {
-						float newpos;
-						bool handled = false;
-						//walking up a downward slope: \ <-direction
-						if(ly1 > ly2 && _buttonLeft && hl > _spriteDimension.Y){ //down
-							float diff=_position.X - (X1 * map->GetTileDimension().X);
-							float ratio = (ly1-ly2)/map->GetTileDimension().X;
-							newpos = Y2 * map->GetTileDimension().Y + diff * ratio - _spriteDimension.Y - ly1 + map->GetTileDimension().Y;
-							handled = true;
-						}
-						//walking up a downward slope: direction-> /
-						else if(ry1 < ry2 && _buttonRight && hr>_spriteDimension.Y){ //Up
-							float diff = _position.X+_spriteDimension.X-(X2*map->GetTileDimension().X);
-							float ratio = (ry2-ry1)/map->GetTileDimension().X;
-							
-							newpos = Y2 * map->GetTileDimension().Y + map->GetTileDimension().Y - diff * ratio - _spriteDimension.Y;
-							handled = true;
-						}
-						//handles player pos
-						if(handled && newpos < _position.Y){
-							_position.Y = newpos;
-						}
-						//checks of the player can walk left or right
-						//(IF there is no ceiling lower then spriteheight)
-						if(_buttonLeft && hl>_spriteDimension.Y)
-							_position.X -= _velocity.X*timeDiff;
-						else if(_buttonRight && hr>_spriteDimension.Y)
-							_position.X += _velocity.X*timeDiff;
-					}
-				}
-			}
-			else if(charTypeBot ==  TileTypeDrawing || charTypeTop ==  TileTypeDrawing){
-				if((charTypeBot ==  TileTypeDrawing && (charTypeTop ==  TileTypeNone || charTypeTop ==  TileTypeDrawing) && charTypeTop != TileTypeNormal) ||
-					(charTypeTop ==  TileTypeDrawing && (charTypeBot ==  TileTypeNone || charTypeBot ==  TileTypeDrawing) && charTypeBot != TileTypeNormal))		{
-					float dx = _buttonLeft?-_velocity.X*timeDiff:_velocity.X*timeDiff;
-					float h = map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X + dx, -map->GetMapPosition().Y));
-					if(h <= 0){
-						_position.X += dx;
-					}
-					else if(_velocity.Y > 0 && h < 4 && 
-						map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X + dx, -map->GetMapPosition().Y - h - 1)) <= 0){
-						_position.X += dx;
-						_position.Y -= h;
-					}
-				}
-			}
-			else if(charTypeBot == TileTypeNone && charTypeTop == TileTypeSlope){
-				TileData td = map->GetTileData(XO, Y2);
-				int y1, y2; td.GetSlope(y1, y2);
-				if((_buttonLeft && y1>y2)||(_buttonRight&&y2>y1)){
-					if(_buttonLeft){_position.X -= _velocity.X*timeDiff;}
-					else {_position.X += _velocity.X*timeDiff;}
-					//_position.Y -= 10;
-					_velocity.Y = 0;
-					_jumpEnable=true;
-				}
-			}
-			//Minimal one edge hit a block, so now it can only move the difference between the block and the player
-			else{
-				if(_buttonLeft){
-					double xDiff = abs(_position.X - ((X+1) * map->GetTileDimension().X));
-					_position.X -= (float)(xDiff-1);
-				}
-				else {
-					double xDiff = abs(_position.X + _spriteDimension.X - (X*map->GetTileDimension().X));
-					_position.X += (float)(xDiff-1);
-				}
-			}
+			else _position.Y += _velocity.Y*timeDiff;
 		}
-		if(_velocity.Y != 0){
-		int Y1 = (int)((_position.Y + _velocity.Y*timeDiff) / map->GetTileDimension().Y);
-		int Y2 = (int)((_position.Y + _velocity.Y*timeDiff + _spriteDimension.Y - 1) / map->GetTileDimension().Y);
-		int Y = (_velocity.Y < 0)?Y1:Y2;
-		//The left edge x coord
-		int X1 = (int)(_position.X / map->GetTileDimension().X);
-		//The right edge x coord
-		int X2 = (int)((_position.X + _spriteDimension.X) / map->GetTileDimension().X);
-		Point2D left((float)X1, (float)Y);
-		Point2D right((float)X2, (float)Y);
-		//IF both edges dont hit anything, the player can walk freely upwards or downwards
-		int charTypeLeft = map->GetCharType(left);
-		int charTypeRight = map->GetCharType(right);
-		int charTypeLeft2 = map->GetCharType(Point2D((float)X1, (float)Y2));
-		int charTypeRight2 = map->GetCharType(Point2D((float)X2, (float)Y2));
-		if(charTypeLeft ==  TileTypeNone && charTypeRight ==  TileTypeNone && charTypeLeft2 ==  TileTypeNone && charTypeRight2 ==  TileTypeNone){
-			_position.Y += _velocity.Y*timeDiff;
-		}
-		//The player hit a block, so now it can only walk the difference between player and the block
 		else {
-			if(_velocity.Y < 0){
-				int Yt = (int)((_position.Y) / map->GetTileDimension().Y);
-				int botLeft = map->GetCharType(Point2D((float)X1, (float)Yt));
-				int botRight = map->GetCharType(Point2D((float)X2, (float)Yt));/*
-				if(((charTypeLeft == 2 || charTypeLeft == 3 || charTypeRight == 2 || charTypeRight == 3) && botLeft ==  TileTypeNone && botRight ==  TileTypeNone) ||
-					(charTypeLeft == 2 && charTypeRight == 2) || (charTypeLeft == 3 && charTypeRight==3)) {
-					//_position.Y = (Y+1)*map->GetTileDimension().Y;
-					_velocity.Y = 0;
-				}
-				else */
-				if(InvulnerableTime <= 0){
-					TileData t1 = map->GetTileData(X1, Y1);
-					TileData t2 = map->GetTileData(X2, Y1);
-					if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
-						if(t1.Side == TSbottom || t2.Side == TSbottom){
-							InvulnerableTime = 2;	
-							Health -= _maxHealth/2;
-						}
+			if(InvulnerableTime <= 0){
+				TileData t1 = map->GetTileData(X1, Y2);
+				TileData t2 = map->GetTileData(X2, Y2);
+				if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
+					if(t1.Side == TStop || t2.Side == TStop){
+						InvulnerableTime = 2;	
+						Health -= _maxHealth/2;
 					}
 				}
-				if(charTypeLeft == TileTypeNormal || charTypeRight == TileTypeNormal || ((charTypeLeft == TileTypeSlope || charTypeRight == TileTypeSlope) && (Yt>Y1)) ){
-					_velocity.Y = 0;
-					_position.Y = (Y+1)*map->GetTileDimension().Y;
-				}
-					//_position.Y += _velocity.Y*timeDiff;
-				else if(charTypeLeft ==  TileTypeDrawing || charTypeLeft2 ==  TileTypeDrawing || charTypeRight ==  TileTypeDrawing || charTypeRight2 ==  TileTypeDrawing){
-					if (!map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X, -map->GetMapPosition().Y+_velocity.Y*timeDiff)))
-						_position.Y += _velocity.Y*timeDiff;
-					else _velocity.Y = 0;
-				}
-				else _position.Y += _velocity.Y*timeDiff;
 			}
-			else {
-				if(InvulnerableTime <= 0){
-					TileData t1 = map->GetTileData(X1, Y2);
-					TileData t2 = map->GetTileData(X2, Y2);
-					if(t1.GetType() == TileTypeSpike || t2.GetType() == TileTypeSpike){
-						if(t1.Side == TStop || t2.Side == TStop){
-							InvulnerableTime = 2;	
-							Health -= _maxHealth/2;
-						}
-					}
-				}
-				if(charTypeLeft == TileTypeNormal || charTypeRight == TileTypeNormal){
-					_velocity.Y = 50;
-					_jumpEnable = true;
-				}
-				else if((charTypeLeft ==  TileTypeNone && map->GetCharType(Point2D((float)X1, (float)Y1)) == TileTypeSlope) || 
-					charTypeRight ==  TileTypeNone && map->GetCharType(Point2D((float)X2, (float)Y1)) == TileTypeSlope){
+			if(charTypeLeft == TileTypeNone && charTypeRight == TileTypeNone){
+				_position.Y += _velocity.Y*timeDiff;
+			}
+			else if(charTypeLeft == TileTypeNormal || charTypeRight == TileTypeNormal){
+				_velocity.Y = 50;
+				_jumpEnable = true;
+			}
+			else if((charTypeLeft ==  TileTypeNone && map->GetCharType(Point2D((float)X1, (float)Y1)) == TileTypeSlope) || 
+				charTypeRight ==  TileTypeNone && map->GetCharType(Point2D((float)X2, (float)Y1)) == TileTypeSlope){
 
-				}
-				else if(charTypeLeft == TileTypeSlope || charTypeRight == TileTypeSlope){
-					//_position.Y += _velocity.Y*timeDiff;
-					TileData tl = map->GetTileData((int)left.X, (int)left.Y);
-					TileData tr = map->GetTileData((int)right.X, (int)right.Y);
-					int yl1, yl2; tl.GetSlope(yl1, yl2);
-					int yr1, yr2; tr.GetSlope(yr1, yr2);
-					if((charTypeRight == TileTypeSlope && charTypeLeft ==  TileTypeDrawing) || (charTypeLeft == TileTypeSlope && charTypeRight ==  TileTypeDrawing)){
-						//Error r; r.HandleError(CaptionOnly, "Nice");
-						float height = (charTypeLeft==TileTypeSlope)?map->GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):
-							map->GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
-						float newpos= (Y2*map->GetTileDimension().Y) + height - _spriteDimension.Y;
+			}
+			else if(charTypeLeft == TileTypeSlope || charTypeRight == TileTypeSlope){
+				//_position.Y += _velocity.Y*timeDiff;
+				TileData tl = map->GetTileData((int)left.X, (int)left.Y);
+				TileData tr = map->GetTileData((int)right.X, (int)right.Y);
+				int yl1, yl2; tl.GetSlope(yl1, yl2);
+				int yr1, yr2; tr.GetSlope(yr1, yr2);
+				if((charTypeRight == TileTypeSlope && charTypeLeft ==  TileTypeDrawing) || (charTypeLeft == TileTypeSlope && charTypeRight ==  TileTypeDrawing)){
+					//Error r; r.HandleError(CaptionOnly, "Nice");
+					float height = (charTypeLeft==TileTypeSlope)?map->GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):
+						map->GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
+					float newpos= (Y2*map->GetTileDimension().Y) + height - _spriteDimension.Y;
 						
-						if(!map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X, -map->GetMapPosition().Y + newpos - _position.Y))){
-							if(_position.Y + _velocity.Y*timeDiff < newpos)
-								_position.Y += _velocity.Y*timeDiff;
-							else {
-								 _position.Y = newpos;
-								 _velocity.Y = 50;
-								 _jumpEnable=true;
-							}
-						}
-					}
-					
-					//on top of 1 or 2 slopes / or \ or /\ 
-					else if((charTypeRight == charTypeLeft && yl2 != yr1 && (int)left.X != (int)right.X) || // if 2 of the same slopes to each other // or \\ 
-						(charTypeLeft == TileTypeSlope && yl2>yl1 &&  (charTypeRight != TileTypeSlope || (charTypeRight == TileTypeSlope && yr1>yr2))) || 
-						(charTypeRight == TileTypeSlope && yr1>yr2&&(charTypeLeft!=TileTypeSlope || (charTypeLeft==TileTypeSlope&&yl2>yl1)))){
-						int h = yl2>yr1?yl2:yr1;
-						float newpos = ((Y+1)*map->GetTileDimension().Y) - _spriteDimension.Y - h;
-						if(newpos >= _position.Y+_velocity.Y*timeDiff)
+					if(!map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X, -map->GetMapPosition().Y + newpos - _position.Y))){
+						if(_position.Y + _velocity.Y*timeDiff < newpos)
 							_position.Y += _velocity.Y*timeDiff;
 						else {
-							_position.Y = newpos;
-							_velocity.Y = 50;
-							_jumpEnable = true;
-						}
-					}
-					else if((charTypeLeft == TileTypeSlope && yl1>yl2) || (charTypeRight == TileTypeSlope && yr1<yr2)){ //Downwards
-						float newpos;
-						//on top of 2 downward slopes \/
-						if((charTypeLeft == TileTypeSlope && yl1>yl2)&&(charTypeRight == TileTypeSlope && yr1<yr2)){
-							float hl = map->GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
-							float hr = map->GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
-							newpos = hl<hr?(Y*map->GetTileDimension().Y) + hl:(Y*map->GetTileDimension().Y) + hr;
-						}
-						else {
-							//normal slope \ or /
-							float h = (charTypeLeft == TileTypeSlope && yl1>yl2)?map->GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):map->GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
-							newpos = (Y*map->GetTileDimension().Y) + h;
-						}
-
-						//Set the new position
-						if(newpos - _spriteDimension.Y >= _position.Y+_velocity.Y*timeDiff){
-							_position.Y += _velocity.Y*timeDiff;
-						}
-						/*
-						else if((_buttonLeft||_buttonRight)) {
-							if((abs(_position.Y - newpos + _spriteDimension.Y) < 8))
-							_position.Y = newpos - _spriteDimension.Y;
-							//else _position.Y -= 5;
-							_velocity.Y = 50;
-							_jumpEnable = true;
-						}*/
-						else {
-							
-							_velocity.Y = 50;
-							_jumpEnable = true;
+								_position.Y = newpos;
+								_velocity.Y = 50;
+								_jumpEnable=true;
 						}
 					}
 				}
-				else if(charTypeLeft ==  TileTypeDrawing  || charTypeRight ==  TileTypeDrawing){
-					if(!map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X, -map->GetMapPosition().Y + _velocity.Y*timeDiff)))
+					
+				//on top of 1 or 2 slopes / or \ or /\ 
+				else if((charTypeRight == charTypeLeft && yl2 != yr1 && (int)left.X != (int)right.X) || // if 2 of the same slopes to each other // or \\ 
+					(charTypeLeft == TileTypeSlope && yl2>yl1 &&  (charTypeRight != TileTypeSlope || (charTypeRight == TileTypeSlope && yr1>yr2))) || 
+					(charTypeRight == TileTypeSlope && yr1>yr2&&(charTypeLeft!=TileTypeSlope || (charTypeLeft==TileTypeSlope&&yl2>yl1)))){
+					int h = yl2>yr1?yl2:yr1;
+					float newpos = ((Y+1)*map->GetTileDimension().Y) - _spriteDimension.Y - h;
+					if(newpos >= _position.Y+_velocity.Y*timeDiff)
 						_position.Y += _velocity.Y*timeDiff;
 					else {
+						_position.Y = newpos;
 						_velocity.Y = 50;
-						_jumpEnable = true;}
+						_jumpEnable = true;
+					}
+				}
+				else if((charTypeLeft == TileTypeSlope && yl1>yl2) || (charTypeRight == TileTypeSlope && yr1<yr2)){ //Downwards
+					float newpos;
+					//on top of 2 downward slopes \/
+					if((charTypeLeft == TileTypeSlope && yl1>yl2)&&(charTypeRight == TileTypeSlope && yr1<yr2)){
+						float hl = map->GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
+						float hr = map->GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
+						newpos = hl<hr?(Y*map->GetTileDimension().Y) + hl:(Y*map->GetTileDimension().Y) + hr;
+					}
+					else {
+						//normal slope \ or /
+						float h = (charTypeLeft == TileTypeSlope && yl1>yl2)?map->GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):map->GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
+						newpos = (Y*map->GetTileDimension().Y) + h;
+					}
+
+					//Set the new position
+					if(newpos - _spriteDimension.Y >= _position.Y+_velocity.Y*timeDiff){
+						_position.Y += _velocity.Y*timeDiff;
+					}
+					/*
+					else if((_buttonLeft||_buttonRight)) {
+						if((abs(_position.Y - newpos + _spriteDimension.Y) < 8))
+						_position.Y = newpos - _spriteDimension.Y;
+						//else _position.Y -= 5;
+						_velocity.Y = 50;
+						_jumpEnable = true;
+					}*/
+					else {
+							
+						_velocity.Y = 50;
+						_jumpEnable = true;
+					}
 				}
 			}
+			else if(charTypeLeft ==  TileTypeDrawing  || charTypeRight ==  TileTypeDrawing){
+				if(!map->CheckDrawCollision(GetBoundR(-map->GetMapPosition().X, -map->GetMapPosition().Y + _velocity.Y*timeDiff)))
+					_position.Y += _velocity.Y*timeDiff;
+				else {
+					_velocity.Y = 50;
+					_jumpEnable = true;}
+			}
 		}
-		}
-		_previousPosition=_position;
 	}
+	}
+	_previousPosition=_position;
 }
 Point2D Player::GetCenter() { return Point2D(_position.X + _spriteDimension.X, _position.Y + _spriteDimension.Y); };
 HorizontalDirection Player::GetHorizontalDir()

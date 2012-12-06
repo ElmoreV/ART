@@ -94,23 +94,26 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 				//#PLAYER KILLS ENEMY -> update false, remove enemy
 				//#ELSE PLAYER LOSES LIFE
 				//player hits enemy
-			if(player->GetVelocity().Y > 0){
-				int height =(int)(Minimum(player->GetBoundR().Y + player->GetBoundR().H, enemy->GetBoundR().Y + enemy->GetBoundR().H) - Maximum(player->GetBoundR().Y, enemy->GetBoundR().Y));
-				int width = (int)(Minimum(player->GetBoundR().X + player->GetBoundR().W, enemy->GetBoundR().X + enemy->GetBoundR().W) - Maximum(player->GetBoundR().X, enemy->GetBoundR().X));
+			if(player->InvulnerableTime <= 0){
+				if(player->GetVelocity().Y > 60){
+					int height =(int)(Minimum(player->GetBoundR().Y + player->GetBoundR().H, enemy->GetBoundR().Y + enemy->GetBoundR().H) - Maximum(player->GetBoundR().Y, enemy->GetBoundR().Y));
+					int width = (int)(Minimum(player->GetBoundR().X + player->GetBoundR().W, enemy->GetBoundR().X + enemy->GetBoundR().W) - Maximum(player->GetBoundR().X, enemy->GetBoundR().X));
 					
-				if(player->GetPreviousPosition().Y + player->GetBoundR().Y < enemy->GetBoundR().Y || height <= width){
-					_enemyList.erase(_enemyList.begin() + i);
-					player->Jump() ;
-					update = false;
+					if(player->GetPreviousPosition().Y + player->GetBoundR().Y < enemy->GetBoundR().Y || height <= width){
+						_enemyList.erase(_enemyList.begin() + i);
+						player->AddInk(20);
+						player->Jump();
+						update = false;
+					}
+					else {
+						player->Health -= 10;
+						player->InvulnerableTime = 2;
+					}
 				}
-				else if(player->InvulnerableTime <= 0){
+				else {
 					player->Health -= 10;
 					player->InvulnerableTime = 2;
 				}
-			}
-			else {
-				player->Health -= 10;
-				player->InvulnerableTime = 2;
 			}
 		}
 		if(update){ //enemy can walk
