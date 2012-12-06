@@ -16,7 +16,7 @@ Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, in
 	InkPool = 100; _maxInkPool = 100;
 	Health  = 100; _maxHealth= 100;
 	InvulnerableTime = 0;
-	_totalInkReceived=_maxInkPool;
+	_totalInkReceived=(float)_maxInkPool;
 }
 Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 {
@@ -180,8 +180,8 @@ void Player::Reset(Point2D position, bool resetStats){
 	_jumpEnable = true;
 	if(resetStats){
 		InkPool = _maxInkPool;
-		_totalInkReceived=_maxInkPool;
-		Health  = _maxHealth;
+		_totalInkReceived=(float)_maxInkPool;
+		Health  =(float) _maxHealth;
 		InvulnerableTime = 0;
 	}
 }

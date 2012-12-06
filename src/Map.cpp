@@ -130,7 +130,7 @@ bool Map::Update(Rectangle playerBound,float inkPool)
 		if (inkPool<1.0f)
 		{_drawObjects[i].SetDrawMode(false);}else{_drawObjects[i].SetDrawMode(true);}
 		_drawObjects.at(i).Update(playerBound);
-		_totalDistance+=_drawObjects[i].GetDrawing().GetDrawingDistance();
+		_totalDistance+=(unsigned long)_drawObjects[i].GetDrawing().GetDrawingDistance();
 	}
 	return true;
 }
@@ -268,7 +268,7 @@ bool Map::NewMapEnabled(Rectangle playerBoundingBox, int& levelId){
 			charline = _mapArray.at((int)collisionPoint[i].Y).c_str();
 			if(strlen(charline) > collisionPoint[i].X){
 				if(charline[(int)collisionPoint[i].X] == _newMapChar){
-					levelId = GetNewMapId(collisionPoint[i].X, collisionPoint[i].Y);
+					levelId = GetNewMapId((int)collisionPoint[i].X, (int)collisionPoint[i].Y);
 					return true;
 				}
 			}
@@ -278,7 +278,7 @@ bool Map::NewMapEnabled(Rectangle playerBoundingBox, int& levelId){
 }
 int Map::GetNewMapId(int x, int y){
 	int it = 0;
-	int count = 0;
+	unsigned int count = 0;
 	while(it < y){
 		count += std::count(_mapArray[it].begin(), _mapArray[it].end(), _newMapChar);
 		it++;

@@ -55,11 +55,12 @@ public:
 class Sounds
 {
 public:
-	~Sounds(){_titleScreen.Free();_forest.Free();};
+	~Sounds(){_titleScreen.Free();_forest.Free();_brupap.Free();};
 	//Music
 	Music _titleScreen;
 	Music _forest;
 	//Sound effects
+	SoundEffect _brupap;
 };
 class Maps
 {

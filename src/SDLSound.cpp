@@ -2,10 +2,81 @@
 #include "SDLFramework.h"
 #include <ctime>
 
+SoundEffect::SoundEffect():_sfx(0),_volumeModifier(1.0f),_volume(128),_channelId(-1)
+{};
+SoundEffect::SoundEffect(std::string filename)
+{
+	SoundEffect();
+	LoadSoundEffect(filename);
+};
+void SoundEffect::SetChannelId(int id=-1)
+{_channelId=id;}
+void SoundEffect::Free()
+{
+	if (_sfx!=0)
+	{
+		::Mix_FreeChunk(_sfx);
+		_sfx=0;
+	}
+};
+bool SoundEffect::LoadSoundEffect(std::string filename)
+{
+	Free();
+	_sfx=::Mix_LoadWAV(filename.c_str());
+	if (_sfx== 0)
+	{
+		//Handle Error
+		std::string str="The following sound effect file could not be found: ";
+		str+=filename;
+		Error error(Caption,str.c_str(),1,true);
+		return false;
+	}
+	return true;
+};
+bool SoundEffect::IsInit()
+{return (_sfx!=0);}
+bool SoundEffect::InitIfNeccessary(std::string filename, int volume)
+{
+	if (!IsInit())
+	{LoadSoundEffect(filename);
+	Volume(volume);}
+};
+void SoundEffect::Play(bool loop=false)
+{
+	if (IsInit())
+	{::Mix_PlayChannel(_channelId,_sfx,loop?-1:0);}
+};
+void SoundEffect::Stop()
+{
+	if (IsInit())
+	{::Mix_HaltChannel(_channelId);}
+}
+void SoundEffect::Volume(int volume)
+{
+	if (volume>128){volume=128;}else if (volume<0){volume=0;}
+		_volume=volume;
+	if (IsInit())
+	{
+		Mix_VolumeChunk(_sfx,(int)((float)_volume*_volumeModifier));
+	}
+}
+void SoundEffect::SetVolumeModifier(float volumeModifier)
+{
+	_volumeModifier=volumeModifier;
+	Volume(_volume);
+}
+
+
+
+
+
 Music::Music():_music(0),_position(0),_playing(false),_volume(128),_loopPosition(0)
 {}
-Music::Music(std::string filename):_music(0),_position(0),_playing(false),_volume(128),_loopPosition(0)
-{LoadMusic(filename);}
+Music::Music(std::string filename)
+{
+	Music();
+	LoadMusic(filename);
+}
 void Music::Free()
 {
 	if (_music!=0)
@@ -122,12 +193,12 @@ void Music::SetVolumeModifier(float modifier)
 	if (modifier>1.0f){modifier=1.0f;}
 	if (modifier<0.0f){modifier=0.0f;}
 	_volumeModifier=modifier;
-Volume(_volume);
+	Volume(_volume);
 }
 bool Music::Loop()
 {
 	if (_playing==true&&(::Mix_PlayingMusic()==false||::Mix_FadingMusic()==MIX_FADING_OUT))
-	{
+	{	
 		Play(_loopPosition,400);
 		return true;
 	}
@@ -136,39 +207,74 @@ bool Music::Loop()
 
 
 MusicHandler::MusicHandler()
-	{
+{
 	_currentMusic=0;_prevMusic=0;_volume=128;
-	}
-	void MusicHandler::SetNewMusic(Music* newMusic)
-	{
-		if (newMusic==0){return;}
-		
-			_prevMusic=_currentMusic;
-			_currentMusic=newMusic;
-		if (_prevMusic!=0)
-		{_prevMusic->Stop();}
-		if (newMusic->IsInit())
-		{	
-			_currentMusic->Continue();
-			_currentMusic->Volume(_volume);
-			
-		}
-		return;
-	}
-	void MusicHandler::Update()
-	{
+}
+void MusicHandler::SetNewMusic(Music* newMusic)
+{
+	if (newMusic==0){return;}
 
-		if (_currentMusic!=0)
-		{_currentMusic->Loop();}
+	_prevMusic=_currentMusic;
+	_currentMusic=newMusic;
+	if (_prevMusic!=0)
+	{_prevMusic->Stop();}
+	if (newMusic->IsInit())
+	{	
+		_currentMusic->Continue();
+		_currentMusic->Volume(_volume);
+
 	}
-	void MusicHandler::Stop()
+	return;
+}
+void MusicHandler::Update()
+{
+
+	if (_currentMusic!=0)
+	{_currentMusic->Loop();}
+}
+void MusicHandler::Stop()
+{
+	if (_currentMusic!=0)
+	{_currentMusic->Stop(true);}
+}
+void MusicHandler::SetGlobalVolume(int volume)
+{
+	_volume=volume;
+	if (_currentMusic!=0)
+	{_currentMusic->Volume(volume);}
+}
+
+SoundEffectsHandler::SoundEffectsHandler(){memset(&_sfx,0,16*sizeof(_sfx[0]));_volume=128;};
+void SoundEffectsHandler::AddSoundEffect(SoundEffect* newSoundEffect)
+{
+	if (newSoundEffect!=0)
 	{
-		if (_currentMusic!=0)
-		{_currentMusic->Stop(true);}
+		for (unsigned i=0;i<16;i++)
+		{
+			if (!_sfx[i])
+			{
+				_sfx[i]=newSoundEffect;
+				_sfx[i]->SetChannelId(i);
+				_sfx[i]->Volume(_volume);
+				break;
+			}
+		};
 	}
-	void MusicHandler::SetGlobalVolume(int volume)
+};
+void SoundEffectsHandler::StopAll()
+{
+	for (unsigned i=0;i<16;i++)
 	{
-		_volume=volume;
-		if (_currentMusic!=0)
-		{_currentMusic->Volume(volume);}
+		if (_sfx[i])
+		{_sfx[i]->Stop();}
+	};
+}
+void SoundEffectsHandler::SetGlobalVolume(int volume)
+{
+	_volume=volume;
+	for (unsigned i=0;i<16;i++)
+	{
+		if (_sfx[i])
+		{_sfx[i]->Volume(_volume);}
 	}
+};

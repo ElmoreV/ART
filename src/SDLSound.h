@@ -5,9 +5,26 @@
 #include <SDL\\SDL_mixer.h>
 #pragma comment(lib,"SDL_mixer.lib")
 
-
-
-
+class SoundEffect
+{
+public:
+	SoundEffect();
+	SoundEffect(std::string filename);
+	void Free();
+	bool LoadSoundEffect(std::string filename);
+	bool IsInit();
+	bool InitIfNeccessary(std::string filename, int volume=128);
+	void Play(bool loop);
+	void Stop();
+	void SetChannelId(int id);
+	void SetVolumeModifier(float volumeModifier);
+	void Volume(int volume);
+private:
+	Mix_Chunk* _sfx;
+	int _channelId;
+	float _volumeModifier;
+	int _volume;
+};
 
 class Music
 {
@@ -36,6 +53,19 @@ private:
 	int _position;
 	int _loopPosition;
 
+};
+
+
+class SoundEffectsHandler
+{
+public:
+	SoundEffectsHandler();
+	void AddSoundEffect(SoundEffect* newSoundEffect);
+	void StopAll();
+	void SetGlobalVolume(int volume);
+private:
+	SoundEffect* _sfx[16];
+	int _volume;
 };
 
 class MusicHandler

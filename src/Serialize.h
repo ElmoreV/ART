@@ -92,7 +92,7 @@ public:
 	{
 		Serializer saver("Settings.sav",true);
 		saver.SetFloat(gSettings._volume);
-		saver.SetFloat(gSettings._SfxMusicProportion);
+		saver.SetFloat(gSettings._sfxMusicProportion);
 
 	};
 	void LoadSettings(GlobalSettings& gSettings)
@@ -101,7 +101,7 @@ public:
 		if (loader._istream.is_open())
 		{
 			gSettings._volume=loader.GetFloat();
-			gSettings._SfxMusicProportion=loader.GetFloat();
+			gSettings._sfxMusicProportion=loader.GetFloat();
 		}
 	};
 };
