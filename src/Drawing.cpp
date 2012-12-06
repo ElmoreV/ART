@@ -54,8 +54,6 @@ void VectorDraw::SetNewPoint(float x, float y)
 
 	if (_recurseChecker++>3)
 	{_recurseChecker=0;
-	std::stringstream ost; ost<<"The drawing code exceeded the recursion check with point("<<x<<","<<y<<").";
-	Error error(Log,ost.str().c_str(),1);
 	return;}
 
 	//if you draw at screenX=300, and the surface is turned 100px to the left (-100)

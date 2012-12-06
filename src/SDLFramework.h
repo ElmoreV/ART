@@ -53,7 +53,6 @@ public:
 private:
 	void LogError(std::string message, int code);
 	void CaptionError(std::string message, int code);
-	//ErrorState _errState;
 };
 
 

@@ -35,6 +35,7 @@ int main( int argc, char* args[] )
 	{
 		WindowSurface screen(800,600);
 		MusicHandler musicHandler;
+		SoundEffectsHandler sfxHandler;
 		Graphics graphics;
 		Sounds sounds;
 		Settings setting;
@@ -49,13 +50,14 @@ int main( int argc, char* args[] )
 		FPS fps(30);
 		SDL_Event sEvent;
 
-		sounds._titleScreen.InitIfNeccessary("Music/ratintro.ogg",128);
+		sounds._titleScreen.InitIfNeccessary("Music/aratsburrow.ogg",128);
 		sounds._titleScreen.SetLoopPosition(48300);
 		sounds._titleScreen.SetVolumeModifier(0.4f);
 		musicHandler.SetNewMusic(&sounds._titleScreen);
 
+		sounds._brupap.LoadSoundEffect("SFX/brupap.wav");
+		sfxHandler.AddSoundEffect(&sounds._brupap);
 		gameStates.NewState(GSIntro);
-
 
 		int introCount=0; float logoPositionY = 0;
 
@@ -152,8 +154,8 @@ int main( int argc, char* args[] )
 		menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,155,155,155,&SetNewVolume,&gSettings);
 		((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(1)))->SetStatus((int)(gSettings._volume*256));
 		menu.GetChild(2)->GetChild(1)->AddChild("SFX-Music");
-		menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30);
-		((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._SfxMusicProportion*256));
+		menu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30,&SetNewProportion,&gSettings);
+		((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._sfxMusicProportion*256));
 		menu.GetChild(2)->AddChild("Keys");
 		menu.AddButtonChild("Exit",false,255,255,255, &Settings::OnClickExitGame);
 
@@ -228,7 +230,12 @@ int main( int argc, char* args[] )
 			if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
 			if(gameStates.CurrentState() == GSGame && player.Health <= 0) gameStates.PushState(GSGame_Over);
 			screen.ClearWindow();
-			musicHandler.SetGlobalVolume((int)(gSettings._volume*128));
+			float musicPercentage=2*gSettings._sfxMusicProportion;
+			if (musicPercentage>1.0){musicPercentage=1.0;}
+			float sfxPercentage=2-2*gSettings._sfxMusicProportion;
+			if (sfxPercentage>1.0){sfxPercentage=1.0;}
+			musicHandler.SetGlobalVolume((int)(gSettings._volume*musicPercentage*128));
+			sfxHandler.SetGlobalVolume((int)(gSettings._volume*sfxPercentage*128));
 			switch(gameStates.CurrentState())
 			{
 			case GSIntro:
@@ -255,6 +262,21 @@ int main( int argc, char* args[] )
 					player.Reset(map.GetSpawnLocation(), true);
 					gameStates.NewState(GSGame);
 					setting.Finish();
+					sounds._brupap.Play(false);
+				}else if (setting.GetResult()==MRLoadGame)
+				{
+					Loader load;
+					load.StartAndCheck("Save1.sav");
+					int prevMapId,newMapId;
+					load.LoadCheckpoint(prevMapId,newMapId);
+					if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = levels.count;
+					load.LoadPlayer(player);
+					load.Close();
+					map.NewMap(levels.levels[newMapId]);
+					enemies.PopulateEnemies(&map, &graphics);
+					gameStates.NewState(GSGame);
+					player.Reset(map.GetSpawnLocation(), false);
+					setting.Finish();
 				}
 				musicHandler.Update();
 				Timer = clock();
@@ -278,18 +300,26 @@ int main( int argc, char* args[] )
 				player.DrawInkBar(screen, 1, 5, 35, 100, 20, &graphics.another);
 				break;
 
-			case GSMenuNewLevel:
+			case GSMenuNewLevel:{
  				if(levels.count > LevelCounter) LevelCounter++;
 
 				if(NewLevelID < 0) levels.count++;
 				else if(NewLevelID >= levels.maxCount) levels.count = levels.maxCount-1;
 				else levels.count = NewLevelID;
 
+				int prevLevel=levels.count;
 				map.NewMap(levels.levels[levels.count]);
 				enemies.PopulateEnemies(&map, &graphics);
 				player.Reset(map.GetSpawnLocation(), false);
 				gameStates.BackState();
+
+				Saver saver;
+				saver.StartAndOpen();
+				saver.SaveCheckpoint(prevLevel,NewLevelID);
+				saver.SavePlayer(player);
+				saver.EndAndClose("Save1.sav");
 				break;
+								}
 			case GSGame_Over:
 				gameOverMenu.Open(screen, graphics.another, Point2D(0, 50));
 				if(setting.GetResult() != MRExitGame && setting.GetResult() != MRNone) {

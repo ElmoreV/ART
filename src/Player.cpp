@@ -16,7 +16,7 @@ Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, in
 	InkPool = 100; _maxInkPool = 100;
 	Health  = 100; _maxHealth= 100;
 	InvulnerableTime = 0;
-	_totalInkReceived=_maxInkPool;
+	_totalInkReceived=(float)_maxInkPool;
 }
 Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 {
@@ -50,17 +50,17 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	//Timedifference, important for time-based movement
 	float timeDiff=lastTick<0?1:(clock()-lastTick)/1000.0f;
 	
-	unsigned int drawDistance=map->GetDrawDistance()/20;
+	float drawDistance=(float)map->GetDrawDistance()/20;
 	//_totalInkReceived+=timeDiff;
-	
-	if (InkPool > _maxInkPool)
-	{InkPool=_maxInkPool; _totalInkReceived=drawDistance+_maxInkPool;}
+	float tempInkPool=_totalInkReceived-drawDistance;
+	if (tempInkPool > _maxInkPool)
+	{InkPool=(float)_maxInkPool; _totalInkReceived=drawDistance+_maxInkPool;}
 	else if(InkPool<0)
-	{InkPool=0;}
-	else 
-	{InkPool=_totalInkReceived-drawDistance;}
+	{InkPool=0;_totalInkReceived=drawDistance;}
+	else
+	{InkPool=tempInkPool;}
 	if(Health < 0)Health=0;
-	else if(Health > _maxHealth) Health = _maxHealth;
+	else if(Health > _maxHealth) Health = (float)_maxHealth;
 
 	if(InvulnerableTime > 0) InvulnerableTime -= timeDiff;
 	else InvulnerableTime = 0;
@@ -158,7 +158,7 @@ float Player::InkPoolRatio(){
 }
 void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
 	if(Health < 0)Health=0;
-	else if(Health > _maxHealth) Health = _maxHealth;
+	else if(Health > _maxHealth) Health = (float)_maxHealth;
 	if(border <= 0)border = 0;
 	
 	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y + Height+2*border, 50, 50, 50);
@@ -173,7 +173,7 @@ void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, uns
 }
 void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
 	if(InkPool < 0)InkPool=0;
-	else if(InkPool > _maxInkPool) InkPool = _maxInkPool;
+	else if(InkPool > _maxInkPool) InkPool = (float)_maxInkPool;
 	if(border <= 0)border = 0;
 	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y+ Height+2*border, 50, 50, 50);
 	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 0, 0, 255);
@@ -189,9 +189,9 @@ void Player::Reset(Point2D position, bool resetStats){
 	_velocity.Y = 50;
 	_jumpEnable = true;
 	if(resetStats){
-		InkPool = _maxInkPool;
-		_totalInkReceived=_maxInkPool;
-		Health  = _maxHealth;
+		InkPool = (float)_maxInkPool;
+		_totalInkReceived=(float)_maxInkPool;
+		Health  =(float) _maxHealth;
 		InvulnerableTime = 0;
 	}
 }
@@ -473,7 +473,6 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 				int yl1, yl2; tl.GetSlope(yl1, yl2);
 				int yr1, yr2; tr.GetSlope(yr1, yr2);
 				if((charTypeRight == TileTypeSlope && charTypeLeft ==  TileTypeDrawing) || (charTypeLeft == TileTypeSlope && charTypeRight ==  TileTypeDrawing)){
-					//Error r; r.HandleError(CaptionOnly, "Nice");
 					float height = (charTypeLeft==TileTypeSlope)?map->GetSlopeHeight(Point2D(_position.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff)):
 						map->GetSlopeHeight(Point2D(_position.X+_spriteDimension.X, _position.Y+_spriteDimension.Y + _velocity.Y*timeDiff));
 					float newpos= (Y2*map->GetTileDimension().Y) + height - _spriteDimension.Y;

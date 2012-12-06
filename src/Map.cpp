@@ -61,7 +61,11 @@ bool Map::ReadFile(std::string filename)
 	_newMapId.clear();
 	std::ifstream streamer;
 	streamer.open(filename.c_str());
-	if(!streamer) return false;
+	if(!streamer) 
+	{
+		Error error(Caption,"Could not find the following map file:" + filename,1);
+		return false;
+	}
 	std::string line;
 	size_t dx;
 	while(!streamer.eof())
@@ -131,7 +135,7 @@ bool Map::Update(Rectangle playerBound,float inkPool)
 		if (inkPool<1.0f)
 		{_drawObjects[i].SetDrawMode(false);}else{_drawObjects[i].SetDrawMode(true);}
 		_drawObjects.at(i).Update(playerBound);
-		_totalDistance+=_drawObjects[i].GetDrawing().GetDrawingDistance();
+		_totalDistance+=(unsigned long)_drawObjects[i].GetDrawing().GetDrawingDistance();
 	}
 	return true;
 }
@@ -280,7 +284,7 @@ bool Map::NewMapEnabled(Rectangle playerBoundingBox, int& levelId){
 			charline = _mapArray.at((int)collisionPoint[i].Y).c_str();
 			if(strlen(charline) > collisionPoint[i].X){
 				if(charline[(int)collisionPoint[i].X] == _newMapChar){
-					levelId = GetNewMapId(collisionPoint[i].X, collisionPoint[i].Y);
+					levelId = GetNewMapId((int)collisionPoint[i].X, (int)collisionPoint[i].Y);
 					return true;
 				}
 			}
@@ -290,7 +294,7 @@ bool Map::NewMapEnabled(Rectangle playerBoundingBox, int& levelId){
 }
 int Map::GetNewMapId(int x, int y){
 	int it = 0;
-	int count = 0;
+	unsigned int count = 0;
 	while(it < y){
 		count += std::count(_mapArray[it].begin(), _mapArray[it].end(), _newMapChar);
 		count += std::count(_mapArray[it].begin(), _mapArray[it].end(), _newMapCharClosed);

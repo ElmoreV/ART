@@ -7,12 +7,17 @@ class SettingSaverLoader;
 class GlobalSettings
 {
 public:
-	bool SetVolume(float percentage);
+	GlobalSettings()
+	{_volume=1.0f;_sfxMusicProportion=0.5f;}
+	bool SetVolume(float ratio);
+	bool SetVolumeProportion(float proportion);
 	float _volume;
-	float _SfxMusicProportion;
+	float _sfxMusicProportion;
 };
-static bool SetNewVolume(float percentage,void* globalSettings)
-{return ((GlobalSettings*)globalSettings)->SetVolume(percentage);};
+static bool SetNewVolume(float ratio,void* globalSettings)
+{return ((GlobalSettings*)globalSettings)->SetVolume(ratio);};
+static bool SetNewProportion(float proportion,void* globalSettings)
+{return ((GlobalSettings*)globalSettings)->SetVolumeProportion(proportion);};
 enum MenuResult{
 	MRNewGame, MRLoadGame, MRExitGame, MRMainMenu, MRRestart, MRNone
 };
