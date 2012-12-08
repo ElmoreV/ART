@@ -33,9 +33,10 @@ public:
 	TileSides Side;
 };
 typedef std::map<char, TileData> Dictionary;
-
+class Loader;
 class Map
 {
+	friend Loader;
 protected:
 	Dictionary _tileLibrary;
 	Surface* _tileSheet;
@@ -45,12 +46,14 @@ protected:
 	char _spawnLocation, _newMapChar, _newMapCharClosed;
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
 	int _forestBbStart;
-	unsigned long _totalDistance;
+	unsigned long _mapDrawDistance;
+	unsigned long _previousDrawDistance;
 	std::vector<int> _newMapId;
 	int GetNewMapId(int x, int y);
-
+	
 public:
 	Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);
+	void Reset();
 	void Draw(WindowSurface screen, int completedLvl = -1);
 	bool AddTile(char key, int x, int y, bool solid=true, bool drawable=false);
 	bool AddTile(char key, int x, int y, TileSides side);

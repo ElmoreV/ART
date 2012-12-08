@@ -601,9 +601,9 @@ void Player::SetFrame(int frame)
 void Player::HandleEvent(SDL_Event sEvent)
 {
 	Uint8* keystates = SDL_GetKeyState(NULL);
-	if(keystates[SDLK_DOWN]) _buttonDown = true; else _buttonDown = false;
-	if(keystates[SDLK_UP]) _buttonUp = true; else _buttonUp = false;
-	if(keystates[SDLK_LEFT]) _buttonLeft = true; else _buttonLeft = false;
-	if(keystates[SDLK_RIGHT]) _buttonRight = true; else _buttonRight = false;
+	if(keystates[SDLK_DOWN]||keystates[SDLK_s]) _buttonDown = true; else _buttonDown = false;
+	if(keystates[SDLK_UP]||keystates[SDLK_w]) _buttonUp = true; else _buttonUp = false;
+	if(keystates[SDLK_LEFT]||keystates[SDLK_a]) _buttonLeft = true; else _buttonLeft = false;
+	if(keystates[SDLK_RIGHT]||keystates[SDLK_d]) _buttonRight = true; else _buttonRight = false;
 	tail.HandleEvent(sEvent);
 }

@@ -208,10 +208,10 @@ int main( int argc, char* args[] )
 				case GSGame:
 					if(sEvent.type == SDL_KEYDOWN) {
 						if(sEvent.key.keysym.sym == SDLK_ESCAPE) {gameStates.PushState(GSMenuMain);}
-						else if(sEvent.key.keysym.sym == SDLK_SPACE) {spacePressed=true;}
+						else if(sEvent.key.keysym.sym == SDLK_s||sEvent.key.keysym.sym == SDLK_DOWN) {spacePressed=true;}
 					}
 					if(sEvent.type == SDL_KEYUP){
-						if(sEvent.key.keysym.sym == SDLK_SPACE)
+						if(sEvent.key.keysym.sym == SDLK_s||sEvent.key.keysym.sym == SDLK_DOWN)
 						{spacePressed=false;}
 					}
 					player.HandleEvent(sEvent);
@@ -258,6 +258,7 @@ int main( int argc, char* args[] )
 					musicHandler.SetNewMusic(&sounds._forest);
 					levels.count = 0;
 					LevelCounter = 0;
+					map.Reset();
 					map.NewMap(levels.levels[0]);
 					enemies.PopulateEnemies(&map, &graphics);
 					player.Reset(map.GetSpawnLocation(), true);
@@ -267,17 +268,21 @@ int main( int argc, char* args[] )
 				}else if (setting.GetResult()==MRLoadGame)
 				{
 					Loader load;
-					load.StartAndCheck("Save1.sav");
-					int newMapId;
-					load.LoadCheckpoint(LevelCounter,newMapId);
-					if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = 0;
-					levels.count = newMapId;
-					load.LoadPlayer(player);
-					load.Close();
-					map.NewMap(levels.levels[newMapId]);
-					enemies.PopulateEnemies(&map, &graphics);
-					gameStates.NewState(GSGame);
-					player.Reset(map.GetSpawnLocation(), false);
+					if (load.StartAndCheck("Save1.sav"))
+					{
+						int newMapId;
+						load.LoadCheckpoint(LevelCounter,newMapId);
+						if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = 0;
+						levels.count = newMapId;
+						load.LoadMap(map);
+						load.LoadPlayer(player);
+						load.Close();
+						map.NewMap(levels.levels[newMapId]);
+						enemies.PopulateEnemies(&map, &graphics);
+						gameStates.NewState(GSGame);
+						musicHandler.SetNewMusic(&sounds._forest);
+						player.Reset(map.GetSpawnLocation(), false);
+					}
 					setting.Finish();
 				}
 				musicHandler.Update();
@@ -317,6 +322,7 @@ int main( int argc, char* args[] )
 				Saver saver;
 				saver.StartAndOpen();
 				saver.SaveCheckpoint(LevelCounter,levels.count);
+				saver.SaveMap(map);
 				saver.SavePlayer(player);
 				saver.EndAndClose("Save1.sav");
 				break;
