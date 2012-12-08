@@ -208,10 +208,10 @@ int main( int argc, char* args[] )
 				case GSGame:
 					if(sEvent.type == SDL_KEYDOWN) {
 						if(sEvent.key.keysym.sym == SDLK_ESCAPE) {gameStates.PushState(GSMenuMain);}
-						else if(sEvent.key.keysym.sym == SDLK_SPACE) {spacePressed=true;}
+						else if(sEvent.key.keysym.sym == SDLK_s||sEvent.key.keysym.sym == SDLK_DOWN) {spacePressed=true;}
 					}
 					if(sEvent.type == SDL_KEYUP){
-						if(sEvent.key.keysym.sym == SDLK_SPACE)
+						if(sEvent.key.keysym.sym == SDLK_s||sEvent.key.keysym.sym == SDLK_DOWN)
 						{spacePressed=false;}
 					}
 					player.HandleEvent(sEvent);
