@@ -4,6 +4,7 @@
 #include <fstream>
 #include "Settings.h"
 #include "Player.h"
+#include "Map.h"
 
 
 class Serializer
@@ -26,7 +27,7 @@ public:
 	DeSerializer();
 	DeSerializer(std::string const & filename);
 	~DeSerializer();
-	void OpenStream(std::string const & filename);
+	bool OpenStream(std::string const & filename);
 	unsigned int GetUnsignedInt();
 	float GetFloat();
 	char GetChar();
@@ -50,6 +51,7 @@ class Saver
 public:
 	void StartAndOpen();
 	void SavePlayer(Player& player);
+	void SaveMap(Map& map);
 	void SaveCheckpoint(int previousMapId,int nextMapId);
 	void EndAndClose(std::string filename);
 private:
@@ -59,8 +61,9 @@ private:
 class Loader
 {
 public:
-	void StartAndCheck(std::string filename);
+	bool StartAndCheck(std::string filename);
 	void LoadPlayer(Player& player);
+	void LoadMap(Map& map);
 	void LoadCheckpoint(int& previousMapId,int& nextMapId);
 	void Close();
 private:

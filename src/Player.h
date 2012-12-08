@@ -15,8 +15,12 @@ enum VerticalDirection
 	VDirDown,
 	VDirNone
 };
+class Saver;
+class Loader;
 class Player : public Object
 {
+	friend Saver;
+	friend Loader;
 protected:
 	Tail tail;
 	Point2D _previousPosition;

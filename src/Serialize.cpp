@@ -38,7 +38,7 @@ DeSerializer::DeSerializer():_size(0)
 {}
 DeSerializer::DeSerializer(std::string const & filename)
 {OpenStream(filename);}
-void DeSerializer::OpenStream(std::string const & filename)
+bool DeSerializer::OpenStream(std::string const & filename)
 {
 	if (_istream.is_open()){_istream.close();}
 	_istream.open(filename.c_str(),std::ios_base::in|std::ios_base::binary);
@@ -47,7 +47,8 @@ void DeSerializer::OpenStream(std::string const & filename)
 		 _istream.seekg (0, std::ios::end);
 		_size = (int)_istream.tellg();
 		 _istream.seekg (0, std::ios::beg);
-	}else{_size=0;}
+	}else{_size=0;return false;}
+	return true;
 }
 DeSerializer::~DeSerializer()
 {
@@ -113,10 +114,15 @@ void Saver::StartAndOpen()
 };
 void Saver::SavePlayer(Player& player)
 {
-	_serial.SetFloat(player.InkPool);
-	_checkSum+=*(unsigned int*)&(player.InkPool);
+	_serial.SetFloat(player._totalInkReceived);
+	_checkSum+=*(unsigned int*)&(player._totalInkReceived);
 	_serial.SetFloat(player.Health);
 	_checkSum+=*(unsigned int*)&(player.Health);
+};
+void Saver::SaveMap(Map& map)
+{
+	_serial.SetUnsignedInt(map.GetDrawDistance());
+	_checkSum+=map.GetDrawDistance();
 };
 void Saver::SaveCheckpoint(int previousMapId,int nextMapId)
 {
@@ -141,9 +147,9 @@ void Saver::EndAndClose(std::string filename)
 		rename("tempSave.sav",filename.c_str());
 	}
 };
-void Loader::StartAndCheck(std::string filename)
+bool Loader::StartAndCheck(std::string filename)
 {
-	_deserial.OpenStream(filename);
+	if (!_deserial.OpenStream(filename)){return false;}
 	unsigned int testChecksum=0;
 	unsigned int size=_deserial.GetSize();
 	while(size>4)
@@ -154,16 +160,22 @@ void Loader::StartAndCheck(std::string filename)
 	if (testChecksum==_deserial.GetUnsignedInt())
 	{
 		_deserial.OpenStream(filename);
-		//Correct
+		return true;
 	}else
 	{
 		Error error(Caption,"Trying to load unvalid file:" + filename,5);
+		_deserial._istream.close();
+		return false;
 	}
 };
 void Loader::LoadPlayer(Player& player)
 {
-	player.InkPool=_deserial.GetFloat();
+	player._totalInkReceived=_deserial.GetFloat();
 	player.Health=_deserial.GetFloat();
+};
+void Loader::LoadMap(Map& map)
+{
+	map._previousDrawDistance=_deserial.GetUnsignedInt();
 };
 void Loader::LoadCheckpoint(int& previousMapId,int& nextMapId)
 {

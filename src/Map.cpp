@@ -1,4 +1,6 @@
 #include "map.h"
+#include <sstream>
+
 TileData::TileData(int x, int y, int width, int height, bool solid, bool drawable){
 	X=x;Y=y;Width=width;Height=height;_isSolid=solid;
 	if(drawable)_type=TileTypeDrawing;
@@ -50,8 +52,13 @@ Map::Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, st
 	_newMapCharClosed = '!';
 	if(map != "") ReadFile(map);
 	_forestBbStart = -1;
+	Reset();
 }
-#include <sstream>
+void Map::Reset()
+{	
+	_previousDrawDistance=0;
+	_mapDrawDistance=0;
+};
 //Read the file and push lines into vector
 bool Map::ReadFile(std::string filename)
 {
@@ -130,12 +137,12 @@ bool Map::HandleEvent(SDL_Event sEvent){
 }
 bool Map::Update(Rectangle playerBound,float inkPool)
 {
-	_totalDistance=0;
+	_mapDrawDistance=0;
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
 		if (inkPool<1.0f)
 		{_drawObjects[i].SetDrawMode(false);}else{_drawObjects[i].SetDrawMode(true);}
 		_drawObjects.at(i).Update(playerBound);
-		_totalDistance+=(unsigned long)_drawObjects[i].GetDrawing().GetDrawingDistance();
+		_mapDrawDistance+=(unsigned long)_drawObjects[i].GetDrawing().GetDrawingDistance();
 	}
 	return true;
 }
@@ -151,7 +158,7 @@ void Map::Draw(WindowSurface screen, int completedLvl)
 	Y2 = (int)((_mapPosition.Y+screen.GetHeight())/_tileDimension.Y)+1;
 	X1 = (int)(_mapPosition.X/_tileDimension.X);
 	X2 = (int)((_mapPosition.X+screen.GetWidth())/_tileDimension.X)+1;
-	int newCharCounter = 0;
+	unsigned int newCharCounter = 0;
 	for(unsigned int y = 0; y < _mapArray.size(); y++)
 	{
 		charline = _mapArray.at(y).c_str();
@@ -161,7 +168,7 @@ void Map::Draw(WindowSurface screen, int completedLvl)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
 				if(charline[x] == _newMapChar && completedLvl >= 0){
-					if(newCharCounter >= 0 && newCharCounter < _newMapId.size() ){
+					if(newCharCounter < _newMapId.size() ){
 						if(_newMapId[newCharCounter] > completedLvl+1){
 							std::stringstream ss;ss<<_newMapCharClosed;
 							_mapArray[y].replace(x, 1, ss.str());
@@ -396,7 +403,7 @@ float Map::GetSlopeHeight(Point2D position){
 	return h;
 }
 unsigned int Map::GetDrawDistance()
-{return _totalDistance;};
+{return _previousDrawDistance+_mapDrawDistance;};
 //Center the map
 void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 	float maxX = _tileDimension.X * _mapArray[0].size();
@@ -436,6 +443,8 @@ bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeigh
 	if(map == "") {return false;}
 	_spawnPosition.X =0; _spawnPosition.Y = 0;
 	ReadFile(map);
+	_previousDrawDistance+=_mapDrawDistance;
+	_mapDrawDistance=0;
 	_drawObjects.clear();
 	return true;
 }
