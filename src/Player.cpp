@@ -27,6 +27,45 @@ void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxV
 void Player::AddInk(int value){
 	_totalInkReceived += value;
 }
+void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float part, float speed){
+	Point2D maxDim = map->GetMapDimension();
+	Point2D centerPoint  = GetCenter();
+	Point2D camera = map->GetMapPosition();
+	if(maxDim.X > screenSize.X){
+		float posOnScreen = centerPoint.X - camera.X;
+		if(_buttonLeft)
+		{
+			if(posOnScreen + _velocity.X*timeDiff + 2 < screenSize.X*(1-part))
+				camera.X -= _velocity.X * timeDiff*speed;
+			else
+				camera.X = centerPoint.X - screenSize.X*(1-part);
+		}
+		else if(_buttonRight){
+			if(posOnScreen - _velocity.X*timeDiff - 2 > screenSize.X*part)
+				camera.X += _velocity.X * timeDiff * speed;
+			else
+				camera.X = centerPoint.X - screenSize.X*part;
+		}
+		if(posOnScreen < part*screenSize.X && !_buttonLeft)
+			camera.X = centerPoint.X - part*screenSize.X;
+		else if(posOnScreen > (1-part)*screenSize.X && !_buttonRight)
+			camera.X = centerPoint.X - (1-part)*screenSize.X;
+		if(camera.X < 0) camera.X = 0;
+		else if(camera.X > maxDim.X - screenSize.X)
+			camera.X = maxDim.X - screenSize.X;
+	}
+	else camera.X = 0;
+	if(maxDim.Y > screenSize.Y){
+		if(centerPoint.Y <= screenSize.Y / 2)
+			camera.Y = 0;
+		else if(centerPoint.Y >= maxDim.Y - screenSize.Y / 2)
+			camera.Y = maxDim.Y - screenSize.Y;
+		else 
+			camera.Y = centerPoint.Y - screenSize.Y / 2;
+	}
+	else camera.Y = 0;
+	map->SetMapPosition(camera.X,camera.Y);
+}
 void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	//Update animation image for the player
 	if(_buttonLeft || _buttonRight){
@@ -76,35 +115,9 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	}
 	//Handles walking and collision
 	HandleCollision(map, screenWidth, screenHeight, timeDiff);
-	map->SetNewMapPosition(Point2D((float)screenWidth, (float)screenHeight), GetCenter());
-	/*
-	Point2D maxDim = map1.GetMapDimension();
-	Point2D centerPoint  = GetCenter();
-	Point2D camera = map1.GetMapPosition();
-	float newX=0, newY=0;
-	if(maxDim.X > screenWidth){
-		float posOnScreen = centerPoint.X - camera.X;
-		if(_buttonLeft)
-		{
-			if(posOnScreen < screenWidth*0.55)
-				camera.X -= _velocity.X * timeDiff * 1.5;
-			else 
-				camera.X = centerPoint.X - screenWidth*0.55;
-		}
-		else if(_buttonRight){
-			if(posOnScreen > screenWidth*0.45)
-				camera.X += _velocity.X * timeDiff * 1.5;
-			else 
-				camera.X = centerPoint.X - screenWidth*0.45;
-		}
-		if(camera.X < 0) camera.X = 0;
-		else if(camera.X > maxDim.X - screenWidth);
-	}
-	else camera.X = 0;
-	map1.SetMapPosition(camera.X,camera.Y);
-	*/
-
-
+	//map->SetNewMapPosition(Point2D((float)screenWidth, (float)screenHeight), GetCenter());
+	
+	SetMapPosition(map, Point2D((float)screenWidth, (float)screenHeight), timeDiff, 0.4, 1.3);
 
 	//Prevents the player from walking out of screen
 	Point2D mapDim = map->GetMapDimension();
@@ -176,7 +189,7 @@ void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsign
 	else if(InkPool > _maxInkPool) InkPool = (float)_maxInkPool;
 	if(border <= 0)border = 0;
 	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y+ Height+2*border, 50, 50, 50);
-	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 0, 0, 255);
+	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 2, 2, 2);
 	if(font != 0){
 		Surface render;
 		std::stringstream ss; ss << (unsigned int)InkPool << "/" << _maxInkPool;
