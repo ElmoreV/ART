@@ -182,6 +182,7 @@ void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, uns
 		std::stringstream ss; ss << Health << "/" << _maxHealth;
 		render.RenderText(*font, ss.str());
 		render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
+		render.Free();
 	}
 }
 void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
@@ -194,7 +195,8 @@ void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsign
 		Surface render;
 		std::stringstream ss; ss << (unsigned int)InkPool << "/" << _maxInkPool;
 		render.RenderText(*font, ss.str());
-	render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
+		render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
+		render.Free();
 	}
 }
 void Player::Reset(Point2D position, bool resetStats){

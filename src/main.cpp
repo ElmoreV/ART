@@ -44,7 +44,6 @@ int main( int argc, char* args[] )
 		GameStateManager gameStates(&setting);
 		SettingSaverLoader ssl;
 		ssl.LoadSettings(gSettings);
-		//SDL_ShowCursor(0);
 		long Timer = clock();//For Frame Independent Movement
 		bool gameRunning=true;
 		FPS fps(30);

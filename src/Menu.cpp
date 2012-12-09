@@ -426,6 +426,7 @@ void MenuItem::Draw(WindowSurface screen, Font& font, Point2D offset){
 			screen.DrawLine((int)b->X, (int)(b->Y+b->H), (int)(b->X + b->W), (int)(b->Y+b->H), item->GetColorR(), item->GetColorG(), item->GetColorB());
 		}
 	}
+	render.Free();
 };
 
 bool MenuItem::IsSelected(){return _selected;}
