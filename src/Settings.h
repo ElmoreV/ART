@@ -19,7 +19,7 @@ static bool SetNewVolume(float ratio,void* globalSettings)
 static bool SetNewProportion(float proportion,void* globalSettings)
 {return ((GlobalSettings*)globalSettings)->SetVolumeProportion(proportion);};
 enum MenuResult{
-	MRNewGame, MRLoadGame, MRExitGame, MRMainMenu, MRRestart, MRNone
+	MRNewGame, MRLoadGame, MRExitGame, MRMainMenu, MRRestart,MRResume, MRNone
 };
 class Settings
 {
@@ -43,6 +43,7 @@ public:
 	}
 	bool OnClickNewGame(){ _result = MRNewGame; return false; }
 	bool OnClickLoadGame(){_result = MRLoadGame; return false;}
+	bool OnClickResume(){_result=MRResume; return false;}
 	bool OnClickExitGame(){
 		_result = MRExitGame; 
 		return false;

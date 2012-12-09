@@ -10,6 +10,7 @@ enum GameStates
 	GSMenuNewLevel,
 	GSGame,
 	GSGame_Over,
+	GSPause
 };
 class GameStateManager
 {

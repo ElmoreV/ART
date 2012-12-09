@@ -178,6 +178,7 @@ void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, uns
 	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * HealthRatio()), Y +border+ Height, 255, 0, 0);
 	
 	if(font != 0){
+		font->SetColor(255,255,255);
 		Surface render;
 		std::stringstream ss; ss << Health << "/" << _maxHealth;
 		render.RenderText(*font, ss.str());
@@ -189,9 +190,10 @@ void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsign
 	if(InkPool < 0)InkPool=0;
 	else if(InkPool > _maxInkPool) InkPool = (float)_maxInkPool;
 	if(border <= 0)border = 0;
-	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y+ Height+2*border, 50, 50, 50);
-	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 2, 2, 2);
+	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y+ Height+2*border, 50, 50, 100);
+	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 2, 20, 2);
 	if(font != 0){
+		font->SetColor(100,100,255);
 		Surface render;
 		std::stringstream ss; ss << (unsigned int)InkPool << "/" << _maxInkPool;
 		render.RenderText(*font, ss.str());

@@ -216,7 +216,7 @@ void MusicHandler::SetNewMusic(Music* newMusic)
 	{_prevMusic->Stop();}
 	if (newMusic->IsInit())
 	{	
-		_currentMusic->Continue();
+		_currentMusic->Play();
 		_currentMusic->Volume(_volume);
 
 	}

@@ -48,14 +48,8 @@ int main( int argc, char* args[] )
 		bool gameRunning=true;
 		FPS fps(30);
 		SDL_Event sEvent;
-
-		sounds._titleScreen.InitIfNeccessary("Music/aratsburrow.ogg",128);
-		sounds._titleScreen.SetLoopPosition(48300);
-		sounds._titleScreen.SetVolumeModifier(0.4f);
-		musicHandler.SetNewMusic(&sounds._titleScreen);
-
-		sounds._brupap.LoadSoundEffect("SFX/brupap.wav");
-		sfxHandler.AddSoundEffect(&sounds._brupap);
+		musicHandler.SetNewMusic(&sounds.titleScreen);	
+		sfxHandler.AddSoundEffect(&sounds.brupap);
 		gameStates.NewState(GSIntro);
 
 		int introCount=0; float logoPositionY = 0;
@@ -174,9 +168,37 @@ int main( int argc, char* args[] )
 		std::vector<std::string> opts; opts.push_back("Yes"); opts.push_back("No"); opts.push_back("Quit");
 		gameOverMenu.AddOptionChild(opts, "    ", false, 255, 255, 255, &Settings::GameOverOptions);
 
+		Menu inGameMenu("Pause",&setting,255,0,0);
+		inGameMenu.SetCenter(true);
+		inGameMenu.SetVerticalSpace(20);
+		inGameMenu.AddButtonChild("Resume" ,true,255,255,255,&Settings::OnClickResume);
+		inGameMenu.AddChild("Show statistics" ,true,255,255,255);
+		inGameMenu.GetChild(1)->AddChild("Current level: ");
+		inGameMenu.GetChild(1)->AddChild("Remaining Lives: ");
+		inGameMenu.GetChild(1)->AddChild("Progression: ");
+		inGameMenu.GetChild(1)->AddChild("Enemies killed: ");
+		inGameMenu.GetChild(1)->AddChild("Game completion: ");
+		inGameMenu.GetChild(1)->AddChild("Total distance drawn: ");
+		inGameMenu.AddChild("Options", true);
+		inGameMenu.GetChild(2)->SetVerticalSpace(20);
+		inGameMenu.GetChild(2)->AddChild("Graphics",true);
+		inGameMenu.GetChild(2)->GetChild(0)->AddChild("FPS Setting");
+		inGameMenu.GetChild(2)->GetChild(0)->AddChild("Resolution");
+		inGameMenu.GetChild(2)->AddChild("Sounds",true);
+		inGameMenu.GetChild(2)->GetChild(1)->AddChild("Master Volume");
+		inGameMenu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,155,155,155,&SetNewVolume,&gSettings);
+		((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(1)))->SetStatus((int)(gSettings._volume*256));
+		inGameMenu.GetChild(2)->GetChild(1)->AddChild("SFX-Music");
+		inGameMenu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30,&SetNewProportion,&gSettings);
+		((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._sfxMusicProportion*256));
+		inGameMenu.GetChild(2)->AddChild("Keys");
+		inGameMenu.AddChild("Quit",true,255,0,0);
+		inGameMenu.GetChild(3)->AddButtonChild("Exit to main menu",true,0,255,0, &Settings::OnClickNewGame);
+		inGameMenu.GetChild(3)->AddButtonChild("Exit game",true,255,255,255, &Settings::OnClickExitGame);
+
 		int NewLevelID = 0;
 		int LevelCounter = 0;
-		bool spacePressed = false;
+		bool actionButtonPressed = false;
 		//((OptionMenuItem*)newLevelMenu.GetChild(3))->GetOption(1)->Enabled = false;
 
 		while (gameRunning)
@@ -204,14 +226,23 @@ int main( int argc, char* args[] )
 					}
 						menu.HandleEvent(sEvent);
 						break;
+				case GSPause:
+					{
+						if(sEvent.type == SDL_KEYDOWN){
+							if(sEvent.key.keysym.sym == SDLK_ESCAPE) 
+							{gameStates.BackState();inGameMenu.Reset();}
+						}
+						inGameMenu.HandleEvent(sEvent);
+						break;
+					}
 				case GSGame:
 					if(sEvent.type == SDL_KEYDOWN) {
-						if(sEvent.key.keysym.sym == SDLK_ESCAPE) {gameStates.PushState(GSMenuMain);}
-						else if(sEvent.key.keysym.sym == SDLK_s||sEvent.key.keysym.sym == SDLK_DOWN) {spacePressed=true;}
+						if(sEvent.key.keysym.sym == SDLK_ESCAPE) {gameStates.PushState(GSPause);}
+						else if(sEvent.key.keysym.sym == SDLK_s||sEvent.key.keysym.sym == SDLK_DOWN) {actionButtonPressed=true;}
 					}
 					if(sEvent.type == SDL_KEYUP){
 						if(sEvent.key.keysym.sym == SDLK_s||sEvent.key.keysym.sym == SDLK_DOWN)
-						{spacePressed=false;}
+						{actionButtonPressed=false;}
 					}
 					player.HandleEvent(sEvent);
 					map.HandleEvent(sEvent);
@@ -227,7 +258,8 @@ int main( int argc, char* args[] )
 
 			if(clock() > Timer + 500) Timer = clock();
 			if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
-			if(gameStates.CurrentState() == GSGame && player.Health <= 0) gameStates.PushState(GSGame_Over);
+			if(gameStates.CurrentState() == GSGame && player.Health <= 0)
+			{gameStates.PushState(GSGame_Over);sounds.forest.SetVolumeModifier(0.1f);}
 			screen.ClearWindow();
 			float musicPercentage=2*gSettings._sfxMusicProportion;
 			if (musicPercentage>1.0){musicPercentage=1.0;}
@@ -254,7 +286,7 @@ int main( int argc, char* args[] )
 				break;
 			case GSMenuMain:
 				if(setting.GetResult() == MRNewGame){
-					musicHandler.SetNewMusic(&sounds._forest);
+					musicHandler.SetNewMusic(&sounds.forest);
 					levels.count = 0;
 					LevelCounter = 0;
 					map.Reset();
@@ -263,7 +295,7 @@ int main( int argc, char* args[] )
 					player.Reset(map.GetSpawnLocation(), true);
 					gameStates.NewState(GSGame);
 					setting.Finish();
-					sounds._brupap.Play(false);
+					sounds.brupap.Play(false);
 				}else if (setting.GetResult()==MRLoadGame)
 				{
 					Loader load;
@@ -279,7 +311,7 @@ int main( int argc, char* args[] )
 						map.NewMap(levels.levels[newMapId]);
 						enemies.PopulateEnemies(&map, &graphics);
 						gameStates.NewState(GSGame);
-						musicHandler.SetNewMusic(&sounds._forest);
+						musicHandler.SetNewMusic(&sounds.forest);
 						player.Reset(map.GetSpawnLocation(), false);
 					}
 					setting.Finish();
@@ -289,14 +321,60 @@ int main( int argc, char* args[] )
 				graphics.gameLogo.Draw(screen, screen.GetWidth()/2 - graphics.gameLogo.GetWidth()/2, (unsigned int)logoPositionY);
 				menu.Open(screen, graphics.another, Point2D(50, logoPositionY + graphics.gameLogo.GetHeight()));
 				break;
+			case GSPause:
+				{
+					if(setting.GetResult() == MRResume){
+						gameStates.BackState();
+						inGameMenu.Reset();
+						setting.Finish();
+					}else if(setting.GetResult() == MRLoadGame)
+					{
+						Loader load;
+						if (load.StartAndCheck("Save1.sav"))
+						{
+							int newMapId;
+							load.LoadCheckpoint(LevelCounter,newMapId);
+							if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = 0;
+							levels.count = newMapId;
+							load.LoadMap(map);
+							load.LoadPlayer(player);
+							load.Close();
+							map.NewMap(levels.levels[newMapId]);
+							enemies.PopulateEnemies(&map, &graphics);
+							gameStates.NewState(GSGame);
+							musicHandler.SetNewMusic(&sounds.forest);
+							player.Reset(map.GetSpawnLocation(), false);
+						}
+						setting.Finish();
+					}else if (setting.GetResult() == MRNewGame)
+					{
+						gameStates.NewState(GSMenuMain);
+						musicHandler.SetNewMusic(&sounds.titleScreen);
+						setting.Finish();
+
+					}
+					
+					musicHandler.Update();
+
+					Timer = clock();
+					map.DrawBackground(screen, &graphics);
+					map.Draw(screen, LevelCounter);
+					player.DrawHealthBar(screen, 1, 5, 5, 100, 20, &graphics.another);
+					player.DrawInkBar(screen, 1, 5, 35, 100, 20, &graphics.another);
+					inGameMenu.Open(screen, graphics.another, Point2D(0, 50));
+					break;
+				}
+
 			case GSGame:
-				if(gameStates.CurrentState() != GSMenuNewLevel && spacePressed){
+				if(gameStates.CurrentState() != GSMenuNewLevel && actionButtonPressed){
 					if(map.NewMapEnabled(player.GetBoundR(), NewLevelID))
 						gameStates.PushState(GSMenuNewLevel);
+					actionButtonPressed=false;
 				}
 				player.Update(&map, screen.GetWidth(), screen.GetHeight(), Timer);
 				enemies.Update(&map, &player, Timer);
 				map.Update(player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y),player.InkPool);
+				musicHandler.Update();
 				Timer = clock();
 				map.DrawBackground(screen, &graphics);
 				map.Draw(screen, LevelCounter);
@@ -308,7 +386,6 @@ int main( int argc, char* args[] )
 
 			case GSMenuNewLevel:{
  				if(levels.count > LevelCounter) LevelCounter++;
-				///if(NewLevelID == -2) levels.count = levels.maxCount-1; //Wat te doen als niet wordt gezegt wat het volgende mapid is
 				if(NewLevelID < 0) levels.count++;
 				else if(NewLevelID >= levels.maxCount) levels.count = levels.maxCount-1;
 				else levels.count = NewLevelID;
@@ -327,16 +404,22 @@ int main( int argc, char* args[] )
 				break;
 								}
 			case GSGame_Over:
+				musicHandler.Update();
+				Timer = clock();
 				gameOverMenu.Open(screen, graphics.another, Point2D(0, 50));
 				if(setting.GetResult() != MRExitGame && setting.GetResult() != MRNone) {
 					if(setting.GetResult() == MRMainMenu)
+					{
+						musicHandler.SetNewMusic(&sounds.titleScreen);
+						sounds.forest.SetVolumeModifier(0.4f);
 						gameStates.NewState(GSMenuMain);
+					}
 					else if(setting.GetResult() == MRNewGame){
-						musicHandler.SetNewMusic(&sounds._forest);
 						levels.count = 1;
 						map.NewMap(levels.levels[0]);
 						enemies.PopulateEnemies(&map, &graphics);
 						player.Reset(map.GetSpawnLocation(), true);
+						sounds.forest.SetVolumeModifier(0.4f);
 						gameStates.NewState(GSGame);
 					}
 					setting.Finish();

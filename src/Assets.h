@@ -55,12 +55,22 @@ public:
 class Sounds
 {
 public:
-	~Sounds(){_titleScreen.Free();_forest.Free();_brupap.Free();};
+	Sounds()
+	{
+		titleScreen.InitIfNeccessary("Music/aratsburrow.ogg",128);
+		titleScreen.SetLoopPosition(48300);
+		titleScreen.SetVolumeModifier(0.6f);
+		forest.InitIfNeccessary("Music/amouseadventure.ogg" ,128);
+		forest.SetVolumeModifier(0.4f);
+		brupap.LoadSoundEffect("SFX/brupap.wav");
+	}
+
+	~Sounds(){titleScreen.Free();forest.Free();brupap.Free();};
 	//Music
-	Music _titleScreen;
-	Music _forest;
+	Music titleScreen;
+	Music forest;
 	//Sound effects
-	SoundEffect _brupap;
+	SoundEffect brupap;
 };
 class Maps
 {
