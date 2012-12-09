@@ -10,6 +10,7 @@ Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, in
 	_animationState = 0;
 	_vDir = VDirNone;
 	_hDir = HDirLeft;
+	_cameraHDir = HDirNone;
 	_frame = 0;
 	_buttonUp=_buttonDown=_buttonLeft=_buttonRight=false;
 	_velocity.Y = 50;
@@ -27,35 +28,72 @@ void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxV
 void Player::AddInk(int value){
 	_totalInkReceived += value;
 }
-void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float part, float speed){
+void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float part,float threshold, float speed){
 	Point2D maxDim = map->GetMapDimension();
 	Point2D centerPoint  = GetCenter();
 	Point2D camera = map->GetMapPosition();
-	if(maxDim.X > screenSize.X){
+	if(maxDim.X < screenSize.X)
+	{camera.X=0;}
+	else
+	{
 		float posOnScreen = centerPoint.X - camera.X;
-		if(_buttonLeft)
+		if (_cameraHDir==HDirNone)
 		{
-			if(posOnScreen + _velocity.X*timeDiff + 2 < screenSize.X*(1-part))
-				camera.X -= _velocity.X * timeDiff*speed;
-			else
-				camera.X = centerPoint.X - screenSize.X*(1-part);
+			if (_buttonLeft)
+			{
+				if (posOnScreen - _velocity.X*timeDiff < screenSize.X*threshold)
+				{_cameraHDir=HDirLeft;}
+			}else if (_buttonRight)
+			{
+				if (posOnScreen + _velocity.X*timeDiff > screenSize.X*(1-threshold))
+				{_cameraHDir=HDirRight;}
+			}
 		}
-		else if(_buttonRight){
-			if(posOnScreen - _velocity.X*timeDiff - 2 > screenSize.X*part)
-				camera.X += _velocity.X * timeDiff * speed;
-			else
-				camera.X = centerPoint.X - screenSize.X*part;
+		if (_cameraHDir==HDirLeft)
+		{
+			if(_buttonLeft)
+			{
+				if(posOnScreen + _velocity.X*timeDiff < screenSize.X*(1-part))
+					camera.X -= _velocity.X * timeDiff*speed;
+				else if (posOnScreen <screenSize.X*(1-part))
+					camera.X = centerPoint.X - screenSize.X*(1-part);
+			}else if (_buttonRight)
+			{
+				if (posOnScreen + _velocity.X*timeDiff > screenSize.X*(1-threshold))
+				{_cameraHDir=HDirRight;}
+			}
+		}else if (_cameraHDir=HDirRight)
+		{
+			if (_buttonLeft)
+			{
+				if (posOnScreen - _velocity.X*timeDiff < screenSize.X*threshold)
+				{_cameraHDir=HDirLeft;}
+			}
+			else if(_buttonRight){
+				if(posOnScreen - _velocity.X*timeDiff - 2 > screenSize.X*part)
+					camera.X += _velocity.X * timeDiff * speed;
+				else if (posOnScreen > screenSize.X*part)
+					camera.X = centerPoint.X - screenSize.X*part;
+			}
 		}
-		if(posOnScreen < part*screenSize.X && !_buttonLeft)
-			camera.X = centerPoint.X - part*screenSize.X;
-		else if(posOnScreen > (1-part)*screenSize.X && !_buttonRight)
-			camera.X = centerPoint.X - (1-part)*screenSize.X;
-		if(camera.X < 0) camera.X = 0;
+		if(posOnScreen < threshold*screenSize.X && !_buttonLeft)
+			camera.X = centerPoint.X - threshold*screenSize.X;
+		else if(posOnScreen > (1-threshold)*screenSize.X && !_buttonRight)
+			camera.X = centerPoint.X - (1-threshold)*screenSize.X;
+		if(camera.X < 0) 
+		{
+			_cameraHDir=HDirNone;
+			camera.X = 0;
+		}
 		else if(camera.X > maxDim.X - screenSize.X)
+		{
 			camera.X = maxDim.X - screenSize.X;
+			_cameraHDir=HDirNone;
+		}
 	}
-	else camera.X = 0;
-	if(maxDim.Y > screenSize.Y){
+	if(maxDim.Y < screenSize.Y){
+		camera.Y=0;//= maxDim.Y-screenSize.Y; //With this, a black strip on the bottom would never appear. Although, no tiles either.
+	}else{
 		if(centerPoint.Y <= screenSize.Y / 2)
 			camera.Y = 0;
 		else if(centerPoint.Y >= maxDim.Y - screenSize.Y / 2)
@@ -63,7 +101,6 @@ void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float 
 		else 
 			camera.Y = centerPoint.Y - screenSize.Y / 2;
 	}
-	else camera.Y = 0;
 	map->SetMapPosition(camera.X,camera.Y);
 }
 void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
@@ -117,7 +154,7 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	HandleCollision(map, screenWidth, screenHeight, timeDiff);
 	//map->SetNewMapPosition(Point2D((float)screenWidth, (float)screenHeight), GetCenter());
 	
-	SetMapPosition(map, Point2D((float)screenWidth, (float)screenHeight), timeDiff, 0.4, 1.3);
+	SetMapPosition(map, Point2D((float)screenWidth, (float)screenHeight), timeDiff, 0.4,0.2, 1.3);
 
 	//Prevents the player from walking out of screen
 	Point2D mapDim = map->GetMapDimension();

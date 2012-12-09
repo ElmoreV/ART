@@ -124,7 +124,7 @@ bool Music::SetPosition(int position)
 
 bool Music::Play(int position,int fadeInMilliseconds)
 {
-	bool alreadyFading=(::Mix_FadingMusic()==MIX_FADING_OUT);
+	bool alreadyFading=(::Mix_FadingMusic()==MIX_FADING_OUT)|(::Mix_FadingMusic()==MIX_FADING_IN);
 	if (::Mix_PlayingMusic()==false||alreadyFading)
 	{
 		if (alreadyFading)

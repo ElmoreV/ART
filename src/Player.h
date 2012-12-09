@@ -26,6 +26,7 @@ protected:
 	Point2D _previousPosition;
 	VerticalDirection _vDir;
 	HorizontalDirection _hDir;
+	HorizontalDirection _cameraHDir;
 	//For the animations
 	int _interval, _countInterval, _animationState, _frame;
 	int _maxVelocity, _maxHealth, _maxInkPool;
@@ -57,6 +58,6 @@ public:
 	void DrawHealthBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
 	void DrawInkBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
 	void Reset(Point2D position = 0, bool resetStats=false);
-	void SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float part=0.3, float speed=1.2);
+	void SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float part=0.5,float threshold=0.3, float speed=1.2);
 };
 #endif
