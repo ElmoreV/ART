@@ -1,4 +1,4 @@
-//SDLFramework Rev 4
+//SDLFramework Rev 5
 
 
 #include "SDLFramework.h"
@@ -75,6 +75,8 @@ void Error::LogError(std::string message, int code)
 	out.close();
 #endif
 };
+//Show the error in the caption
+//With the message and the code
 void Error::CaptionError(std::string message, int code)
 {
 #ifdef ERROR
@@ -90,6 +92,7 @@ void Error::CaptionError(std::string message, int code)
 	SDL_WM_SetCaption(str.c_str(),0);
 #endif
 }; 
+//Initialize all the Dll-components of SDL
 bool InitSDL()
 {
 	int flags=SDL_INIT_VIDEO;//Initialize video component
@@ -117,7 +120,8 @@ bool InitSDL()
 	#endif
 	return true;
 }
-void ClearSDL()//Quit the SDL,TTF and mixer extenstion
+//Quit the SDL,TTF and mixer extenstion
+void ClearSDL()
 {
 	SDL_Quit();
 	#ifdef FONT
@@ -129,7 +133,8 @@ void ClearSDL()//Quit the SDL,TTF and mixer extenstion
 }
 
 #ifdef FONT
-//Font
+
+//Font constructors
 Font::Font():_ttf(0){_textColor.b=0;_textColor.g=0;_textColor.r=0;}
 
 Font::Font(TTF_Font* font):_ttf(font){_textColor.b=0;_textColor.g=0;_textColor.r=0;}
@@ -147,7 +152,7 @@ bool Font::OpenFont(std::string filename, int size)
 	}
 	return true;
 }
-//Set and get the Colour
+//Set and get the text Color (with RGB colors or the in SDL already defined SDL_Color)
 void Font::SetColor(int R,int G, int B)
 {
 	SDL_Color text={R,G,B};
@@ -161,7 +166,7 @@ SDL_Color Font::GetColor()
 {
 	return _textColor;
 }
-//Free's the resources
+//Free's the font's resources
 void Font::Free()
 {
 	if (_ttf!=0)
@@ -170,6 +175,7 @@ void Font::Free()
 		_ttf=0;
 	}
 }
+//Returns the font object as 
 Font::operator TTF_Font* (){return _ttf;};
 bool Font::IsInit(){return (_ttf!=0);}
 #endif
@@ -180,7 +186,7 @@ BaseSurface::operator SDL_Surface* (){return _surface;};//Return for maximum com
 SDL_Surface* BaseSurface::operator->(){return _surface;};//Return a reference(exact copy)of the surface to make calling e.g. MapRGB() easier
 BaseSurface::BaseSurface():_surface(0){}; //Default constructor, initialize _surface to 0
 BaseSurface::BaseSurface(SDL_Surface* surface):_surface(surface){}; //Surface constructor, which handles SDL_Surface* input;
-bool BaseSurface::IsInit(){return (_surface!=0);}
+bool BaseSurface::IsInit(){return (_surface!=0);}//Checks if the surface is already initialized
 
 //Surface
 
@@ -215,6 +221,12 @@ bool Surface::Draw(WindowSurface windowSurface,unsigned int x, unsigned int y, S
 	}
 	return false;
 };
+//Loads an image unto a surface.
+//Can be a BMP
+//With the IMAGE extension, it can be almost any other image file.
+//colorKeyR/G/B is the masking color used to make the sprite partially transparent.
+//useImageAlpha makes SDL render the image with the alpha channel already present in the image
+//alpha makes the surface use a certain alpha value
 bool Surface::LoadImage(std::string filename,int colorKeyR,int colorKeyG, int colorKeyB,bool useImageAlpha,int alpha)
 {
 	Free();//Free the resource if it is already occupied
@@ -254,6 +266,7 @@ bool Surface::LoadImage(std::string filename,int colorKeyR,int colorKeyG, int co
 	return true;
 };
 #ifdef FONT
+//Renders a text with a certain font on the surface to draw
 bool Surface::RenderText(Font font,std::string text)
 {
 	Free();//Free surface if already taken
@@ -266,6 +279,9 @@ bool Surface::RenderText(Font font,std::string text)
 	return true;
 };
 #endif
+//Set a mask color
+//Check if it's between 0 and 255
+//If one of the colors is set to -1, unset the color mask(and transparancy on that part)
 bool Surface::MaskColor(int r,int g,int b)
 {
 	if (_surface!=0)
@@ -287,12 +303,14 @@ bool Surface::MaskColor(int r,int g,int b)
 	}
 	return false;
 }
+//gets the current mask color and set it in r,g, b
 void Surface::GetMaskColor(int& r,int& g, int& b)
 {
 	r=_r;
 	g=_g;
 	b=_b;
 };
+//Set the alpha (blending) transparancy
 bool Surface::SetTransparency(int alpha)
 {
 	if (_surface!=0)
@@ -308,7 +326,9 @@ bool Surface::SetTransparency(int alpha)
 	}
 	return false;
 };
+//Get the surface width
 int Surface::GetWidth(){return _surface!=0?_surface->w:0;}
+//Get the surface height
 int Surface::GetHeight(){return _surface!=0?_surface->h:0;}
 void Surface::Free()//Freeing the surface
 {
@@ -318,13 +338,20 @@ void Surface::Free()//Freeing the surface
 		_surface=0;
 	}
 }
-
+//Creating the windowsurface.
+//Without any parameters, it is just an empty one
 WindowSurface::WindowSurface():BaseSurface(){};
 WindowSurface::WindowSurface(SDL_Surface* surface):BaseSurface(){_surface=surface;};
 WindowSurface::WindowSurface(int width, int height, int bpp, bool doublebuffering, bool windowFrame):BaseSurface()
 {
 	CreateWindowSurface(width,height,bpp,doublebuffering,windowFrame);
 };
+//Creates a screen to work on
+//Width and height are the screen dimensions to set
+//bpp is bits per pixel. 32 gives the normal RGBA color scheme
+//doublebuffering enables the use of doublebuffering
+//windowFrame: when true: it shows the outlines of the window
+// when false: it doesn't show the outlines of the window(and no close,minimize or maximize button)
 bool WindowSurface::CreateWindowSurface(int width,int height, int bpp, bool doublebuffering, bool windowFrame)
 {
 	int modeFlags=0;
@@ -389,7 +416,7 @@ bool WindowSurface::DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g,
 	}
 	return true;
 }
-//Draw a line from a to b
+//Draw a line from 1 to 2
 bool WindowSurface::DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b)
 {
 	if (::lineRGBA(_surface,x1,y1,x2,y2,r,g,b,255)==-1)

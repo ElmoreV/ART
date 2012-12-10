@@ -124,32 +124,26 @@ bool Music::SetPosition(int position)
 
 bool Music::Play(int position,int fadeInMilliseconds)
 {
-	bool alreadyFading=(::Mix_FadingMusic()==MIX_FADING_OUT)|(::Mix_FadingMusic()==MIX_FADING_IN);
-	if (::Mix_PlayingMusic()==false||alreadyFading)
+	bool playingSomething=(::Mix_PlayingMusic())|(::Mix_FadingMusic()==MIX_FADING_OUT)|(::Mix_FadingMusic()==MIX_FADING_IN);
+	if (playingSomething)
+	{::Mix_HaltMusic();}
+	if (fadeInMilliseconds>0)
+	{Mix_FadeInMusic(_music, 1, fadeInMilliseconds);}
+	else
+	{::Mix_PlayMusic(_music,1);}
+	_playing=true;
+	Mix_VolumeMusic(_volume);
+	_position=0;
+	_startTime=clock();
+	if (position>0)
 	{
-		if (alreadyFading)
-		{::Mix_HaltMusic();}
-
-		if (fadeInMilliseconds>0)
-		{Mix_FadeInMusic(_music, 1, fadeInMilliseconds);}
-		else
-		{::Mix_PlayMusic(_music,1);}
-		_playing=true;
-		Mix_VolumeMusic(_volume);
-		_position=0;
-		_startTime=clock();
-		if (position>0)
+		if (SetPosition(position))
 		{
-			if (SetPosition(position))
-			{
-				_position+=position;
-				_startTime-=position;
-			}
+			_position+=position;
+			_startTime-=position;
 		}
-		
-		return true;
 	}
-	return false;
+	return true;
 };
 bool Music::Continue(int fadeIn)
 {

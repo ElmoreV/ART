@@ -5,6 +5,7 @@
 class Graphics
 {
 public:
+	//Frees all the graphics
 	~Graphics()
 	{
 		tileSheet.Free();
@@ -20,6 +21,7 @@ public:
 		space2.Free();
 		another.Free();
 	};
+	//Initializes all the graphics
 	Graphics(){
 
 		tileSheet.LoadImage("Images/tilesheet.png", 255, 242, 0);
@@ -55,6 +57,7 @@ public:
 class Sounds
 {
 public:
+	//Initializes all the sounds
 	Sounds()
 	{
 		titleScreen.InitIfNeccessary("Music/aratsburrow.ogg",128);
@@ -64,7 +67,7 @@ public:
 		forest.SetVolumeModifier(0.4f);
 		brupap.LoadSoundEffect("SFX/brupap.wav");
 	}
-
+	//Frees all the sounds
 	~Sounds(){titleScreen.Free();forest.Free();brupap.Free();};
 	//Music
 	Music titleScreen;
@@ -75,9 +78,10 @@ public:
 class Maps
 {
 public:
-	std::string levels[6];
-	int count;
-	int maxCount;
+	std::string levels[6];//The filenames for the levels
+	int count;//The starting level
+	int maxCount; //The maximum of levels
+	//Initializes all the maps
 	Maps(){
 		count = 0;
 		maxCount = 6;

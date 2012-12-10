@@ -154,7 +154,7 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 	HandleCollision(map, screenWidth, screenHeight, timeDiff);
 	//map->SetNewMapPosition(Point2D((float)screenWidth, (float)screenHeight), GetCenter());
 	
-	SetMapPosition(map, Point2D((float)screenWidth, (float)screenHeight), timeDiff, 0.4,0.2, 1.3);
+	SetMapPosition(map, Point2D((float)screenWidth, (float)screenHeight), timeDiff, 0.4f,0.2f, 1.3f);
 
 	//Prevents the player from walking out of screen
 	Point2D mapDim = map->GetMapDimension();
