@@ -49,7 +49,10 @@ int main( int argc, char* args[] )
 		FPS fps(30);
 		SDL_Event sEvent;
 		musicHandler.SetNewMusic(&sounds.titleScreen);	
-		sfxHandler.AddSoundEffect(&sounds.brupap);
+		sfxHandler.AddSoundEffect(&sounds.death);
+		sfxHandler.AddSoundEffect(&sounds.bell);
+		sfxHandler.AddSoundEffect(&sounds.damage);
+		sfxHandler.AddSoundEffect(&sounds.enemyDeath);
 		gameStates.NewState(GSIntro);
 
 		int introCount=0; float logoPositionY = 0;
@@ -130,7 +133,7 @@ int main( int argc, char* args[] )
 		map.AddTile('!', 100, 250);
 
 		Player player(&graphics.player, map.GetSpawnLocation().X, map.GetSpawnLocation().Y, 3, 3, 2);
-		player.SetVelocity(300, 400); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
+		player.SetVelocity(200, 300); //If Timer is set in draw of player (50 pixels per second) else (50pixels per frame)
 		Menu menu("Main menu", &setting, 255, 255, 255);
 		menu.ShowHeader(false);
 		menu.SetCenter(true);
@@ -173,28 +176,28 @@ int main( int argc, char* args[] )
 		inGameMenu.SetVerticalSpace(20);
 		inGameMenu.AddButtonChild("Resume" ,true,255,255,255,&Settings::OnClickResume);
 		inGameMenu.AddChild("Show statistics" ,true,255,255,255);
-		inGameMenu.GetChild(1)->AddChild("Current level: ");
-		inGameMenu.GetChild(1)->AddChild("Remaining Lives: ");
-		inGameMenu.GetChild(1)->AddChild("Progression: ");
-		inGameMenu.GetChild(1)->AddChild("Enemies killed: ");
-		inGameMenu.GetChild(1)->AddChild("Game completion: ");
-		inGameMenu.GetChild(1)->AddChild("Total distance drawn: ");
+			inGameMenu.GetChild(1)->AddChild("Current level: ");
+			inGameMenu.GetChild(1)->AddChild("Remaining Lives: ");
+			inGameMenu.GetChild(1)->AddChild("Progression: ");
+			inGameMenu.GetChild(1)->AddChild("Enemies killed: ");
+			inGameMenu.GetChild(1)->AddChild("Game completion: ");
+			inGameMenu.GetChild(1)->AddChild("Total distance drawn: ");
 		inGameMenu.AddChild("Options", true);
-		inGameMenu.GetChild(2)->SetVerticalSpace(20);
-		inGameMenu.GetChild(2)->AddChild("Graphics",true);
-		inGameMenu.GetChild(2)->GetChild(0)->AddChild("FPS Setting");
-		inGameMenu.GetChild(2)->GetChild(0)->AddChild("Resolution");
-		inGameMenu.GetChild(2)->AddChild("Sounds",true);
-		inGameMenu.GetChild(2)->GetChild(1)->AddChild("Master Volume");
-		inGameMenu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,155,155,155,&SetNewVolume,&gSettings);
-		((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(1)))->SetStatus((int)(gSettings._volume*256));
-		inGameMenu.GetChild(2)->GetChild(1)->AddChild("SFX-Music");
-		inGameMenu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30,&SetNewProportion,&gSettings);
-		((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._sfxMusicProportion*256));
-		inGameMenu.GetChild(2)->AddChild("Keys");
+			inGameMenu.GetChild(2)->SetVerticalSpace(20);
+			inGameMenu.GetChild(2)->AddChild("Graphics",true);
+			inGameMenu.GetChild(2)->GetChild(0)->AddChild("FPS Setting");
+			inGameMenu.GetChild(2)->GetChild(0)->AddChild("Resolution");
+			inGameMenu.GetChild(2)->AddChild("Sounds",true);
+				inGameMenu.GetChild(2)->GetChild(1)->AddChild("Master Volume");
+				inGameMenu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,155,155,155,&SetNewVolume,&gSettings);
+				((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(1)))->SetStatus((int)(gSettings._volume*256));
+				inGameMenu.GetChild(2)->GetChild(1)->AddChild("SFX-Music");
+				inGameMenu.GetChild(2)->GetChild(1)->AddSliderChild(256,10,true,30,200,30,&SetNewProportion,&gSettings);
+				((SliderMenuItem*)(menu.GetChild(2)->GetChild(1)->GetChild(3)))->SetStatus((int)(gSettings._sfxMusicProportion*256));
+			inGameMenu.GetChild(2)->AddChild("Keys");
 		inGameMenu.AddChild("Quit",true,255,0,0);
-		inGameMenu.GetChild(3)->AddButtonChild("Exit to main menu",true,0,255,0, &Settings::OnClickNewGame);
-		inGameMenu.GetChild(3)->AddButtonChild("Exit game",true,255,255,255, &Settings::OnClickExitGame);
+			inGameMenu.GetChild(3)->AddButtonChild("Exit to main menu",true,0,255,0, &Settings::OnClickNewGame);
+			inGameMenu.GetChild(3)->AddButtonChild("Exit game",true,255,255,255, &Settings::OnClickExitGame);
 
 		int NewLevelID = 0;
 		int LevelCounter = 0;
@@ -259,7 +262,11 @@ int main( int argc, char* args[] )
 			if(clock() > Timer + 500) Timer = clock();
 			if(gameStates.CurrentState() == GSNone) gameStates.PushState(GSMenuMain);
 			if(gameStates.CurrentState() == GSGame && player.Health <= 0)
-			{gameStates.PushState(GSGame_Over);sounds.forest.SetVolumeModifier(0.1f);}
+			{
+				gameStates.PushState(GSGame_Over);
+				sounds.forest.SetVolumeModifier(0.1f);
+				sounds.death.Play(false);
+			}
 			screen.ClearWindow();
 			float musicPercentage=2*gSettings._sfxMusicProportion;
 			if (musicPercentage>1.0){musicPercentage=1.0;}
@@ -295,7 +302,6 @@ int main( int argc, char* args[] )
 					player.Reset(map.GetSpawnLocation(), true);
 					gameStates.NewState(GSGame);
 					setting.Finish();
-					sounds.brupap.Play(false);
 				}else if (setting.GetResult()==MRLoadGame)
 				{
 					Loader load;
@@ -371,8 +377,8 @@ int main( int argc, char* args[] )
 						gameStates.PushState(GSMenuNewLevel);
 					actionButtonPressed=false;
 				}
-				player.Update(&map, screen.GetWidth(), screen.GetHeight(), Timer);
-				enemies.Update(&map, &player, Timer);
+				player.Update(&map, screen.GetWidth(), screen.GetHeight(),sounds, Timer);
+				enemies.Update(&map, &player,sounds, Timer);
 				map.Update(player.GetBoundR(-map.GetMapPosition().X, -map.GetMapPosition().Y),player.InkPool);
 				musicHandler.Update();
 				Timer = clock();
@@ -394,7 +400,7 @@ int main( int argc, char* args[] )
 				enemies.PopulateEnemies(&map, &graphics);
 				player.Reset(map.GetSpawnLocation(), false);
 				gameStates.BackState();
-
+				sounds.bell.Play(false);
 				Saver saver;
 				saver.StartAndOpen();
 				saver.SaveCheckpoint(LevelCounter,levels.count);

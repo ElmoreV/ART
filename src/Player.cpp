@@ -103,7 +103,7 @@ void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float 
 	}
 	map->SetMapPosition(camera.X,camera.Y);
 }
-void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
+void Player::Update(Map* map, int screenWidth, int screenHeight,Sounds& sounds, long lastTick){
 	//Update animation image for the player
 	if(_buttonLeft || _buttonRight){
 		if(_countInterval > _interval){
@@ -151,10 +151,10 @@ void Player::Update(Map* map, int screenWidth, int screenHeight, long lastTick){
 		_jumpEnable = false; 
 	}
 	//Handles walking and collision
-	HandleCollision(map, screenWidth, screenHeight, timeDiff);
+	HandleCollision(map, screenWidth, screenHeight, timeDiff,sounds);
 	//map->SetNewMapPosition(Point2D((float)screenWidth, (float)screenHeight), GetCenter());
 	
-	SetMapPosition(map, Point2D((float)screenWidth, (float)screenHeight), timeDiff, 0.4f,0.2f, 1.3f);
+	SetMapPosition(map, Point2D((float)screenWidth, (float)screenHeight), timeDiff, 0.45f,0.2f, 1.4f);
 
 	//Prevents the player from walking out of screen
 	Point2D mapDim = map->GetMapDimension();
@@ -259,7 +259,7 @@ void Player::Draw(WindowSurface screen, Point2D mapPosition)
 	Rectangle playerBounds=GetBoundR(-mapPosition.X, -mapPosition.Y);
 	aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
 }
-void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff){
+void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff,Sounds& sound){
 	//The velocities (X and Y) must be smaller than the tile dimensions and the sprite dimensions
 	if(_buttonLeft || _buttonRight){
 		int X, XO;
@@ -293,6 +293,7 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 				if(t1.Side == must || t2.Side == must){
 					InvulnerableTime = 2;	
 					Health -= _maxHealth/2;
+					sound.damage.Play(false);
 				}
 			}
 		}
@@ -481,6 +482,7 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 					if(t1.Side == TSbottom || t2.Side == TSbottom){
 						InvulnerableTime = 2;	
 						Health -= _maxHealth/2;
+						sound.damage.Play(false);
 					}
 				}
 			}
@@ -506,6 +508,7 @@ void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float 
 					if(t1.Side == TStop || t2.Side == TStop){
 						InvulnerableTime = 2;	
 						Health -= _maxHealth/2;
+						sound.damage.Play(false);
 					}
 				}
 			}

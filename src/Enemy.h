@@ -31,7 +31,7 @@ private:
 public:
 	EnemyHandler();
 	void AddEnemy(EnemyType type, Graphics* graphics, Point2D position);
-	void Update(Map* map, Player* player, long timediff=-1);
+	void Update(Map* map, Player* player, Sounds& sound,long timediff=-1);
 	void Draw(WindowSurface screen, Point2D mapPosition);
 	void PopulateEnemies(Map* map, Graphics* graphics);
 };

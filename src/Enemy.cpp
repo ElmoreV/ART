@@ -84,7 +84,7 @@ void EnemyHandler::AddEnemy(EnemyType type, Graphics* graphics, Point2D position
 	newE.CanWalkSlope=canwalkslope;
 	_enemyList.push_back(newE);
 }
-void EnemyHandler::Update(Map* map, Player* player, long timer){
+void EnemyHandler::Update(Map* map, Player* player,Sounds& sound, long timer){
 	float timeDiff=timer<0?1:(clock()-timer)/1000.0f;
 	for(unsigned int i = 0; i <_enemyList.size(); i++){
 		Enemy* enemy = &_enemyList.at(i);
@@ -103,16 +103,21 @@ void EnemyHandler::Update(Map* map, Player* player, long timer){
 						_enemyList.erase(_enemyList.begin() + i);
 						player->AddInk(20);
 						player->Jump();
+						player->InvulnerableTime = 0.2;
+						sound.enemyDeath.Play(false);
 						update = false;
 					}
 					else {
 						player->Health -= 10;
 						player->InvulnerableTime = 2;
+						sound.damage.Play(false);
+						
 					}
 				}
 				else {
 					player->Health -= 10;
 					player->InvulnerableTime = 2;
+					sound.damage.Play(false);
 				}
 			}
 		}

@@ -31,7 +31,7 @@ protected:
 	int _interval, _countInterval, _animationState, _frame;
 	int _maxVelocity, _maxHealth, _maxInkPool;
 	bool _jumpEnable;
-	void HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff);
+	void HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff,Sounds& sound);
 	Rectangle GetPreviousBoundR(float velocityX, float velocityY);
 	bool _buttonUp, _buttonDown, _buttonLeft, _buttonRight;
 	float _totalInkReceived;
@@ -41,7 +41,7 @@ public:
 	//Update the position based on the velocity and draws the clip on screen
 	void SetVelocity(float X, float Y);
 	void Draw(WindowSurface screen, Point2D mapPosition);
-	void Update(Map* map1, int screenWidth, int screenHeight, long lastTick=-1);
+	void Update(Map* map1, int screenWidth, int screenHeight,Sounds& sounds, long lastTick=-1);
 	void HandleEvent(SDL_Event sEvent); //Keep up if arrowbuttons are pressed
 	Point2D GetCenter();
 	HorizontalDirection GetHorizontalDir();

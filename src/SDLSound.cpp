@@ -56,6 +56,7 @@ void SoundEffect::Volume(int volume)
 	if (IsInit())
 	{
 		Mix_VolumeChunk(_sfx,(int)((float)_volume*_volumeModifier));
+		Mix_Volume(_channelId,(int)((float)_volume*_volumeModifier));
 	}
 }
 void SoundEffect::SetVolumeModifier(float volumeModifier)

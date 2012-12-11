@@ -65,15 +65,21 @@ public:
 		titleScreen.SetVolumeModifier(0.6f);
 		forest.InitIfNeccessary("Music/amouseadventure.ogg" ,128);
 		forest.SetVolumeModifier(0.4f);
-		brupap.LoadSoundEffect("SFX/brupap.wav");
+		death.LoadSoundEffect("SFX/deathbysnusnu.wav");
+		bell.LoadSoundEffect("SFX/bell.wav");
+		damage.LoadSoundEffect("SFX/damage.wav");
+		enemyDeath.LoadSoundEffect("SFX/enemydeath.wav");
 	}
 	//Frees all the sounds
-	~Sounds(){titleScreen.Free();forest.Free();brupap.Free();};
+	~Sounds(){titleScreen.Free();forest.Free();death.Free();};
 	//Music
 	Music titleScreen;
 	Music forest;
 	//Sound effects
-	SoundEffect brupap;
+	SoundEffect death;
+	SoundEffect bell;
+	SoundEffect damage;
+	SoundEffect enemyDeath;
 };
 class Maps
 {
