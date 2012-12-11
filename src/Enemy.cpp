@@ -103,7 +103,7 @@ void EnemyHandler::Update(Map* map, Player* player,Sounds& sound, long timer){
 						_enemyList.erase(_enemyList.begin() + i);
 						player->AddInk(20);
 						player->Jump();
-						player->InvulnerableTime = 0.2;
+						player->InvulnerableTime = 0.2f;
 						sound.enemyDeath.Play(false);
 						update = false;
 					}

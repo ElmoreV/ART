@@ -95,7 +95,19 @@ bool OptionMenuItem::GetOptionHover(int index) { return _options.at(index).GetHo
 void OptionMenuItem::SetOptionHover(int index, bool value){ _options.at(index).SetHover(value); }
 void OptionMenuItem::SetOptionBound(int index, float x, float y, float w, float h){_options.at(index).SetBound(x, y, w, h); }
 Options* OptionMenuItem::GetOption(int index){return &_options.at(index); }
-
+void OptionMenuItem::SetOptionEnabled(unsigned int index, bool value){
+	if(index < _options.size())
+		_options.at(index).Enabled = value;
+}
+std::string OptionMenuItem::GetOptionSpace(){
+	if(_optionSpace != "") return _optionSpace;
+	return " ";
+}
+int OptionMenuItem::GetOptionSpaceWidth(){return _optionSpaceWidth; }
+void OptionMenuItem::SetOptionSpace(std::string value){
+	_optionSpace = value;
+}
+void OptionMenuItem::SetOptionSpaceWidth(int value){_optionSpaceWidth = value;}
 TextMenuItem::TextMenuItem(std::string text, int maxLength, bool digit, bool center, int r, int g, int b,bool (Settings::*ontextchange)(std::string text)):MenuItem(text,center,r,g,b){
 	_type=TextItem;
 	_maxLength = maxLength;
@@ -428,7 +440,9 @@ void MenuItem::Draw(WindowSurface screen, Font& font, Point2D offset){
 	}
 	render.Free();
 };
-
+void MenuItem::ShowHeader(bool value){ _headerShown = value; }
+void MenuItem::SetVerticalSpace(int value){_verticalSpace = value; }
+void MenuItem::SetCenter(bool value){_center = value; }
 bool MenuItem::IsSelected(){return _selected;}
 std::string MenuItem::GetText(){
 	if(_type==OptionItem) { Text = "";
@@ -506,6 +520,17 @@ void Menu::AddTextChild(std::string title, int maxLength, bool digit, bool cente
 void Menu::AddSliderChild(int width, int height, bool center, int r, int g, int b,bool (*onValueChange)(float value,void* pRev),void* pRev){
 	_mainItem.AddSliderChild(width, height, center, r, g, b,onValueChange,pRev);
 }
+void Menu::SetVerticalSpace(int space){
+		_mainItem.SetVerticalSpace(space);
+	}
+void  Menu::SetColor(unsigned int r, unsigned int g, unsigned int b){
+	if(r>255)r=255;
+	if(g>255)g=255;
+	if(b>255)b=255;
+	_mainItem.SetColor(r, g, b);
+}
+void  Menu::ShowHeader(bool value){ _mainItem.ShowHeader(value); }
+void  Menu::SetCenter(bool value){_mainItem.SetCenter(value); }
 void Menu::HandleEvent(SDL_Event sEvent){
 	int id = _currentItem->HandleEvent(sEvent, _setting);
 	if(id == -3 || id == -2) return;
