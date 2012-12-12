@@ -84,19 +84,21 @@ public:
 class Maps
 {
 public:
-	std::string levels[6];//The filenames for the levels
+	std::string levels[8];//The filenames for the levels
 	int count;//The starting level
 	int maxCount; //The maximum of levels
 	//Initializes all the maps
 	Maps(){
 		count = 0;
-		maxCount = 6;
+		maxCount = 8;
 		levels[0] = "Map/map0.txt";
 		levels[1] = "Map/map1.txt";
 		levels[2] = "Map/map2.txt";
 		levels[3] = "Map/map3.txt";
 		levels[4] = "Map/map4.txt";
 		levels[5] = "Map/map5.txt";
+		levels[6] = "Map/map6.txt";
+		levels[7] = "Map/map7.txt";
 	};
 
 };

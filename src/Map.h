@@ -88,6 +88,8 @@ protected:
 	std::vector<int> _newMapId;
 	//Returns the id of the newmapchar
 	int GetNewMapId(int x, int y);
+	//If the entrances of the map are lockable
+	bool _locked;
 public:
 	//Contructor, which set the tilesheet, tiledimensions, and the textfile to read for the map
 	Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, std::string map);

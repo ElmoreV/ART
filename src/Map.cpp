@@ -53,6 +53,7 @@ Map::Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, st
 	if(map != "") ReadFile(map);
 	_forestBbStart = -1;
 	Reset();
+	_locked = true;
 }
 void Map::Reset()
 {	
@@ -67,6 +68,7 @@ bool Map::ReadFile(std::string filename)
 	_lines=0;
 	_newMapId.clear();
 	std::ifstream streamer;
+	_locked = true;
 	streamer.open(filename.c_str());
 	if(!streamer) 
 	{
@@ -95,6 +97,11 @@ bool Map::ReadFile(std::string filename)
 				if(word.substr(0, (int)dx) == ss.str()){
 					int mapId = std::atoi(word.substr((int)dx+1).c_str());
 					_newMapId.push_back(mapId);
+				}
+				else if(word.substr(0, (int)dx) == "lock"){
+					int v = std::atoi(word.substr((int)dx+1).c_str());
+					if(v == 0 || word.substr((int)dx+1) == "false") _locked = false;
+					else _locked = true;
 				}
 			}
 		}
@@ -167,7 +174,7 @@ void Map::Draw(WindowSurface screen, int completedLvl)
 			if(_tileLibrary.count(charline[x]) != 0 && charline[x] != _spawnLocation)
 			{
 				TileData td = _tileLibrary.find(charline[x])->second;
-				if(charline[x] == _newMapChar && completedLvl >= 0){
+				if(charline[x] == _newMapChar && completedLvl >= 0 && _locked){
 					if(newCharCounter < _newMapId.size() ){
 						if(_newMapId[newCharCounter] > completedLvl+1){
 							std::stringstream ss;ss<<_newMapCharClosed;

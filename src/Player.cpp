@@ -176,11 +176,13 @@ void Player::Update(Map* map, int screenWidth, int screenHeight,Sounds& sounds, 
 		if(_position.Y + _spriteDimension.Y -  map->GetMapPosition().Y > screenHeight){
 			_position.Y = screenHeight - _spriteDimension.Y +  map->GetMapPosition().Y;
 			_jumpEnable = true;
+			Health = 0;
 		}
 	}
 	else if(_position.Y + _spriteDimension.X > mapDim.Y){
 		_position.Y = mapDim.Y - _spriteDimension.Y;
 		_jumpEnable = true;
+		Health = 0;
 	}
 	if(_velocity.Y < 0) _vDir = VDirUp;
 	else if(_velocity.Y>0)_vDir=VDirDown;
