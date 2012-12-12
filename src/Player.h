@@ -97,6 +97,9 @@ public:
 	//Resets the player, sets the position and the stats like health, if the bool resetStats=true
 	void Reset(Point2D position = 0, bool resetStats=false);
 	//Calculate and set the cameraposition based on the players position
+	//part: the part of the screen that the mouse is going to be when walking a direction
+	//threshold: the ratio of the screen where the direction the camera is oriented changes
+	//speed: the speed of the camera when it tries to make the player position of 'part' of the screen. Must be higher than the player velocity(>1)
 	void SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float part=0.5,float threshold=0.3, float speed=1.2);
 };
 #endif

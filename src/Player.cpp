@@ -53,7 +53,7 @@ void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float 
 		{
 			if(_buttonLeft)
 			{
-				if(posOnScreen + _velocity.X*timeDiff < screenSize.X*(1-part))
+				if(posOnScreen + _velocity.X*timeDiff +2 < screenSize.X*(1-part))
 					camera.X -= _velocity.X * timeDiff*speed;
 				else if (posOnScreen <screenSize.X*(1-part))
 					camera.X = centerPoint.X - screenSize.X*(1-part);
