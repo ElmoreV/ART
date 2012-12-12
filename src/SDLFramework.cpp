@@ -175,7 +175,7 @@ void Font::Free()
 		_ttf=0;
 	}
 }
-//Returns the font object as 
+
 Font::operator TTF_Font* (){return _ttf;};
 bool Font::IsInit(){return (_ttf!=0);}
 #endif

@@ -1,4 +1,4 @@
-//SDLFramework Rev 5
+//SDLFramework Rev 6
 
 
 #ifndef SDLFRAMEWORK_H
@@ -49,16 +49,26 @@ class Error
 public:
 	Error();
 	Error(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false);
+	//Errorstate error: Log/Caption/Exit. Determines how to handle the error
+//errorMessage: the message describing the error,and it will be logged
+//errorCode: optional code describing developer code values. Default=0; With code 0, the code will not be logged.
+//showSDLError: when true, it add the internal SDLError message to the log message. Default = true.
 	void HandleError(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false);
 private:
+	//Log the error to a file ('log.txt')
+	//When code is positive non-zero: add the clocktime to the log
+	//When code = 0, don't add it
 	void LogError(std::string message, int code);
+	//Show the error in the caption
+	//With the message and the code
 	void CaptionError(std::string message, int code);
 };
 
 
 
-
+//Initialize all the Dll-components of SDL
 bool InitSDL();
+//Quit and free the Dlls that were used
 void ClearSDL();
 
 #ifdef FONT
@@ -68,12 +78,17 @@ class Font
 public:
 	Font();
 	Font(TTF_Font* font);
+	//Open a (new) font (and release the old one if it's needed)
 	bool OpenFont(std::string filename, int size=28);
+	//Set and get the text Color (with RGB colors or the in SDL already defined SDL_Color)
 	void SetColor(int R,int G, int B);
 	void SetColor(SDL_Color color);
 	SDL_Color GetColor();
+	//Free's the font's resources
 	void Free();
+	//Returns the font object as TTF_Font object native to SDL
 	operator TTF_Font* ();
+	//Return whether the font is initialized
 	bool IsInit();
 protected:
 	TTF_Font* _ttf;
@@ -87,9 +102,9 @@ protected:
 class BaseSurface
 {
 public:	
-	operator SDL_Surface* ();
-	SDL_Surface* operator->();
-	bool IsInit();
+	operator SDL_Surface* ();//Return for maximum compatibility
+	SDL_Surface* operator->();//Return a reference(exact copy)of the surface to make calling e.g. MapRGB() easier
+	bool IsInit();//Whether the surface is initialized
 protected:
 	BaseSurface();
 	BaseSurface(SDL_Surface* surface);
@@ -102,17 +117,31 @@ class WindowSurface:public BaseSurface
 private:
 	int _width, _height;
 public:
+	//Creating the windowsurface.
+	//Without any parameters, it is just an empty one
 	WindowSurface();
 	WindowSurface(SDL_Surface* surface);
 	WindowSurface(int width, int height, int bpp=0, bool doublebuffering=false, bool windowFrame=true);
+	//Creates a screen to work on
+	//Width and height are the screen dimensions to set
+	//bpp is bits per pixel. 32 gives the normal RGBA color scheme
+	//doublebuffering enables the use of doublebuffering
+	//windowFrame: when true: it shows the outlines of the window
+	// when false: it doesn't show the outlines of the window(and no close,minimize or maximize button)
 	bool CreateWindowSurface(int width,int height, int bpp=0, bool doublebuffering=false, bool windowFrame=true);
+	//Set the window caption
 	void SetCaption(std::string caption);
+	//Update the window surface, so that all blits are shown
 	bool UpdateWindow();
+	//Fill the entire window with a certain color (default=black RGB(0,0,0))
 	bool ClearWindow(int r=0x00, int g=0x00, int b=0x00);
+	
 	int GetWidth(){return _width;}
 	int GetHeight(){return _height;}
 #ifdef DRAWING
+	//Draw a filled rectangle
 	bool DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g, int b);
+	//Draw a line from 1 to 2
 	bool DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b);
 #endif
 };
@@ -125,23 +154,40 @@ class Surface: public BaseSurface
 public:
 	Surface();
 	Surface(SDL_Surface* surface);
+	//Loads an image unto a surface.
+	//Can be a BMP
+	//With the IMAGE extension, it can be almost any other image file.
+	//colorKeyR/G/B is the masking color used to make the sprite partially transparent.
+	//useImageAlpha makes SDL render the image with the alpha channel already present in the image
+	//alpha makes the surface use a certain alpha value
 	bool LoadImage(std::string filename, int colorKeyR=-1,int colorKeyG=-1, int colorKeyB=-1,bool useImageAlpha=false, int alpha=SDL_ALPHA_OPAQUE);
 	#ifdef FONT
+	//Renders a text with a certain font on the surface to draw
 	bool RenderText(Font font,std::string text);
 	#endif
+	//Set a mask color
+	//Check if it's between 0 and 255
+	//If one of the colors is set to -1, unset the color mask(and transparancy on that part)
 	bool MaskColor(int r=-1,int g=-1,int b=-1);
+	//gets the current mask color and set it in r,g, b
 	void Surface::GetMaskColor(int& r,int& g, int& b);
+	//Draw: x,y are the screen's position
+	//clip is the part of the loaded surface image to draw
+	//windowSurface is the surface to draw on
 	bool Draw(WindowSurface windowSurface,unsigned int x=0, unsigned int y=0, SDL_Rect* clip=0);
+	//Set the alpha (blending) transparancy
 	bool SetTransparency(int alpha);
+	//Get the surface width or height
 	int GetWidth();
 	int GetHeight();
+	//Free the surface resources
 	void Free();
 private:
 	int _r,_g,_b;
 
 };
-/*class CanvasSurface:public BaseSurface{};*/
 
+//An easy way to fill the SDL_Rect structure
 void FillRect (SDL_Rect* destination,int x, int y, int w, int h);
 //Formulas to get the bigger/smaller value
 #define Maximum(a, b) ((a > b) ? a : b)
