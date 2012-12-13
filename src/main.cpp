@@ -30,8 +30,8 @@ private:
 
 int main( int argc, char* args[] ) 
 {
-	InitSDL();
-	if (true)
+	
+	if (InitSDL())
 	{
 		WindowSurface screen(800,600);
 		MusicHandler musicHandler;

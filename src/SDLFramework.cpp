@@ -101,21 +101,22 @@ bool InitSDL()
 	#endif
 	if (SDL_Init(flags)==-1)//Initialize SDL
 	{
-		Error error(Exit,"The initializing of SDL failed with code:");
+		Error error(Exit,"The initializing of SDL failed with code:",0,true);
 		return false;
 	};
 	#ifdef FONT
 	if (TTF_Init()==-1)//Initialize Font extension
 	{
-		Error error(Exit,"The initializing of TTF failed with code:");
+		Error error(Exit,"The initializing of TTF failed with code:",0,true);
 		return false;
 	};
 	#endif
 	#ifdef AUDIO
 	if (Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 )==-1)//Open audio device on a certain sample rate
 	{
-		Error error(Exit,"The opening of the audio device failed with code:");
-		return false;
+		Error error(Caption,"The opening of the audio device failed with code:",0,true);
+		Mix_CloseAudio();
+		return true;
 	}
 	#endif
 	return true;
