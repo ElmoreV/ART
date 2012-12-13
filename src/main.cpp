@@ -424,7 +424,9 @@ int main( int argc, char* args[] )
 						levels.count = 1;
 						map.NewMap(levels.levels[0]);
 						enemies.PopulateEnemies(&map, &graphics);
-						player.Reset(map.GetSpawnLocation(), true);
+						player.Reset(map.GetSpawnLocation(), false);
+						player.Health  =(float) 100;
+						player.InvulnerableTime = 0;
 						sounds.forest.SetVolumeModifier(0.4f);
 						gameStates.NewState(GSGame);
 					}
