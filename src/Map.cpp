@@ -146,10 +146,10 @@ bool Map::Update(Rectangle playerBound,float inkPool)
 {
 	_mapDrawDistance=0;
 	for(unsigned int i = 0; i < _drawObjects.size(); i++){
-		if (inkPool<1.0f)
+		if (inkPool<0.5f)
 		{_drawObjects[i].SetDrawMode(false);}else{_drawObjects[i].SetDrawMode(true);}
 		_drawObjects.at(i).Update(playerBound);
-		_mapDrawDistance+=(unsigned long)_drawObjects[i].GetDrawing().GetDrawingDistance();
+		_mapDrawDistance+=_drawObjects[i].GetDrawing().GetDrawingDistance();
 	}
 	return true;
 }
@@ -410,7 +410,7 @@ float Map::GetSlopeHeight(Point2D position){
 	return h;
 }
 unsigned int Map::GetDrawDistance()
-{return _previousDrawDistance+_mapDrawDistance;};
+{return _previousDrawDistance+(unsigned int)_mapDrawDistance;};
 //Center the map
 void Map::SetNewMapPosition(Point2D screenSize, Point2D centerPoint){
 	float maxX = _tileDimension.X * _mapArray[0].size();
@@ -450,7 +450,7 @@ bool Map::NewMap(std::string map, unsigned int tileWidth, unsigned int tileHeigh
 	if(map == "") {return false;}
 	_spawnPosition.X =0; _spawnPosition.Y = 0;
 	ReadFile(map);
-	_previousDrawDistance+=_mapDrawDistance;
+	_previousDrawDistance+=(unsigned int)_mapDrawDistance;
 	_mapDrawDistance=0;
 	_drawObjects.clear();
 	return true;

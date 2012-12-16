@@ -79,7 +79,7 @@ protected:
 	//The startcounter of the forest, for background, to define where the bottomside of the forest is
 	int _forestBbStart;
 	//Total drawn distance
-	unsigned long _mapDrawDistance;
+	float _mapDrawDistance;
 	//Total Drawn distance of last frame
 	unsigned long _previousDrawDistance;
 	//List of all map id, to change levels

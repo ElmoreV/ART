@@ -176,6 +176,7 @@ void Loader::LoadPlayer(Player& player)
 void Loader::LoadMap(Map& map)
 {
 	map._previousDrawDistance=_deserial.GetUnsignedInt();
+	map._mapDrawDistance=0;
 };
 void Loader::LoadCheckpoint(int& previousMapId,int& nextMapId)
 {

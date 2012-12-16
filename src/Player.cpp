@@ -234,7 +234,7 @@ void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsign
 	if(font != 0){
 		font->SetColor(100,100,255);
 		Surface render;
-		std::stringstream ss; ss << (unsigned int)InkPool << "/" << _maxInkPool;
+		std::stringstream ss; ss << (unsigned int)(InkPool+0.5) << "/" << _maxInkPool;
 		render.RenderText(*font, ss.str());
 		render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
 		render.Free();
