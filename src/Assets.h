@@ -20,6 +20,7 @@ public:
 		space1.Free();
 		space2.Free();
 		another.Free();
+		forestParallax.Free();
 	};
 	//Initializes all the graphics
 	Graphics(){
@@ -30,10 +31,10 @@ public:
 		air[0].LoadImage("Images/background/air1.png");
 		air[1].LoadImage("Images/background/air2.png");
 		air[2].LoadImage("Images/background/air3.png");
-		forest[0].LoadImage("Images/background/forest1.png");
-		forest[1].LoadImage("Images/background/forest2.png");
-		forest[2].LoadImage("Images/background/forest3.png");
-		forest[3].LoadImage("Images/background/forest4.png");
+		forest[0].LoadImage("Images/background/forest1.png",176,244,132);
+		forest[1].LoadImage("Images/background/forest2.png",176,244,132);
+		forest[2].LoadImage("Images/background/forest3.png",176,244,132);
+		forest[3].LoadImage("Images/background/forest4.png",176,244,132);
 		space1.LoadImage("Images/background/space1.png");
 		space2.LoadImage("Images/background/space2.png");
 		enemy[0].LoadImage("Images/enemy1.png", 0, 0, 0);
@@ -41,6 +42,7 @@ public:
 		enemy[2].LoadImage("Images/enemy3.png", 0, 0, 0);
 		enemy[3].LoadImage("Images/enemy4.png", 181, 230, 29);
 		another.OpenFont("Another.ttf");
+		forestParallax.LoadImage("Images/background/parallaxforest.png");
 	}
 	//Normal surfaces
 	Surface tileSheet;
@@ -51,6 +53,7 @@ public:
 	Surface space1;
 	Surface space2;
 	Surface enemy[4];
+	Surface forestParallax;
 	//Fonts
 	Font another;
 };

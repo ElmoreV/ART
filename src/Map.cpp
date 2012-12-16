@@ -215,27 +215,50 @@ void Map::Draw(WindowSurface screen, int completedLvl)
 void Map::DrawBackground(WindowSurface screen, Graphics* assets){
 	Point2D dim = GetMapDimension();
 	Surface surface = assets->forest[0];
-	int forestStart = (int)dim.Y;
+	Surface parallax = assets->forestParallax;
+	int forestStart = (int)dim.Y;//The bottom of the map
+	//_forestBbStart is always -1, so why do this?
 	if(_forestBbStart>=0) 
 		forestStart = _forestBbStart; 
 
 	int Xstart = 0;
 	int Xcount = 0;
-
+	int parallaxStartX =0;
+	//(Bottom of map - (the current camera position + the height of the screen)) divided by the height of the background surface -1
+	//== (bottom of map - the bottom of the screen)/height of background -1
+	//==how many backgrounds are already beneath this position?
 	int Ycount = (int)((forestStart - (_mapPosition.Y+screen.GetHeight())) / surface.GetHeight()) - 1;
+	//the starting point for the background to draw
 	int Ystart = (int)dim.Y - surface.GetHeight()*Ycount;
 	while(Ystart>_mapPosition.Y){
+		//The vertical height determines the kind of background
 		surface.SetTransparency(255);
-		if(Ycount == 0)surface = assets->forest[0];
-		else if(Ycount == 1)surface = assets->air[0];
-		else if(Ycount == 2)surface = assets->space1;
-		else if(Ycount < 0)surface.SetTransparency(0);
-		else surface = assets->space2;
-		
+		if(Ycount == 0)
+		{surface = assets->forest[0]; parallax=assets->forestParallax;}
+		else if(Ycount == 1)
+		{surface = assets->air[0];parallax=0;}
+		else if(Ycount == 2)
+		{surface = assets->space1;parallax=0;}
+		else if(Ycount < 0)
+		{surface.SetTransparency(0);parallax=0;}
+		else {surface = assets->space2;parallax=0;}
+		//This one is handled, go the next one
 		Ystart -= surface.GetHeight();
+		//The starting position of the next background to render
 		Xstart = (int)(_mapPosition.X - ((Uint32)_mapPosition.X % (Uint32)surface.GetWidth()));
+		//How many backgrounds are already left of this?
 		Xcount = (int)(_mapPosition.X/surface.GetWidth());
+		if (parallax.IsInit())
+		{
+			int parallaxStartX=(int)(_mapPosition.X/2 - ((Uint32)(_mapPosition.X/2) % (Uint32)parallax.GetWidth()));
+			while(parallaxStartX < _mapPosition.X + screen.GetWidth()){		
+				parallax.Draw(screen,(Uint32)(parallaxStartX-_mapPosition.X/2), (Uint32)(Ystart-_mapPosition.Y)+400);
+				parallax.Draw(screen,(Uint32)(parallaxStartX-_mapPosition.X/2), (Uint32)(Ystart-_mapPosition.Y)+400);
+				parallaxStartX += parallax.GetWidth();
+			}
+		}
 		while(Xstart < _mapPosition.X + screen.GetWidth()){
+			//Handle the current image for the looping backgrounds
 			if(Ycount == 1){
 				if(Xcount>2)Xcount = Xcount%3;
 				surface = assets->air[Xcount];
@@ -246,7 +269,7 @@ void Map::DrawBackground(WindowSurface screen, Graphics* assets){
 				surface = assets->forest[Xcount];
 				Xcount++;
 			}
-			surface.Draw(screen, (Uint32)(Xstart-_mapPosition.X), (Uint32)(Ystart-_mapPosition.Y));
+			surface.Draw(screen, (Uint32)(Xstart-_mapPosition.X), (Uint32)(Ystart-_mapPosition.Y));	
 			Xstart += surface.GetWidth();
 		}
 		Ycount++;
