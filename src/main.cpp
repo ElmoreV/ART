@@ -336,7 +336,48 @@ int main( int argc, char* args[] )
 					}else if(setting.GetResult() == MRLoadGame)
 					{
 						Loader load;
-						if (load.StartAndCheck())
+						if (load.StartAndCheck("tempOldSave.sav"))
+						{
+							int newMapId;
+							load.LoadCheckpoint(LevelCounter,newMapId);
+							if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = 0;
+							levels.count = newMapId;
+							load.LoadMap(map);
+							load.LoadPlayer(player);
+							load.Close();
+							map.NewMap(levels.levels[newMapId]);
+							enemies.PopulateEnemies(&map, &graphics);
+							gameStates.NewState(GSGame);
+							musicHandler.SetNewMusic(&sounds.forest);
+							player.Reset(map.GetSpawnLocation(), false);
+							Saver save;
+							save.StartAndOpen();
+							save.SaveCheckpoint(LevelCounter,levels.count);
+							save.SaveMap(map);
+							save.SavePlayer(player);
+							save.EndAndClose("Save1.sav");
+						}
+						if (load.StartAndCheck("tempSave.sav"))
+						{
+							int newMapId;
+							load.LoadCheckpoint(LevelCounter,newMapId);
+							if(levels.maxCount <= newMapId || newMapId < 0)	newMapId = 0;
+							levels.count = newMapId;
+							load.LoadMap(map);
+							load.LoadPlayer(player);
+							load.Close();
+							map.NewMap(levels.levels[newMapId]);
+							enemies.PopulateEnemies(&map, &graphics);
+							gameStates.NewState(GSGame);
+							musicHandler.SetNewMusic(&sounds.forest);
+							player.Reset(map.GetSpawnLocation(), false);
+							Saver save;
+							save.StartAndOpen();
+							save.SaveCheckpoint(LevelCounter,levels.count);
+							save.SaveMap(map);
+							save.SavePlayer(player);
+							save.EndAndClose("Save1.sav");
+						}
 						if (load.StartAndCheck("Save1.sav"))
 						{
 							int newMapId;
