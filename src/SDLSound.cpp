@@ -95,15 +95,12 @@ bool Music::LoadMusic(std::string filename)
 }
 bool Music::IsInit()
 {return (_music!=0);}
-bool Music::InitIfNeccessary(std::string filename, int volume)
+bool Music::InitIfNeccessary(std::string filename, float volumeModifier)
 {
 	if (!IsInit())
 	{
 		bool retVal=LoadMusic(filename);
-		if (volume!=-1)
-		{
-			Volume(volume);
-		}
+		SetVolumeModifier(volumeModifier);
 		return retVal;
 	}
 	return true;
@@ -126,11 +123,11 @@ bool Music::SetPosition(int position)
 bool Music::Play(int position,int fadeInMilliseconds)
 {
 	bool playingSomething=(bool)(::Mix_PlayingMusic()!=0?true:false)|(::Mix_FadingMusic()==MIX_FADING_OUT)|(::Mix_FadingMusic()==MIX_FADING_IN);
-	if (playingSomething)
+	if (playingSomething&&!_playing)
 	{::Mix_HaltMusic();}
-	if (fadeInMilliseconds>0)
+	if (!_playing&&fadeInMilliseconds>0)
 	{Mix_FadeInMusic(_music, 1, fadeInMilliseconds);}
-	else
+	else if (!_playing)
 	{::Mix_PlayMusic(_music,1);}
 	_playing=true;
 	Mix_VolumeMusic(_volume);
@@ -190,6 +187,7 @@ bool Music::Loop()
 {
 	if (_playing==true&&(::Mix_PlayingMusic()==false||::Mix_FadingMusic()==MIX_FADING_OUT))
 	{	
+		_playing=false;
 		Play(_loopPosition,400);
 		return true;
 	}
@@ -213,7 +211,6 @@ void MusicHandler::SetNewMusic(Music* newMusic)
 	{	
 		_currentMusic->Play();
 		_currentMusic->Volume(_volume);
-
 	}
 	return;
 }

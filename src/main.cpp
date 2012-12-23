@@ -336,6 +336,7 @@ int main( int argc, char* args[] )
 					}else if(setting.GetResult() == MRLoadGame)
 					{
 						Loader load;
+						if (load.StartAndCheck())
 						if (load.StartAndCheck("Save1.sav"))
 						{
 							int newMapId;

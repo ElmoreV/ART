@@ -76,8 +76,6 @@ protected:
 	//_spawnPosition = position of the player to spawn, set where the _spanLocationChar is
 	//if it is not available in _mapArray, this position is (0, 0)
 	Point2D _tileDimension, _mapPosition, _spawnPosition;
-	//The startcounter of the forest, for background, to define where the bottomside of the forest is
-	int _forestBbStart;
 	//Total drawn distance
 	float _mapDrawDistance;
 	//Total Drawn distance of last frame

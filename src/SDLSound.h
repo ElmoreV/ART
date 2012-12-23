@@ -51,7 +51,7 @@ public:
 	//check wether the music file is initialized
 	bool IsInit();
 	//If it isn't initialized, initialize it
-	bool InitIfNeccessary(std::string filename, int volume=128);
+	bool InitIfNeccessary(std::string filename, float volumeModifier=1.0);
 	//Set the volume between 128 (full) and 0(no)
 	void Volume(int volume);
 	//Set the position in milliseconds

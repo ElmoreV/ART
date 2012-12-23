@@ -51,7 +51,6 @@ Map::Map(Surface* tilesheet, unsigned int tileWidth, unsigned int tileHeight, st
 	_newMapChar = '@';
 	_newMapCharClosed = '!';
 	if(map != "") ReadFile(map);
-	_forestBbStart = -1;
 	Reset();
 	_locked = true;
 }
@@ -217,9 +216,6 @@ void Map::DrawBackground(WindowSurface screen, Graphics* assets){
 	Surface surface = assets->forest[0];
 	Surface parallax = assets->forestParallax;
 	int forestStart = (int)dim.Y;//The bottom of the map
-	//_forestBbStart is always -1, so why do this?
-	if(_forestBbStart>=0) 
-		forestStart = _forestBbStart; 
 
 	int Xstart = 0;
 	int Xcount = 0;
