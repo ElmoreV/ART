@@ -38,6 +38,7 @@ bool SoundEffect::InitIfNeccessary(std::string filename, int volume)
 	if (!IsInit())
 	{LoadSoundEffect(filename);
 	Volume(volume);}
+	return true;
 };
 void SoundEffect::Play(bool loop=false)
 {

@@ -25,7 +25,7 @@ public:
 	//Will update the animation of the enemy, so it looks like it is moving
 	void Update();
 	//Draws the enemy (a frame of the surface) on the windowsurface
-	void Draw(WindowSurface screen, Point2D mapPosition);
+	void Draw(Window screen, Point2D mapPosition);
 	//Return the center point of the enemy
 	Point2D GetCenter();
 	SDL_Rect GetFrame();//Get the part of the image that is showed
@@ -37,6 +37,7 @@ public:
 //The enemy handler, which handles all the enemy objects in a map
 class EnemyHandler{
 private:
+	unsigned int counter;
 	std::vector<Enemy> _enemyList; //List of the enemy objects in the current map
 	std::vector<char> enemyChars; //List of all char in a *.txt file that are enemies
 public:
@@ -49,9 +50,9 @@ public:
 	//It checks if the player hits any enemy, and handles it (remove enemy or decrease health of player)
 	//Move alle enemies to their new position, and checks if a enemy collides with a wall, 
 	//If so, this function will handle this
-	void Update(Map* map, Player* player, Sounds& sound,long timediff=-1);
-	//Draws every enemy on the windowsurface
-	void Draw(WindowSurface screen, Point2D mapPosition);
+	void Update(Map* map, Player* player, Sounds& sound,long timediff=-1, Graphics* graphics=0);
+	//Draws every enemy on the Window
+	void Draw(Window screen, Point2D mapPosition);
 	//If a new map is created, this function will be called to repopulate all the enemies in the new level.
 	//All the old enemies will be destroyed, and new once will be added to the enemylist with te position on the map
 	void PopulateEnemies(Map* map, Graphics* graphics);

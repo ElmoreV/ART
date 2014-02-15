@@ -254,7 +254,7 @@ void DrawingObject::Update(Rectangle playerBound)
 	}
 
 };
-void DrawingObject::Draw(WindowSurface sfScreen)
+void DrawingObject::Draw(Window sfScreen)
 {
 	int vectorSize=_canvas.GetSize();
 	for (int i=1;i<vectorSize;i++)

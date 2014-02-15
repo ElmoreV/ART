@@ -112,7 +112,6 @@ TextMenuItem::TextMenuItem(std::string text, int maxLength, bool digit, bool cen
 	_type=TextItem;
 	_maxLength = maxLength;
 	_digitOnly = digit;
-	SDL_EnableUNICODE(SDL_ENABLE);
 	_selected =false;
 	HoverEnabled = true;
 	_headerShown = true;
@@ -309,36 +308,47 @@ int MenuItem::HandleEvent(SDL_Event sEvent, Settings* setting){
 			if(item->IsSelected() && item->GetType() == TextItem){
 				TextMenuItem* tItem = (TextMenuItem*)&item;
 				std::string str = item->GetText();
-				SDLKey key = sEvent.key.keysym.sym;
-				if(key == SDLK_BACKSPACE && item->Text.size() > 0){
+				SDL_Keycode key = sEvent.key.keysym.scancode;
+				if(key == SDL_SCANCODE_BACKSPACE && item->Text.size() > 0){
 					if (str.size () > 0){
 						str.resize (str.size () - 1);
 					}
 					if(str.size() == 0) str = " ";
 						item->Text = str;
 				}
-				else if(key == SDLK_KP_ENTER || key == SDLK_RETURN){
+				else if( key == SDL_SCANCODE_RETURN){
 					item->SetSelect(false);
 				}
-				else {
-					if(str.size() < (Uint32)item->GetMaxLength()){
-						char v = (char)sEvent.key.keysym.unicode;
-						if(!item->IsDigitOnly() || (item->IsDigitOnly() && sEvent.key.keysym.unicode >= 48 && sEvent.key.keysym.unicode <= 57)){
-							if(str != " ") str += v;
-							else str = v;
-							item->Text = str;
-						}
+				if(item->IsEventAssigned())
+					if((setting->*item->onTextChange)(str))
+						return i;
+			}
+		}
+	}else if(sEvent.type == SDL_TEXTINPUT){
+		for(unsigned int i = 0; i < _childs.size(); i++){
+			MenuItem* item = &_childs.at(i);
+			if(item->IsSelected() && item->GetType() == TextItem){
+				TextMenuItem* tItem = (TextMenuItem*)&item;
+				std::string str = item->GetText();
+				std::string key = sEvent.text.text;
+
+				if(str.size() < (Uint32)item->GetMaxLength()){
+					char v = (char)key[0];
+					if(!item->IsDigitOnly() || (item->IsDigitOnly() && key[0] >= 48 && key[0] <= 57)){
+						if(str != " ") str += v;
+						else str = v;
+						item->Text = str;
 					}
 				}
 				if(item->IsEventAssigned())
 					if((setting->*item->onTextChange)(str))
-							return i;
+						return i;
 			}
 		}
 	}
 	return -3;
 }
-void MenuItem::Draw(WindowSurface screen, Font& font, Point2D offset){
+void MenuItem::Draw(Window screen, Font& font, Point2D offset){
 	float y = offset.Y;
 	float x = offset.X;
 
@@ -492,7 +502,7 @@ Menu::Menu(std::string text, Settings* setting, int r, int g, int b){
 	_mainItem.SetColor(r, g, b);
 	_setting = setting;
 }
-void Menu::Open(WindowSurface screen, Font& font, Point2D offset){
+void Menu::Open(Window screen, Font& font, Point2D offset){
 	if(_itemTracker.size() == 0) _currentItem = &_mainItem;
 	_currentItem->Draw(screen, font,offset);
 }

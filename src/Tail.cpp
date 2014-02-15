@@ -36,7 +36,7 @@ Point2D GetIntersectionRayCircle2(Point2D point1, Point2D point2, Point2D center
 }
 Tail::Tail():_tip(0.0,0.0),_base(0.0,0.0){}
 
-void Tail::Draw(WindowSurface screen)
+void Tail::Draw(Window screen)
 {
 	//Draw the different point, giving some thickness near the base
 	for (int i=1;i<=100;i++)
@@ -92,8 +92,6 @@ void Tail::Update(Rectangle playerRect,HorizontalDirection playerDirection)
 			2*(1-a)*a*middlePoint.Y+
 			(1-a)*(1-a)*_tip.Y;
 	}
-
-
 }
 void Tail::HandleEvent(SDL_Event sEvent)
 {
@@ -104,5 +102,4 @@ void Tail::HandleEvent(SDL_Event sEvent)
 		_lastCursor.X=sEvent.button.x;
 		_lastCursor.Y=sEvent.button.y;
 	}
-	
 }

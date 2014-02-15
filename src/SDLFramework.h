@@ -16,27 +16,27 @@
 #define NO_STDIO_REDIRECT 1
 //Main SDL files
 #include <SDL\\SDL.h>
-#pragma comment(lib,"SDL.lib")
-#pragma comment(lib,"SDLmain.lib")
+#pragma comment(lib,"SDL2.lib")
+#pragma comment(lib,"SDL2main.lib")
 #ifdef IMAGE
 //Image extension
 #include <SDL\\SDL_image.h>
-#pragma comment(lib,"SDL_image.lib")
+#pragma comment(lib,"SDL2_image.lib")
 #endif
 #ifdef FONT
 //Text extension
 #include <SDL\\SDL_ttf.h>
-#pragma comment(lib,"SDL_ttf.lib")
+#pragma comment(lib,"SDL2_ttf.lib")
 #endif
 #ifdef DRAWING
 //'Drawing' extension
-#include <SDL\\SDL_gfxPrimitives.h>
-#pragma comment(lib,"sdlgfx.lib")
+//#include <SDL\\SDL2_gfxPrimitives.h>
+//#pragma comment(lib,"sdlgfx.lib")
 #endif
 #ifdef AUDIO
 //Sound extension
 #include <SDL\\SDL_mixer.h>
-#pragma comment(lib,"SDL_mixer.lib")
+#pragma comment(lib,"SDL2_mixer.lib")
 #endif
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 #ifdef AUDIO
@@ -48,12 +48,12 @@ class Error
 {
 public:
 	Error();
-	Error(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false);
+	Error(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false, SDL_Window* win=0);
 	//Errorstate error: Log/Caption/Exit. Determines how to handle the error
 //errorMessage: the message describing the error,and it will be logged
 //errorCode: optional code describing developer code values. Default=0; With code 0, the code will not be logged.
 //showSDLError: when true, it add the internal SDLError message to the log message. Default = true.
-	void HandleError(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false);
+	void HandleError(ErrorState error,std::string errorMessage, int errorCode=0, bool showSDLError=false,SDL_Window* win=0);
 private:
 	//Log the error to a file ('log.txt')
 	//When code is positive non-zero: add the clocktime to the log
@@ -61,7 +61,8 @@ private:
 	void LogError(std::string message, int code);
 	//Show the error in the caption
 	//With the message and the code
-	void CaptionError(std::string message, int code);
+	void CaptionError(std::string message, int code,SDL_Window* win);
+
 };
 
 
@@ -109,33 +110,40 @@ protected:
 	BaseSurface();
 	BaseSurface(SDL_Surface* surface);
 	SDL_Surface* _surface;
+	SDL_Texture* _texture;
 };
 
 //This Surface is special: it's the window, with window-like functions
-class WindowSurface:public BaseSurface
+class Window
 {
 private:
 	int _width, _height;
+	SDL_Window* _window;
+	SDL_Renderer* _renderContext;
 public:
-	//Creating the windowsurface.
+	//Creating the window.
 	//Without any parameters, it is just an empty one
-	WindowSurface();
-	WindowSurface(SDL_Surface* surface);
-	WindowSurface(int width, int height, int bpp=0, bool doublebuffering=false, bool windowFrame=true);
+	Window();
+	Window(SDL_Window* window, SDL_Renderer* renderer);
+	Window(int width, int height, bool windowFrame=true);
 	//Creates a screen to work on
 	//Width and height are the screen dimensions to set
 	//bpp is bits per pixel. 32 gives the normal RGBA color scheme
 	//doublebuffering enables the use of doublebuffering
 	//windowFrame: when true: it shows the outlines of the window
 	// when false: it doesn't show the outlines of the window(and no close,minimize or maximize button)
-	bool CreateWindowSurface(int width,int height, int bpp=0, bool doublebuffering=false, bool windowFrame=true);
+	bool CreateWindow(int width,int height, bool windowFrame=true);
 	//Set the window caption
 	void SetCaption(std::string caption);
+	//Set the window icon
+	void SetIcon(BaseSurface icon);
 	//Update the window surface, so that all blits are shown
-	bool UpdateWindow();
+	void UpdateWindow();
 	//Fill the entire window with a certain color (default=black RGB(0,0,0))
 	bool ClearWindow(int r=0x00, int g=0x00, int b=0x00);
-	
+	operator SDL_Renderer*(){return _renderContext;};
+	operator SDL_Window*(){return _window;}
+	bool Resize(int width, int height);
 	int GetWidth(){return _width;}
 	int GetHeight(){return _height;}
 #ifdef DRAWING
@@ -173,8 +181,8 @@ public:
 	void Surface::GetMaskColor(int& r,int& g, int& b);
 	//Draw: x,y are the screen's position
 	//clip is the part of the loaded surface image to draw
-	//windowSurface is the surface to draw on
-	bool Draw(WindowSurface windowSurface,unsigned int x=0, unsigned int y=0, SDL_Rect* clip=0);
+	//Window is the surface to draw on
+	bool Draw(Window window,unsigned int x=0, unsigned int y=0, SDL_Rect* clip=0);
 	//Set the alpha (blending) transparancy
 	bool SetTransparency(int alpha);
 	//Get the surface width or height
@@ -189,6 +197,8 @@ private:
 
 //An easy way to fill the SDL_Rect structure
 void FillRect (SDL_Rect* destination,int x, int y, int w, int h);
+
+std::string IntToString(int i);
 //Formulas to get the bigger/smaller value
 #define Maximum(a, b) ((a > b) ? a : b)
 #define Minimum(a, b) ((a > b) ? b : a)

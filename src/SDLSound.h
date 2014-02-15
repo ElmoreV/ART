@@ -3,7 +3,7 @@
 #include <string>
 
 #include <SDL\\SDL_mixer.h>
-#pragma comment(lib,"SDL_mixer.lib")
+#pragma comment(lib,"SDL2_mixer.lib")
 
 class SoundEffect
 {

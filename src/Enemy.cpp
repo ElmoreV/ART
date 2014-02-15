@@ -20,7 +20,7 @@ void Enemy::Update(){
 	else _frame=3+_animationState;
 	_countInterval++;
 }
-void Enemy::Draw(WindowSurface screen, Point2D mapPosition){
+void Enemy::Draw(Window screen, Point2D mapPosition){
 	_surface->Draw(screen, (Sint32)(_position.X - mapPosition.X), (Sint32)(_position.Y - mapPosition.Y), &GetFrame());
 }
 Point2D Enemy::GetCenter(){
@@ -49,6 +49,8 @@ EnemyHandler::EnemyHandler(){
 	enemyChars.push_back('1');
 	enemyChars.push_back('2');
 	enemyChars.push_back('3');
+	
+	counter=0;
 }
 void EnemyHandler::AddEnemy(EnemyType type, Graphics* graphics, Point2D position){
 	Surface* surface = 0; Point2D velocity; bool canwalkoff = true; bool canwalkslope = true;
@@ -84,7 +86,28 @@ void EnemyHandler::AddEnemy(EnemyType type, Graphics* graphics, Point2D position
 	newE.CanWalkSlope=canwalkslope;
 	_enemyList.push_back(newE);
 }
-void EnemyHandler::Update(Map* map, Player* player,Sounds& sound, long timer){
+void EnemyHandler::Update(Map* map, Player* player,Sounds& sound, long timer, Graphics* graphics){
+	if (counter>100)
+	{
+ 		std::vector<std::string> mapArray = map->GetMapArray();
+		std::string str;
+		char chararcter;
+		for(unsigned int y = 0; y < mapArray.size(); y++){
+			str = mapArray.at(y);
+			for(unsigned int x = 0; x < str.length(); x++){
+				chararcter = str[x];
+				for(unsigned int i = 0; i < enemyChars.size(); i++){
+					if(enemyChars[i]==chararcter){
+						AddEnemy((EnemyType)i, graphics, Point2D((float)x, (float)y)*map->GetTileDimension());
+					}
+				}
+			}
+
+		}
+		counter=0;
+	}
+	counter++;
+	
 	float timeDiff=timer<0?1:(clock()-timer)/1000.0f;
 	for(unsigned int i = 0; i <_enemyList.size(); i++){
 		Enemy* enemy = &_enemyList.at(i);
@@ -257,7 +280,7 @@ void EnemyHandler::Update(Map* map, Player* player,Sounds& sound, long timer){
 		}
 	}
 }
-void EnemyHandler::Draw(WindowSurface screen, Point2D mapPosition){
+void EnemyHandler::Draw(Window screen, Point2D mapPosition){
 	for(unsigned int i = 0; i <_enemyList.size(); i++){
 		_enemyList.at(i).Draw(screen, mapPosition);
 	}
@@ -266,18 +289,18 @@ void EnemyHandler::PopulateEnemies(Map* map, Graphics* graphics){
 	_enemyList.clear();
 	std::vector<std::string> mapArray = map->GetMapArray();
 	std::string str;
-	char chararcter;
+	char character;
 	for(unsigned int y = 0; y < mapArray.size(); y++){
 		str = mapArray.at(y);
 		for(unsigned int x = 0; x < str.length(); x++){
-			chararcter = str[x];
+			character = str[x];
 			for(unsigned int i = 0; i < enemyChars.size(); i++){
-				if(enemyChars[i]==chararcter){
+				if(enemyChars[i]==character){
 					AddEnemy((EnemyType)i, graphics, Point2D((float)x, (float)y)*map->GetTileDimension());
 				}
 			}
 		}
 
 	}
-	map->RemoveEnemiesFromArray(enemyChars);
+	//map->RemoveEnemiesFromArray(enemyChars);
 }

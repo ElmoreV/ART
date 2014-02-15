@@ -36,7 +36,17 @@ TileData Map::GetTileData(unsigned int x, unsigned int y){
   TileData td(0, 0, 0, 0);
   if(_mapArray.size()>y){
     const char* charline = _mapArray.at(y).c_str();
-    td = _tileLibrary.find(charline[x])->second;
+	if (charline[x]=='-'||(charline[x]>='0'&&charline[x]<='9')||charline[x]=='\0'||charline[x]=='#'){return td;}
+	Dictionary::iterator temp=_tileLibrary.find(charline[x]); 
+    if (temp==_tileLibrary.end())
+	{
+		std::string msg="An unexpected symbol in the library: "; msg+=charline[x];
+		Error error(Log,msg.c_str());
+	}
+	else
+	{
+		td=temp->second;
+	}
   }
   return td;
 }
@@ -141,6 +151,23 @@ bool Map::HandleEvent(SDL_Event sEvent){
 	}
 	return true;
 }
+bool Map::AddPlatform(Rectangle PlayerBound)
+{
+	SDL_Event mouseStart;
+	mouseStart.type=SDL_MOUSEBUTTONDOWN;
+	mouseStart.button.x=PlayerBound.X-_mapPosition.X+PlayerBound.W/2-20;
+	mouseStart.button.y=PlayerBound.Y-_mapPosition.Y+60;
+	HandleEvent(mouseStart);
+	Update(Rectangle(PlayerBound.X-_mapPosition.X,PlayerBound.Y-_mapPosition.Y,PlayerBound.W,PlayerBound.H),100);
+	mouseStart.type=SDL_MOUSEMOTION;
+	mouseStart.button.x+=40;
+	HandleEvent(mouseStart);
+	Update(Rectangle(PlayerBound.X-_mapPosition.X,PlayerBound.Y-_mapPosition.Y,PlayerBound.W,PlayerBound.H),100);
+	mouseStart.type=SDL_MOUSEBUTTONUP;
+	HandleEvent(mouseStart);
+	Update(Rectangle(PlayerBound.X-_mapPosition.X,PlayerBound.Y-_mapPosition.Y,PlayerBound.W,PlayerBound.H),100);
+	return true;
+}
 bool Map::Update(Rectangle playerBound,float inkPool)
 {
 	_mapDrawDistance=0;
@@ -153,11 +180,10 @@ bool Map::Update(Rectangle playerBound,float inkPool)
 	return true;
 }
 //Draws the excisting map on the screen
-void Map::Draw(WindowSurface screen, int completedLvl)
+void Map::Draw(Window screen, int completedLvl)
 {
 	unsigned int drawings = 0;
 	const char* charline;
-
 	//For optimization, only draws the tiles that you can see on the screen
 	unsigned int Y1, Y2, X1, X2;
 	Y1 = (int)(_mapPosition.Y/_tileDimension.Y);
@@ -211,10 +237,10 @@ void Map::Draw(WindowSurface screen, int completedLvl)
 		}
 	}
 }
-void Map::DrawBackground(WindowSurface screen, Graphics* assets){
+void Map::DrawBackground(Window screen, Graphics* assets){
 	Point2D dim = GetMapDimension();
-	Surface surface = assets->forest[0];
-	Surface parallax = assets->forestParallax;
+	Surface* surface =& (assets->forest[0]);
+	Surface* parallax = & (assets->forestParallax);
 	int forestStart = (int)dim.Y;//The bottom of the map
 
 	int Xstart = 0;
@@ -223,50 +249,50 @@ void Map::DrawBackground(WindowSurface screen, Graphics* assets){
 	//(Bottom of map - (the current camera position + the height of the screen)) divided by the height of the background surface -1
 	//== (bottom of map - the bottom of the screen)/height of background -1
 	//==how many backgrounds are already beneath this position?
-	int Ycount = (int)((forestStart - (_mapPosition.Y+screen.GetHeight())) / surface.GetHeight()) - 1;
+	int Ycount = (int)((forestStart - (_mapPosition.Y+screen.GetHeight())) / surface->GetHeight()) - 1;
 	//the starting point for the background to draw
-	int Ystart = (int)dim.Y - surface.GetHeight()*Ycount;
+	int Ystart = (int)dim.Y - surface->GetHeight()*Ycount;
 	while(Ystart>_mapPosition.Y){
 		//The vertical height determines the kind of background
-		surface.SetTransparency(255);
+		surface->SetTransparency(255);
 		if(Ycount == 0)
-		{surface = assets->forest[0]; parallax=assets->forestParallax;}
+		{surface = &(assets->forest[0]); parallax=&(assets->forestParallax);}
 		else if(Ycount == 1)
-		{surface = assets->air[0];parallax=0;}
+		{surface =&( assets->air[0]);parallax=0;}
 		else if(Ycount == 2)
-		{surface = assets->space1;parallax=0;}
+		{surface = &(assets->space1);parallax=0;}
 		else if(Ycount < 0)
-		{surface.SetTransparency(0);parallax=0;}
-		else {surface = assets->space2;parallax=0;}
+		{surface->SetTransparency(0);parallax=0;}
+		else {surface = &(assets->space2);parallax=0;}
 		//This one is handled, go the next one
-		Ystart -= surface.GetHeight();
+		Ystart -= surface->GetHeight();
 		//The starting position of the next background to render
-		Xstart = (int)(_mapPosition.X - ((Uint32)_mapPosition.X % (Uint32)surface.GetWidth()));
+		Xstart = (int)(_mapPosition.X - ((Uint32)_mapPosition.X % (Uint32)surface->GetWidth()));
 		//How many backgrounds are already left of this?
-		Xcount = (int)(_mapPosition.X/surface.GetWidth());
-		if (parallax.IsInit())
+		Xcount = (int)(_mapPosition.X/surface->GetWidth());
+		if (parallax!=0 && parallax->IsInit())
 		{
-			int parallaxStartX=(int)(_mapPosition.X/2 - ((Uint32)(_mapPosition.X/2) % (Uint32)parallax.GetWidth()));
+			int parallaxStartX=(int)(_mapPosition.X/2 - ((Uint32)(_mapPosition.X/2) % (Uint32)parallax->GetWidth()));
 			while(parallaxStartX < _mapPosition.X + screen.GetWidth()){		
-				parallax.Draw(screen,(Uint32)(parallaxStartX-_mapPosition.X/2), (Uint32)(Ystart-_mapPosition.Y)+400);
-				parallax.Draw(screen,(Uint32)(parallaxStartX-_mapPosition.X/2), (Uint32)(Ystart-_mapPosition.Y)+400);
-				parallaxStartX += parallax.GetWidth();
+				parallax->Draw(screen,(Uint32)(parallaxStartX-_mapPosition.X/2), (Uint32)(Ystart-_mapPosition.Y)+400);
+				parallax->Draw(screen,(Uint32)(parallaxStartX-_mapPosition.X/2), (Uint32)(Ystart-_mapPosition.Y)+400);
+				parallaxStartX += parallax->GetWidth();
 			}
 		}
 		while(Xstart < _mapPosition.X + screen.GetWidth()){
 			//Handle the current image for the looping backgrounds
 			if(Ycount == 1){
 				if(Xcount>2)Xcount = Xcount%3;
-				surface = assets->air[Xcount];
+				surface = &(assets->air[Xcount]);
 				Xcount++;
 			}
 			else if(Ycount == 0){
 				if(Xcount>3) Xcount = Xcount%4;
-				surface = assets->forest[Xcount];
+				surface = &(assets->forest[Xcount]);
 				Xcount++;
 			}
-			surface.Draw(screen, (Uint32)(Xstart-_mapPosition.X), (Uint32)(Ystart-_mapPosition.Y));	
-			Xstart += surface.GetWidth();
+			surface->Draw(screen, (Uint32)(Xstart-_mapPosition.X), (Uint32)(Ystart-_mapPosition.Y));	
+			Xstart += surface->GetWidth();
 		}
 		Ycount++;
 	}
@@ -279,7 +305,11 @@ TileType Map::GetCharType(Point2D collisionPoint){
 		charline = _mapArray.at((int)collisionPoint.Y).c_str();
 		if(strlen(charline) > collisionPoint.X){
 			if(charline[(int)collisionPoint.X] == _newMapChar || charline[(int)collisionPoint.X] == _newMapCharClosed) return TileTypeNone;
-			if(charline[(int)collisionPoint.X] == '-' || charline[(int)collisionPoint.X] == _spawnLocation) return TileTypeNone;
+			if(
+				(charline[(int)collisionPoint.X] >='0'&&
+				charline[(int)collisionPoint.X] <='9')||
+				charline[(int)collisionPoint.X] == '-' || 
+				charline[(int)collisionPoint.X] == _spawnLocation) return TileTypeNone;
 			else {
 				TileData td = _tileLibrary.find(charline[(int)collisionPoint.X])->second;
 				TileType t = td.GetType();

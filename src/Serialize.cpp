@@ -114,8 +114,9 @@ void Saver::StartAndOpen()
 };
 void Saver::SavePlayer(Player& player)
 {
-	_serial.SetFloat(player._totalInkReceived);
-	_checkSum+=*(unsigned int*)&(player._totalInkReceived);
+	_serial.SetFloat(player.GetTotalReceived());
+	float totalInk=player.GetTotalReceived();
+	_checkSum+=*(unsigned int*)&(totalInk);
 	_serial.SetFloat(player.Health);
 	_checkSum+=*(unsigned int*)&(player.Health);
 };
@@ -170,7 +171,7 @@ bool Loader::StartAndCheck(std::string filename)
 };
 void Loader::LoadPlayer(Player& player)
 {
-	player._totalInkReceived=_deserial.GetFloat();
+	player.SetTotalReceived(_deserial.GetFloat());
 	player.Health=_deserial.GetFloat();
 };
 void Loader::LoadMap(Map& map)

@@ -20,6 +20,37 @@ enum VerticalDirection
 //Declarations of save and loadclasses that are used
 class Saver;
 class Loader;
+class InkPool
+{
+public:
+	InkPool(float max);
+	void Reset();
+	//GetInk = The amount of ink the player has left
+	float GetInk();
+	//Adds new ink to the players inkpool
+	void AddInk(int value);
+	//InkPoolRatio() = Returns the ratio of the Ink : InkPool / _maxInkPool
+	float InkPoolRatio();
+	bool Draw(Window screen, int border,Font* font,unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height);
+	float GetTotalReceived();
+	void HandleDrawnDistance(float DrawDistance);
+	void SetTotalReceived(float value);
+	void SetUnlimited(int value);
+private:
+	float _prevInk;
+	float _curInk;
+	//Amount of ink, the player has received in the game
+	float _totalInkReceived;
+	//_maxInkPool=Maximum amount of ink the mouse can have
+	float _maxInk;
+	Surface _inkBar;
+	bool _unlimited;
+};
+class HealthBar
+{
+
+};
+
 //The player class
 class Player : public Object
 {
@@ -44,8 +75,7 @@ protected:
 	int _interval, _countInterval, _animationState, _frame;
 	//_maxVelocity= Maximum amount of pixel the mouse can fall per second
 	//_maxHealth=Maximum amount of health the mouse can have
-	//_maxInkPool=Maximum amount of ink the mouse can have
-	int _maxVelocity, _maxHealth, _maxInkPool;
+	int _maxVelocity, _maxHealth;
 	//Whether or not the player can jump
 	bool _jumpEnable;
 	//Moves the mouse
@@ -55,15 +85,20 @@ protected:
 	//Return the boundingbox of the player in the previous frame
 	Rectangle GetPreviousBoundR(float velocityX, float velocityY);
 	//the four movement keys of the player
-	bool _buttonUp, _buttonDown, _buttonLeft, _buttonRight;
-	//Amount of ink, the player has received in the game
-	float _totalInkReceived;
+	bool _buttonUp, _buttonDown, _buttonLeft, _buttonRight,_buttonShift;
+
+	float _prevHealth;
+	Surface HealthBar;
+	InkPool _inkpool;
 public:
 	//To set the default values
+	float GetInk(){return _inkpool.GetInk();}
 	Player(Surface* surface, float X, float Y, int interval, int spriteX=1, int spriteY=1);
 	void SetVelocity(float X, float Y);
+	float GetTotalReceived();
+	void SetTotalReceived(float value);
 	//Draws the frame of the player on the screen
-	void Draw(WindowSurface screen, Point2D mapPosition);
+	void Draw(Window screen, Point2D mapPosition);
 	//Update the position based on the velocity and draws the clip on screen
 	void Update(Map* map1, int screenWidth, int screenHeight,Sounds& sounds, long lastTick=-1);
 	void HandleEvent(SDL_Event sEvent); //Keep up if arrowbuttons are pressed
@@ -74,12 +109,10 @@ public:
 	Rectangle GetFrameR();//The function with floats
 	void SetFrame(int frame);//Set the animation (if it has more then 1)
 	//Health = The amount of health the player has left
-	//InkPool = The amount of ink the player has left
 	//InvulnerableTime = the amount of second that the player can lose any health
-	float Health, InkPool, InvulnerableTime;
+	float Health, InvulnerableTime;
 	//HealthRatio() = Returns the ratio of the health : Health / _maxHealth
-	//InkPoolRatio() = Returns the ratio of the Ink : InkPool / _maxInkPool
-	float HealthRatio(), InkPoolRatio();
+	float HealthRatio();
 	//Adds new ink to the players inkpool
 	void AddInk(int value);
 	//Jumps the mouse
@@ -90,10 +123,10 @@ public:
 	Rectangle GetPreviousBoundR();
 	//Draws the healthbar on the screen, with given dimensions
 	//If font*!=0, it also renders the text of the amount of health and the total health
-	void DrawHealthBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
+	void DrawHealthBar(Window screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
 	//Draws the inkbar on the screen, with given dimensions
 	//If font*!=0, it also renders the text of the amount of ink and the total ink
-	void DrawInkBar(WindowSurface screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
+	void DrawInkBar(Window screen, int borderWidth, unsigned int X, unsigned int Y, unsigned int Width = 100, unsigned int Height = 20, Font* font = 0);
 	//Resets the player, sets the position and the stats like health, if the bool resetStats=true
 	void Reset(Point2D position = 0, bool resetStats=false);
 	//Calculate and set the cameraposition based on the players position

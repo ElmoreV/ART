@@ -24,7 +24,7 @@ public:
 	//Draw the set of points of the Bezier curve
 	//Make it thick the first half of points
 	//Make it extra thick the first quarter of point
-	void Draw(WindowSurface screen);
+	void Draw(Window screen);
 private:
 	Point2D _base;//base point
 	Point2D _tip;//tip point

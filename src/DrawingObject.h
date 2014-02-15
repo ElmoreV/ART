@@ -27,7 +27,7 @@ public:
 	//Return 0.0f when there is no collision
 	float CheckCollision(Rectangle ObjectRect);
 	//Draws lines connecting the points in the surface
-	void Draw(WindowSurface sfScreen);
+	void Draw(Window sfScreen);
 	//Get the 'vectordraw'  object.
 	inline VectorDraw& GetDrawing(){return _canvas;}
 	//The second on/off-switch for drawing.

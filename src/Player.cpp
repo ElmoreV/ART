@@ -1,7 +1,77 @@
 #include "Player.h"
 
-Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, int spriteY):Object(surface, X, Y, spriteX, spriteY)
-{
+
+	InkPool::InkPool(float max):_prevInk(0),_maxInk(max),_curInk(max),_totalInkReceived(max),_unlimited(false)
+	{}
+	
+	void InkPool::Reset()
+	{
+		_curInk = (float)_maxInk;
+		_totalInkReceived=(float)_maxInk;
+	}
+	
+	float InkPool::GetInk(){
+		
+		return _unlimited?100:_curInk;}
+	
+	void InkPool::AddInk(int value)
+	{
+		_totalInkReceived+=value;
+	}
+	float InkPool::InkPoolRatio()
+	{return ((float)_curInk)/((float)_maxInk);}
+	void InkPool::SetUnlimited(int value)
+	{if (value==0||value==1){_unlimited=value;}
+	if (value==2){_unlimited=_unlimited?false:true;}
+	}
+	bool InkPool::Draw(Window screen, int borderWidth,Font* font,unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height)
+	{
+		if(_curInk < 0)
+			_curInk=0;
+		else if(_curInk > _maxInk) 
+			_curInk = (float)_maxInk;
+		if(borderWidth <= 0)borderWidth = 0;
+		screen.DrawFilledRect(X, Y, X + Width + 2*borderWidth, Y+ Height+2*borderWidth, 50, 50, 100);
+		screen.DrawFilledRect(X+borderWidth, Y+borderWidth, X+borderWidth + (int)(Width * InkPoolRatio()), Y +borderWidth+ Height, 2, 20, 2);
+		if (_curInk!=_prevInk&&font != 0)
+		{
+			font->SetColor(100,100,255);
+			std::stringstream ss; ss << (unsigned int)(_curInk+0.5) << "/" << _maxInk;
+			_inkBar.RenderText(*font, ss.str());
+			_prevInk=_curInk;
+		}
+		return _inkBar.Draw(screen, (Uint32)(((float)X+borderWidth) + ((float)Width)/2 - _inkBar.GetWidth()/2),
+									(Uint32)(((float)Y+borderWidth) + ((float)Height)/2 - _inkBar.GetHeight()/2));
+
+	}
+	float InkPool::GetTotalReceived(){return _totalInkReceived;}
+	void InkPool::HandleDrawnDistance(float totalDrawDistance)
+	{
+		
+		float tempInkPool=_totalInkReceived-totalDrawDistance;
+		if (tempInkPool > _maxInk)
+		{
+			_curInk=(float)_maxInk; 
+			_totalInkReceived=totalDrawDistance+_maxInk;
+		}
+		else if(_curInk<0)
+		{
+			_curInk=0;
+			_totalInkReceived=totalDrawDistance;
+		}
+		else
+		{
+			if (_unlimited)
+			{_totalInkReceived=totalDrawDistance+_curInk;}
+			else{_curInk=tempInkPool;}
+		}
+		
+	}
+	void InkPool::SetTotalReceived(float value)
+	{_totalInkReceived=value;}
+
+
+Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, int spriteY):Object(surface, X, Y, spriteX, spriteY),_inkpool(100){
 	_maxVelocity = 250;
 	_previousPosition = _position;
 	_interval = interval;
@@ -14,10 +84,9 @@ Player::Player(Surface* surface, float X, float Y, int interval, int spriteX, in
 	_frame = 0;
 	_buttonUp=_buttonDown=_buttonLeft=_buttonRight=false;
 	_velocity.Y = 50;
-	InkPool = 100; _maxInkPool = 100;
-	Health  = 100; _maxHealth= 100;
+
+	Health  = 100; _prevHealth; _maxHealth= 100;
 	InvulnerableTime = 0;
-	_totalInkReceived=(float)_maxInkPool;
 }
 Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 {
@@ -25,9 +94,6 @@ Rectangle Player::GetPreviousBoundR(float velocityX, float velocityY)
 	return bound;
 }
 void Player::SetVelocity(float X, float Y){_velocity.X = X;_velocity.Y = 0;_maxVelocity=(int)Y;}
-void Player::AddInk(int value){
-	_totalInkReceived += value;
-}
 void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float part,float threshold, float speed){
 	Point2D maxDim = map->GetMapDimension();
 	Point2D centerPoint  = GetCenter();
@@ -103,6 +169,13 @@ void Player::SetMapPosition(Map* map, Point2D screenSize, float timeDiff, float 
 	}
 	map->SetMapPosition(camera.X,camera.Y);
 }
+void Player::AddInk(int value)
+{
+	_inkpool.AddInk(value);
+}
+
+	float Player::GetTotalReceived(){return _inkpool.GetTotalReceived();}
+	void Player::SetTotalReceived(float value){_inkpool.SetTotalReceived(value);}
 void Player::Update(Map* map, int screenWidth, int screenHeight,Sounds& sounds, long lastTick){
 	//Update animation image for the player
 	if(_buttonLeft || _buttonRight){
@@ -128,13 +201,15 @@ void Player::Update(Map* map, int screenWidth, int screenHeight,Sounds& sounds, 
 	
 	float drawDistance=(float)map->GetDrawDistance()/20;
 	//_totalInkReceived+=timeDiff;
+	/*
 	float tempInkPool=_totalInkReceived-drawDistance;
 	if (tempInkPool > _maxInkPool)
 	{InkPool=(float)_maxInkPool; _totalInkReceived=drawDistance+_maxInkPool;}
 	else if(InkPool<0)
 	{InkPool=0;_totalInkReceived=drawDistance;}
 	else
-	{InkPool=tempInkPool;}
+	{InkPool=tempInkPool;}*/
+	_inkpool.HandleDrawnDistance(drawDistance);
 	if(Health < 0)Health=0;
 	else if(Health > _maxHealth) Health = (float)_maxHealth;
 
@@ -204,11 +279,11 @@ void Player::Jump(){
 }
 float Player::HealthRatio(){
 	return ((float)Health)/((float)_maxHealth);
-}
+}/*
 float Player::InkPoolRatio(){
 	return ((float)InkPool)/((float)_maxInkPool);
-}
-void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
+}*/
+void Player::DrawHealthBar(Window screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
 	if(Health < 0)Health=0;
 	else if(Health > _maxHealth) Health = (float)_maxHealth;
 	if(border <= 0)border = 0;
@@ -216,50 +291,40 @@ void Player::DrawHealthBar(WindowSurface screen, int border, unsigned int X, uns
 	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y + Height+2*border, 50, 50, 50);
 	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * HealthRatio()), Y +border+ Height, 255, 0, 0);
 	
-	if(font != 0){
+
+	if (Health!=_prevHealth&&font != 0)
+	{
 		font->SetColor(255,255,255);
-		Surface render;
 		std::stringstream ss; ss << Health << "/" << _maxHealth;
-		render.RenderText(*font, ss.str());
-		render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
-		render.Free();
+		HealthBar.RenderText(*font, ss.str());
+		_prevHealth=Health;		
 	}
+	HealthBar.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - HealthBar.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - HealthBar.GetHeight()/2));
+
 }
-void Player::DrawInkBar(WindowSurface screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
-	if(InkPool < 0)InkPool=0;
-	else if(InkPool > _maxInkPool) InkPool = (float)_maxInkPool;
-	if(border <= 0)border = 0;
-	screen.DrawFilledRect(X, Y, X + Width + 2*border, Y+ Height+2*border, 50, 50, 100);
-	screen.DrawFilledRect(X+border, Y+border, X+border + (int)(Width * InkPoolRatio()), Y +border+ Height, 2, 20, 2);
-	if(font != 0){
-		font->SetColor(100,100,255);
-		Surface render;
-		std::stringstream ss; ss << (unsigned int)(InkPool+0.5) << "/" << _maxInkPool;
-		render.RenderText(*font, ss.str());
-		render.Draw(screen, (Uint32)(((float)X+border) + ((float)Width)/2 - render.GetWidth()/2), (Uint32)(((float)Y+border) + ((float)Height)/2 - render.GetHeight()/2));
-		render.Free();
-	}
+void Player::DrawInkBar(Window screen, int border, unsigned int X, unsigned int Y, unsigned int Width, unsigned int Height, Font* font){
+	_inkpool.Draw(screen,border,font,X,Y,Width,Height);
 }
 void Player::Reset(Point2D position, bool resetStats){
 	_position = position;
 	_velocity.Y = 50;
 	_jumpEnable = true;
 	if(resetStats){
-		InkPool = (float)_maxInkPool;
-		_totalInkReceived=(float)_maxInkPool;
+		_inkpool.Reset();
 		Health  =(float) _maxHealth;
 		InvulnerableTime = 0;
 	}
 }
 Point2D Player::GetPreviousPosition(){ return _previousPosition; } 
 Rectangle Player::GetPreviousBoundR(){return Rectangle(_previousPosition.X, _previousPosition.Y, _spriteDimension.X, _spriteDimension.Y); }
-void Player::Draw(WindowSurface screen, Point2D mapPosition)
+void Player::Draw(Window screen, Point2D mapPosition)
 {
 	//Draws the player on the screen
 	_surface->Draw(screen, (Sint16)(_position.X - mapPosition.X), (Sint16)(_position.Y - mapPosition.Y), &GetFrame());
 	tail.Draw(screen);
 	Rectangle playerBounds=GetBoundR(-mapPosition.X, -mapPosition.Y);
-	aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
+	//SDL_RenderDraw
+	//aaellipseRGBA(screen,(Sint16)(playerBounds.X+0.5*playerBounds.W),(Sint16)(playerBounds.Y+0.5*playerBounds.H),100,100,255,255,255,255);
 }
 void Player::HandleCollision(Map* map, int screenWidth, int screenHeight, float timeDiff,Sounds& sound){
 	//The velocities (X and Y) must be smaller than the tile dimensions and the sprite dimensions
@@ -646,10 +711,21 @@ void Player::SetFrame(int frame)
 //Keep up if arrowbuttons are pressed
 void Player::HandleEvent(SDL_Event sEvent)
 {
-	Uint8* keystates = SDL_GetKeyState(NULL);
-	if(keystates[SDLK_DOWN]||keystates[SDLK_s]) _buttonDown = true; else _buttonDown = false;
-	if(keystates[SDLK_UP]||keystates[SDLK_w]) _buttonUp = true; else _buttonUp = false;
-	if(keystates[SDLK_LEFT]||keystates[SDLK_a]) _buttonLeft = true; else _buttonLeft = false;
-	if(keystates[SDLK_RIGHT]||keystates[SDLK_d]) _buttonRight = true; else _buttonRight = false;
+	const Uint8* keystates = SDL_GetKeyboardState(NULL);
+	if(keystates[SDL_SCANCODE_DOWN]||keystates[SDL_SCANCODE_S]) _buttonDown = true; else _buttonDown = false;
+	if(keystates[SDL_SCANCODE_UP]||keystates[SDL_SCANCODE_W]) _buttonUp = true; else _buttonUp = false;
+	if(keystates[SDL_SCANCODE_LEFT]||keystates[SDL_SCANCODE_A]) _buttonLeft = true; else _buttonLeft = false;
+	if(keystates[SDL_SCANCODE_RIGHT]||keystates[SDL_SCANCODE_S]) _buttonRight = true; else _buttonRight = false;
+	if(keystates[SDL_SCANCODE_RSHIFT])
+	{if (_buttonShift==false){_inkpool.SetUnlimited(2);_buttonShift=true;}
+	else {_buttonShift=false;}}
+	if (sEvent.type==SDL_JOYHATMOTION)
+	{
+		if (sEvent.jhat.value==SDL_HAT_UP){_buttonUp=true; _buttonDown=false;}
+		if (sEvent.jhat.value==SDL_HAT_DOWN){_buttonDown=true; _buttonUp=false;}
+		if (sEvent.jhat.value==SDL_HAT_RIGHT){_buttonRight=true; _buttonLeft=false;}
+		if (sEvent.jhat.value==SDL_HAT_LEFT){_buttonLeft=true; _buttonRight=false;}
+	}
+	
 	tail.HandleEvent(sEvent);
 }

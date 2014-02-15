@@ -10,13 +10,13 @@
 #endif
 
 Error::Error(){};
-Error::Error(ErrorState error,std::string errorMessage, int errorCode, bool showSDLError)
+Error::Error(ErrorState error,std::string errorMessage, int errorCode, bool showSDLError,SDL_Window* win)
 {HandleError(error,errorMessage,errorCode,showSDLError);};
 //Errorstate error: Log/Caption/Exit. Determines how to handle the error
 //errorMessage: the message describing the error,and it will be logged
 //errorCode: optional code describing developer code values. Default=0; With code 0, the code will not be logged.
 //showSDLError: when true, it add the internal SDLError message to the log message. Default = true.
-void Error::HandleError(ErrorState error,std::string errorMessage, int errorCode, bool showSDLError)
+void Error::HandleError(ErrorState error,std::string errorMessage, int errorCode, bool showSDLError,SDL_Window* win)
 {
 #ifdef ERROR
 
@@ -28,13 +28,13 @@ void Error::HandleError(ErrorState error,std::string errorMessage, int errorCode
 		exit(errorCode);
 	}else if (error==Caption)//The error should be shown in the caption to warn the user (it also logs it)
 	{
-		CaptionError(errorMessage,errorCode);
+		CaptionError(errorMessage,errorCode,win);
 		LogError(errorMessage,errorCode);
 		if (showSDLError)
 		{LogError(SDL_GetError(),-1);}
 	}else if (error==CaptionOnly)
 	{
-		CaptionError(errorMessage,errorCode);
+		CaptionError(errorMessage,errorCode,win);
 	}else if (error==Log)//The error isn't that severe, and should be just logged
 	{
 		LogError(errorMessage,errorCode);
@@ -77,7 +77,7 @@ void Error::LogError(std::string message, int code)
 };
 //Show the error in the caption
 //With the message and the code
-void Error::CaptionError(std::string message, int code)
+void Error::CaptionError(std::string message, int code,SDL_Window* win)
 {
 #ifdef ERROR
 	std::string str=message;
@@ -89,13 +89,15 @@ void Error::CaptionError(std::string message, int code)
 		integer<<code;
 		str+=integer.str();
 	}
-	SDL_WM_SetCaption(str.c_str(),0);
+	if (win!=0)
+	{SDL_SetWindowTitle(win,message.c_str());};
 #endif
 }; 
 //Initialize all the Dll-components of SDL
 bool InitSDL()
 {
-	int flags=SDL_INIT_VIDEO;//Initialize video component
+	int flags=SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;//Initialize video component
+	//TODO: encapsulate joystick
 	#ifdef AUDIO
 	flags|=SDL_INIT_AUDIO;//Initialize audio component
 	#endif
@@ -114,7 +116,7 @@ bool InitSDL()
 	#ifdef AUDIO
 	if (Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 )==-1)//Open audio device on a certain sample rate
 	{
-		Error error(Caption,"The opening of the audio device failed with code:",0,true);
+		Error error(Log,"The opening of the audio device failed with code:",0,true);
 		Mix_CloseAudio();
 		return true;
 	}
@@ -191,21 +193,31 @@ bool BaseSurface::IsInit(){return (_surface!=0);}//Checks if the surface is alre
 
 //Surface
 
-Surface::Surface():BaseSurface(){MaskColor();};//Default ctor, calls the ctor of BaseSurface
-Surface::Surface(SDL_Surface* surface):BaseSurface(surface){MaskColor();};//Surface ctor, calls the ctor of BaseSurface
+Surface::Surface():BaseSurface(){_texture=0;MaskColor();};//Default ctor, calls the ctor of BaseSurface
+Surface::Surface(SDL_Surface* surface):BaseSurface(surface){_texture=0;MaskColor();};//Surface ctor, calls the ctor of BaseSurface
 
 //Draw: x,y are the screen's position
 //clip is the part of the loaded surface image to draw
-//windowSurface is the surface to draw on
-bool Surface::Draw(WindowSurface windowSurface,unsigned int x, unsigned int y, SDL_Rect* clip)
+//Window is the surface to draw on
+bool Surface::Draw(Window window,unsigned int x, unsigned int y, SDL_Rect* clip)
 {
 	if (_surface!=0)
 	{
 		SDL_Rect offset;//Fill a rectangle with the x's and y's, width and heigth aren't important for the destination rectangle
 		offset.x=x;
 		offset.y=y;
-		int retVal=SDL_BlitSurface(_surface,clip,windowSurface,&offset);
-		if (retVal==-1)//Return value =1 when error
+		if (_texture==0)
+		{
+			_texture=SDL_CreateTextureFromSurface(window,_surface);
+			if (_texture==0)
+			{Error error(Log,"Failed to create texture from surface");return false;}}
+		if (SDL_QueryTexture(_texture,NULL,NULL,&offset.w,&offset.h)==-1)
+		{Error(Log,"Failed to query the texture");return false;}
+		if (clip){offset.w=clip->w; offset.h=clip->h;}
+		if (SDL_RenderCopy(window,_texture,clip,&offset)==-1)
+		{Error error(Log,"Failed to render texture");return false;}
+//		int retVal=SDL_BlitSurface(_surface,clip,window,&offset);
+		/*if (retVal==-1)//Return value =1 when error
 		{		
 			Error error(Caption,"Failed to blit to the window with code: ");
 			return false;
@@ -218,7 +230,8 @@ bool Surface::Draw(WindowSurface windowSurface,unsigned int x, unsigned int y, S
 		}else
 		{
 			return true;
-		}
+		}*/
+		return true;
 	}
 	return false;
 };
@@ -239,30 +252,18 @@ bool Surface::LoadImage(std::string filename,int colorKeyR,int colorKeyG, int co
 #endif
 	if (tempLoaded==0)//If error?
 	{
-		std::string errorMessage="The following image file cannot be opened: ";
+		std::string errorMessage="The following image file could not be opened: ";
 		errorMessage+=filename;
 		Error error(Caption,errorMessage);
+		_surface=0;
 		return false;
 	}
 	//Colorkey and transparency here for hardware acceleration
 	if (colorKeyR!=-1&&colorKeyG!=-1&&colorKeyB!=-1)
 	{tempLoaded.MaskColor(colorKeyR,colorKeyG,colorKeyB);}
-	if (alpha!=SDL_ALPHA_OPAQUE)
-	{tempLoaded.SetTransparency(alpha);}
-	//convert to video buffer pixel format
-	if (useImageAlpha)
-	{_surface=::SDL_DisplayFormatAlpha(tempLoaded);}
-	else{_surface=SDL_DisplayFormat(tempLoaded);}
-	if (_surface==0)//If an error occurs
-	{
-		_surface=tempLoaded;//Just use the unoptimized image then
-		std::string errorMessage="The following image file could not be converted: ";
-		errorMessage+=filename;
-		Error error(Log,errorMessage);
-	}else
-	{
-		tempLoaded.Free();//Otherwise free the resource
-	}
+	//if (alpha!=SDL_ALPHA_OPAQUE)
+	//{tempLoaded.SetTransparency(alpha);}
+	_surface=tempLoaded;	
 
 	return true;
 };
@@ -287,8 +288,8 @@ bool Surface::MaskColor(int r,int g,int b)
 {
 	if (_surface!=0)
 	{
-		int flags=SDL_SRCCOLORKEY;
-		if (r==-1||g==-1||b==-1){flags=0;}//If one of the colours is -1,then unset the colorkey
+		int flags=SDL_TRUE;
+		if (r==-1||g==-1||b==-1){flags=SDL_FALSE;}//If one of the colours is -1,then unset the colorkey
 		if (r>0xff){r=0xff;};if (g>0xff){g=0xff;};if (b>0xff){b=0xff;};//Keep the values within their limits
 		if (r!=_r||g!=_g||b!=_b)//if the color is not already set to the same colour
 		{
@@ -318,11 +319,20 @@ bool Surface::SetTransparency(int alpha)
 	{
 		if (alpha>SDL_ALPHA_OPAQUE){alpha=SDL_ALPHA_OPAQUE;}//Check if some limits are exceeded
 		if (alpha<SDL_ALPHA_TRANSPARENT){alpha=SDL_ALPHA_TRANSPARENT;}
-		if (SDL_SetAlpha(_surface,SDL_SRCALPHA,alpha)==-1)
-		{		
-			Error error(Log,"Failed to set transparency",0,true);
-			return false;
-		};
+		if (_texture!=0)
+		{
+			if(SDL_SetTextureAlphaMod(_texture,alpha)==-1)
+			{		
+				Error error(Log,"Failed to set transparency on texture",0,true);
+				return false;
+			};}
+		else {
+			if(SDL_SetSurfaceAlphaMod(_surface,alpha)==-1)
+			{		
+				Error error(Log,"Failed to set transparency on surface",0,true);
+				return false;
+			};
+		}
 		return true;
 	}
 	return false;
@@ -337,15 +347,17 @@ void Surface::Free()//Freeing the surface
 	{
 		SDL_FreeSurface(_surface);
 		_surface=0;
+		SDL_DestroyTexture(_texture);
+		_texture=0;
 	}
 }
-//Creating the windowsurface.
+//Creating the Window.
 //Without any parameters, it is just an empty one
-WindowSurface::WindowSurface():BaseSurface(){};
-WindowSurface::WindowSurface(SDL_Surface* surface):BaseSurface(){_surface=surface;};
-WindowSurface::WindowSurface(int width, int height, int bpp, bool doublebuffering, bool windowFrame):BaseSurface()
+Window::Window():_window(0),_renderContext(0){};
+Window::Window(SDL_Window* window,SDL_Renderer* renderer):_window(window),_renderContext(renderer){};
+Window::Window(int width, int height, bool windowFrame):_window(0),_renderContext(0)
 {
-	CreateWindowSurface(width,height,bpp,doublebuffering,windowFrame);
+	CreateWindow(width,height,windowFrame);
 };
 //Creates a screen to work on
 //Width and height are the screen dimensions to set
@@ -353,17 +365,16 @@ WindowSurface::WindowSurface(int width, int height, int bpp, bool doublebufferin
 //doublebuffering enables the use of doublebuffering
 //windowFrame: when true: it shows the outlines of the window
 // when false: it doesn't show the outlines of the window(and no close,minimize or maximize button)
-bool WindowSurface::CreateWindowSurface(int width,int height, int bpp, bool doublebuffering, bool windowFrame)
+bool Window::CreateWindow(int width,int height, bool windowFrame)
 {
 	int modeFlags=0;
-	//Render the buffer in system memory or in video memory with doublebuffering, which can increase aestetics
-	if (doublebuffering==true){modeFlags|=SDL_HWSURFACE|SDL_DOUBLEBUF;}else{modeFlags|=SDL_SWSURFACE;}
 	//Makes the frame resizable, or just non-existent, depending on the boolean
-	if (windowFrame==false){modeFlags|=SDL_NOFRAME;}else{modeFlags|=SDL_RESIZABLE;}
+	if (windowFrame){modeFlags|=SDL_WINDOW_RESIZABLE;}else{modeFlags|=SDL_WINDOW_BORDERLESS;};
 	//Create the window surface
-	_surface=::SDL_SetVideoMode(width,height,bpp,modeFlags);
+	_window=::SDL_CreateWindow("",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,width,height,modeFlags);
 	_width=width;_height=height;
-	if (_surface==0)
+	_renderContext = SDL_CreateRenderer(_window, -1, 0);
+	if (_window==0)
 	{		
 		Error error(Exit,"Failed to create window surface",0,true);
 		return false;
@@ -371,45 +382,50 @@ bool WindowSurface::CreateWindowSurface(int width,int height, int bpp, bool doub
 	return true;
 };
 //Set the window caption
-void WindowSurface::SetCaption(std::string caption)
+void Window::SetCaption(std::string caption)
 {
-	SDL_WM_SetCaption(caption.c_str(),0);//Could also set the icon.
+	::SDL_SetWindowTitle(_window,caption.c_str());//Could also set the icon.
+}
+//Set the window icon
+void Window::SetIcon(BaseSurface icon)
+{
+	SDL_SetWindowIcon(_window,icon);
 }
 //Update the window surface, so that all blits are shown
-bool WindowSurface::UpdateWindow()
+void Window::UpdateWindow()
 {
-	if (_surface!=0)
-	{
-		if (SDL_Flip(_surface)==-1)
-		{		
-			Error error(Caption,"Failed to update screen with code: ",0,true);
-			return false;
-		}
-		return true;
-	}
-	return false;
+	SDL_RenderPresent(_renderContext);
+}
+bool Window::Resize(int width, int height)
+{
+	SDL_SetWindowSize(_window,width,height);
+	_width=width;
+	_height=height;
+	return true;
 }
 //Fill the entire window with a certain color (default=black RGB(0,0,0))
-bool WindowSurface::ClearWindow(int r, int g, int b)
+bool Window::ClearWindow(int r, int g, int b)
 {
-	if (_surface!=0)
+	if (SDL_SetRenderDrawColor(_renderContext, r, g, b, 255)==-1)//0=succes -1= error
 	{
-		if (::SDL_FillRect(_surface,0,SDL_MapRGB(_surface->format,r,g,b)))
-		{	
-			Error error(Caption,"Failed to clear the window",0,true);
-			return false;
-		};
-		return true;
+		Error error(Log,"Failed to set rendercolor to black",0,true);
+		return false;
+	};
+	if (SDL_RenderClear(_renderContext)==-1)//0=succes -1=error
+	{
+		Error error(Log,"Failed to clear background",0,true);
+		return false;
 	}
-	return false;
+	return true;
 }
 #ifdef DRAWING
 //Draw a filled rectangle
-bool WindowSurface::DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g, int b)
+bool Window::DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g, int b)
 {
 	SDL_Rect rectangle;
 	::FillRect(&rectangle,x1,y1,x2-x1,y2-y1);
-	int retVal=SDL_FillRect(_surface,&rectangle,SDL_MapRGB(_surface->format,r,g,b));
+	SDL_SetRenderDrawColor(_renderContext,r,g,b,SDL_ALPHA_OPAQUE);
+	int retVal=SDL_RenderFillRect(_renderContext,&rectangle);
 	if (retVal==-1)
 	{		
 		Error error(Log,"Failed to draw filled rectangle",0,true);
@@ -417,17 +433,22 @@ bool WindowSurface::DrawFilledRect(int x1, int y1, int x2, int y2, int r, int g,
 	}
 	return true;
 }
+#endif
 //Draw a line from 1 to 2
-bool WindowSurface::DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b)
+bool Window::DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b)
 {
-	if (::lineRGBA(_surface,x1,y1,x2,y2,r,g,b,255)==-1)
+
+	/*if (::lineRGBA(_renderContext,x1,y1,x2,y2,r,g,b,255)==-1)
 	{
 		Error error(Log,"Failed to draw line",0,true);
 		return false;
 	};
+	return true;*/
+	SDL_SetRenderDrawColor(_renderContext,r,g,b,SDL_ALPHA_OPAQUE);
+	SDL_RenderDrawLine(_renderContext,x1,y1,x2,y2);
 	return true;
 };
-#endif
+//#endif
 
 
 
@@ -439,3 +460,9 @@ void FillRect (SDL_Rect* destination,int x, int y, int w, int h)
 	destination->w=w;
 	destination->h=h;
 }
+
+std::string IntToString(int i)
+{std::ostringstream oss;
+oss<<i;
+std::string str=oss.str();
+return str;}

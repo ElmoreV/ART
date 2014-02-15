@@ -118,7 +118,7 @@ public:
 	int HandleEvent(SDL_Event sEvent, Settings* setting);
 	//Renders all the MenuItems with the given font on the screen
 	//Offset is the place to start drawing, if it is not a centered menuItem
-	void Draw(WindowSurface screen, Font& font, Point2D offset=Point2D());
+	void Draw(Window screen, Font& font, Point2D offset=Point2D());
 	//HoverEnebled = If this menuItem can be hovered
 	//IsClickable = If this menuItem can be clicked
 	bool HoverEnabled, IsClickable;
@@ -247,7 +247,7 @@ public:
 	//Constructor, which set the mainItem
 	Menu(std::string text, Settings* setting, int r=255, int g=255, int b=255);
 	//Renders the currentItem on the screen
-	void Open(WindowSurface screen, Font& font, Point2D offset = Point2D());
+	void Open(Window screen, Font& font, Point2D offset = Point2D());
 	//Returns the pointer of the menuitem at index
 	MenuItem* GetChild(unsigned int index);
 	//Set the vertical space between the items

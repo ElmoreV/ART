@@ -94,15 +94,18 @@ public:
 	//Reset all values of the map to their origine
 	void Reset();
 	//Draws the part of the map that can be seen on the screen, to save time
-	void Draw(WindowSurface screen, int completedLvl = -1);
+	void Draw(Window screen, int completedLvl = -1);
 	//Draws the background on the screen (only the part of the images that can be seen on the screen)
-	void DrawBackground(WindowSurface screen, Graphics* assets);
+	void DrawBackground(Window screen, Graphics* assets);
 	//Add a normal tile to the collection
 	bool AddTile(char key, int x, int y, bool solid=true, bool drawable=false);
 	//Add a spike tile to the collection
 	bool AddTile(char key, int x, int y, TileSides side);
 	//Add a slope tile to the collection
 	bool AddTile(char key, int x, int y, int slopeLeft, int slopeRight); 
+	
+	bool AddPlatform(Rectangle PlayerBound);
+	
 	//Reads the textfile, and set all values of the map, like _mapArray, _spawnlocation, _mapID etc.
 	bool ReadFile(std::string filename);
 	//Retruns the TileType at a certain point in the mapArray

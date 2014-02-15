@@ -32,7 +32,7 @@ public:
 
 	bool ChangeSprite(std::string filename, int r=-1, int g=-1, int b=-1); //Changes the surface and set maskcolor
 	bool MaskColor(int r, int g, int b); //Set the colorkey (mask)
-	void Draw(WindowSurface screen);//Draws (clip of) surface on the screen
+	void Draw(Window screen);//Draws (clip of) surface on the screen
 	void SetPosition(float X, float Y);//Changes the position of the object
 	void SetPosition(Point2D position);//Changes the position of the object
 	void SetVelocity(float X, float Y);//Changes the velocity of the object
